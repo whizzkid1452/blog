@@ -54,19 +54,19 @@ const Header = styled.header`
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-bottom: 1px solid #e4e4e7;
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 32px;
 `;
 
 const PostDate = styled.time`
-  color: #71717a;
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 500;
 `;
 
 const Title = styled.h1`
   margin: 0;
-  color: #18181b;
+  color: var(--color-text-primary);
   font-size: 40px;
   font-weight: 650;
   line-height: 1.15;
@@ -74,7 +74,7 @@ const Title = styled.h1`
 
 const Description = styled.p`
   margin: 0;
-  color: #52525b;
+  color: var(--color-text-secondary);
   font-size: 18px;
   line-height: 1.75;
 `;
@@ -86,7 +86,7 @@ const TagList = styled.div`
 `;
 
 const TagLink = styled(Link)`
-  color: #2563eb;
+  color: var(--color-link);
   font-size: 14px;
   text-decoration: none;
 
