@@ -1,119 +1,158 @@
 import fs from 'node:fs';
 import path from 'node:path';
+import matter from 'gray-matter';
+import { z } from 'zod';
 
-const postsDirectory = path.join(process.cwd(), 'content', 'posts');
+const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
+const POST_FILE_EXTENSIONS = ['.md', '.mdx'];
+const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+const tagSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine((tag) => !tag.includes('/'), 'Tag cannot include a slash');
+
+const dateSchema = z.preprocess(
+  (value) => {
+    if (value instanceof Date) {
+      return value.toISOString().slice(0, 10);
+    }
+
+    return value;
+  },
+  z.string().regex(DATE_ONLY_PATTERN, 'Expected a YYYY-MM-DD date').refine(isValidDate, 'Expected a valid date')
+);
+
+const postFrontmatterSchema = z.object({
+  title: z.string().trim().min(1),
+  description: z.string().trim().min(1),
+  date: dateSchema,
+  tags: z.array(tagSchema).min(1),
+  draft: z.boolean().default(false),
+});
 
 export interface PostSummary {
   slug: string;
   title: string;
   description: string;
   date: string;
+  tags: string[];
 }
 
 export interface Post extends PostSummary {
   content: string;
+  draft: boolean;
 }
 
-interface PostFrontmatter {
-  title: string;
-  description: string;
-  date: string;
-}
+type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 
 export function getPostSummaries(): PostSummary[] {
-  return getPostSlugs()
-    .map((slug) => getPostBySlug(slug))
-    .filter((post): post is Post => post != null)
-    .map((post) => ({
-      slug: post.slug,
-      title: post.title,
-      description: post.description,
-      date: post.date,
-    }))
-    .sort((leftPost, rightPost) => rightPost.date.localeCompare(leftPost.date));
+  return getPublishedPosts().map(toPostSummary);
+}
+
+export function getPostSummariesByTag(tag: string): PostSummary[] {
+  return getPostSummaries().filter((post) => post.tags.includes(tag));
+}
+
+export function getTags(): string[] {
+  return Array.from(new Set(getPostSummaries().flatMap((post) => post.tags))).sort((leftTag, rightTag) =>
+    leftTag.localeCompare(rightTag)
+  );
 }
 
 export function getPostBySlug(slug: string): Post | null {
-  const filePath = path.join(postsDirectory, `${slug}.md`);
+  const fileName = getPostFileNameBySlug(slug);
 
-  if (!fs.existsSync(filePath)) {
+  if (fileName == null) {
     return null;
   }
 
-  const fileContent = fs.readFileSync(filePath, 'utf8');
-  const { frontmatter, content } = parsePostFile(fileContent);
+  const post = readPostFile(fileName);
 
+  if (post.draft) {
+    return null;
+  }
+
+  return post;
+}
+
+function getPublishedPosts(): Post[] {
+  return getPostFileNames()
+    .map(readPostFile)
+    .filter((post) => !post.draft)
+    .sort(comparePosts);
+}
+
+function toPostSummary(post: Post): PostSummary {
   return {
-    slug,
-    ...frontmatter,
-    content,
+    slug: post.slug,
+    title: post.title,
+    description: post.description,
+    date: post.date,
+    tags: post.tags,
   };
 }
 
-function getPostSlugs(): string[] {
-  if (!fs.existsSync(postsDirectory)) {
+function getPostFileNameBySlug(slug: string): string | null {
+  return getPostFileNames().find((fileName) => createSlug(fileName) === slug) ?? null;
+}
+
+function getPostFileNames(): string[] {
+  if (!fs.existsSync(POSTS_DIRECTORY)) {
     return [];
   }
 
-  return fs
-    .readdirSync(postsDirectory)
-    .filter((fileName) => fileName.endsWith('.md'))
-    .map((fileName) => fileName.replace(/\.md$/, ''));
+  return fs.readdirSync(POSTS_DIRECTORY).filter(isPostFileName).sort();
 }
 
-function parsePostFile(fileContent: string): {
-  frontmatter: PostFrontmatter;
-  content: string;
-} {
-  const frontmatterPattern = /^---\n([\s\S]*?)\n---\n?([\s\S]*)$/;
-  const match = fileContent.match(frontmatterPattern);
-
-  if (!match) {
-    throw new Error('Post file must start with frontmatter.');
-  }
+function readPostFile(fileName: string): Post {
+  const fileContent = fs.readFileSync(path.join(POSTS_DIRECTORY, fileName), 'utf8');
+  const { data, content } = matter(fileContent);
+  const frontmatter = parseFrontmatter({ fileName, data });
 
   return {
-    frontmatter: parseFrontmatter(match[1]),
-    content: match[2].trim(),
+    slug: createSlug(fileName),
+    ...frontmatter,
+    content: content.trim(),
   };
 }
 
-function parseFrontmatter(frontmatterContent: string): PostFrontmatter {
-  const entries = frontmatterContent
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean)
-    .map((line) => {
-      const separatorIndex = line.indexOf(':');
+function parseFrontmatter({ fileName, data }: { fileName: string; data: unknown }): PostFrontmatter {
+  const result = postFrontmatterSchema.safeParse(data);
 
-      if (separatorIndex === -1) {
-        throw new Error(`Invalid frontmatter line: ${line}`);
-      }
-
-      const key = line.slice(0, separatorIndex).trim();
-      const value = line
-        .slice(separatorIndex + 1)
-        .trim()
-        .replace(/^"|"$/g, '');
-
-      return [key, value] as const;
-    });
-
-  const frontmatter = Object.fromEntries(entries);
-
-  return {
-    title: readFrontmatterValue(frontmatter, 'title'),
-    description: readFrontmatterValue(frontmatter, 'description'),
-    date: readFrontmatterValue(frontmatter, 'date'),
-  };
-}
-
-function readFrontmatterValue(frontmatter: Record<string, unknown>, key: keyof PostFrontmatter): string {
-  const value = frontmatter[key];
-
-  if (typeof value !== 'string' || value.length === 0) {
-    throw new Error(`Missing frontmatter value: ${key}`);
+  if (result.success) {
+    return result.data;
   }
 
-  return value;
+  const message = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
+  throw new Error(`Invalid frontmatter in ${fileName}: ${message}`);
+}
+
+function isPostFileName(fileName: string): boolean {
+  return POST_FILE_EXTENSIONS.includes(path.extname(fileName));
+}
+
+function createSlug(fileName: string): string {
+  return fileName.replace(/\.(md|mdx)$/, '');
+}
+
+function comparePosts(leftPost: Post, rightPost: Post): number {
+  const dateComparison = rightPost.date.localeCompare(leftPost.date);
+
+  if (dateComparison !== 0) {
+    return dateComparison;
+  }
+
+  return leftPost.slug.localeCompare(rightPost.slug);
+}
+
+function isValidDate(value: string): boolean {
+  const date = new Date(`${value}T00:00:00.000Z`);
+
+  if (Number.isNaN(date.getTime())) {
+    return false;
+  }
+
+  return date.toISOString().slice(0, 10) === value;
 }
