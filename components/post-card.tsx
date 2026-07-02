@@ -24,7 +24,7 @@ export function PostCard({ post }: PostCardProps) {
       <PostTitle>
         <PostLink href={`/posts/${post.slug}`}>{post.title}</PostLink>
       </PostTitle>
-      <PostDescription>{post.description}</PostDescription>
+      {post.description == null ? null : <PostDescription>{post.description}</PostDescription>}
     </Article>
   );
 }

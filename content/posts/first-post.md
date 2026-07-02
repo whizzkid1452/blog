@@ -1,6 +1,5 @@
 ---
 title: 'First Post'
-description: 'A starting point for the blog content structure.'
 date: '2026-07-02'
 tags: ['nextjs', 'seo']
 draft: false

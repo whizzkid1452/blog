@@ -16,7 +16,7 @@ export function PostView({ post }: PostViewProps) {
         <Header>
           <PostDate dateTime={post.date}>{post.date}</PostDate>
           <Title>{post.title}</Title>
-          <Description>{post.description}</Description>
+          {post.description == null ? null : <Description>{post.description}</Description>}
           <TagList aria-label="Tags">
             {post.tags.map(tag => (
               <TagLink key={tag} href={`/tags/${encodeURIComponent(tag)}`}>

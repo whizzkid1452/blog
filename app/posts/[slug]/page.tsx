@@ -24,7 +24,7 @@ export async function generateMetadata({ params }: PostPageProps) {
 
   return {
     title: post.title,
-    description: post.description,
+    ...(post.description == null ? {} : { description: post.description }),
   };
 }
 

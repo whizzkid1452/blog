@@ -26,7 +26,7 @@ const dateSchema = z.preprocess(
 
 const postFrontmatterSchema = z.object({
   title: z.string().trim().min(1),
-  description: z.string().trim().min(1),
+  description: z.string().trim().min(1).optional(),
   date: dateSchema,
   tags: z.array(tagSchema).min(1),
   draft: z.boolean().default(false),
@@ -35,7 +35,7 @@ const postFrontmatterSchema = z.object({
 export interface PostSummary {
   slug: string;
   title: string;
-  description: string;
+  description?: string;
   date: string;
   tags: string[];
 }
