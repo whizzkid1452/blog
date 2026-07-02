@@ -1,3 +1,5 @@
+import { SiteLayout } from '@/components/site-layout';
+import { getPostSummaries, getTags } from '@/lib/posts';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { EmotionRegistry } from './emotion-registry';
@@ -23,10 +25,17 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const posts = getPostSummaries();
+  const tags = getTags();
+
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <EmotionRegistry>{children}</EmotionRegistry>
+        <EmotionRegistry>
+          <SiteLayout currentYear={new Date().getFullYear()} tags={tags} recentPosts={posts}>
+            {children}
+          </SiteLayout>
+        </EmotionRegistry>
       </body>
     </html>
   );
