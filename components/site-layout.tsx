@@ -43,7 +43,6 @@ export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLay
                 key={link.href}
                 href={link.href}
                 aria-current={isNavigationActive({ pathname, href: link.href }) ? 'page' : undefined}
-                $isActive={isNavigationActive({ pathname, href: link.href })}
               >
                 {link.label}
               </NavigationAnchor>
@@ -161,13 +160,18 @@ const PrimaryNavigation = styled.nav`
   align-items: center;
 `;
 
-const NavigationAnchor = styled(Link)<{ $isActive: boolean }>`
+const NavigationAnchor = styled(Link)`
   border-radius: 6px;
   padding: 8px 10px;
-  color: ${({ $isActive }) => ($isActive ? 'var(--color-text-primary)' : 'var(--color-text-muted)')};
+  color: var(--color-text-muted);
   font-size: 14px;
-  font-weight: ${({ $isActive }) => ($isActive ? 650 : 500)};
+  font-weight: 500;
   text-decoration: none;
+
+  &[aria-current='page'] {
+    color: var(--color-text-primary);
+    font-weight: 650;
+  }
 
   &:hover {
     background: color-mix(in srgb, var(--color-border) 35%, transparent);
