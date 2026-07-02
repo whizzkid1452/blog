@@ -6,6 +6,7 @@ import { z } from 'zod';
 const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
 const POST_FILE_EXTENSIONS = ['.md', '.mdx'];
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const DATE_TIME_WITH_TIME_ZONE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 
 const tagSchema = z
   .string()
@@ -24,10 +25,25 @@ const dateSchema = z.preprocess(
   z.string().regex(DATE_ONLY_PATTERN, 'Expected a YYYY-MM-DD date').refine(isValidDate, 'Expected a valid date')
 );
 
+const dateTimeSchema = z.preprocess(
+  value => {
+    if (value instanceof Date) {
+      return value.toISOString();
+    }
+
+    return value;
+  },
+  z
+    .string()
+    .regex(DATE_TIME_WITH_TIME_ZONE_PATTERN, 'Expected an ISO 8601 date-time with timezone')
+    .refine(isValidDateTime, 'Expected a valid date-time')
+);
+
 const postFrontmatterSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1).optional(),
   date: dateSchema,
+  publishedAt: dateTimeSchema.optional(),
   tags: z.array(tagSchema).min(1),
   draft: z.boolean().default(false),
 });
@@ -37,6 +53,7 @@ export interface PostSummary {
   title: string;
   description?: string;
   date: string;
+  publishedAt?: string;
   tags: string[];
 }
 
@@ -138,13 +155,17 @@ function createSlug(fileName: string): string {
 }
 
 function comparePosts(leftPost: Post, rightPost: Post): number {
-  const dateComparison = rightPost.date.localeCompare(leftPost.date);
+  const publishTimeComparison = getPostPublishTime(rightPost) - getPostPublishTime(leftPost);
 
-  if (dateComparison !== 0) {
-    return dateComparison;
+  if (publishTimeComparison !== 0) {
+    return publishTimeComparison;
   }
 
   return leftPost.slug.localeCompare(rightPost.slug);
+}
+
+function getPostPublishTime(post: Pick<Post, 'date' | 'publishedAt'>): number {
+  return new Date(post.publishedAt ?? `${post.date}T00:00:00.000Z`).getTime();
 }
 
 function isValidDate(value: string): boolean {
@@ -155,4 +176,10 @@ function isValidDate(value: string): boolean {
   }
 
   return date.toISOString().slice(0, 10) === value;
+}
+
+function isValidDateTime(value: string): boolean {
+  const date = new Date(value);
+
+  return !Number.isNaN(date.getTime());
 }
