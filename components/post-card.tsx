@@ -15,14 +15,16 @@ export function PostCard({ post }: PostCardProps) {
         <PostDate dateTime={post.date}>{post.date}</PostDate>
         <TagList aria-label="Tags">
           {post.tags.map(tag => (
-            <TagLink key={tag} href={`/tags/${encodeURIComponent(tag)}`}>
+            <TagLink key={tag} href={`/tags/${encodeURIComponent(tag)}`} rel="noopener noreferrer" target="_blank">
               #{tag}
             </TagLink>
           ))}
         </TagList>
       </PostMeta>
       <PostTitle>
-        <PostLink href={`/posts/${post.slug}`}>{post.title}</PostLink>
+        <PostLink href={`/posts/${post.slug}`} rel="noopener noreferrer" target="_blank">
+          {post.title}
+        </PostLink>
       </PostTitle>
       {post.description == null ? null : <PostDescription>{post.description}</PostDescription>}
     </Article>

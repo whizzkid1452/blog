@@ -1,7 +1,9 @@
 'use client';
 
 import styled from '@emotion/styled';
+import type { ComponentPropsWithoutRef } from 'react';
 import ReactMarkdown from 'react-markdown';
+import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 
 interface MarkdownContentProps {
@@ -12,9 +14,19 @@ interface MarkdownContentProps {
 export function MarkdownContent({ content, title }: MarkdownContentProps) {
   return (
     <Content>
-      <ReactMarkdown remarkPlugins={[remarkGfm]}>{removeDuplicateTitle({ content, title })}</ReactMarkdown>
+      <ReactMarkdown components={MARKDOWN_COMPONENTS} remarkPlugins={[remarkGfm]}>
+        {removeDuplicateTitle({ content, title })}
+      </ReactMarkdown>
     </Content>
   );
+}
+
+const MARKDOWN_COMPONENTS: Components = {
+  a: NewTabAnchor,
+};
+
+function NewTabAnchor(anchorProps: ComponentPropsWithoutRef<'a'>) {
+  return <a {...anchorProps} rel="noopener noreferrer" target="_blank" />;
 }
 
 const Content = styled.div`
