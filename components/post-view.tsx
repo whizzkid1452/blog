@@ -1,0 +1,72 @@
+'use client';
+
+import type { Post } from '@/lib/posts';
+import styled from '@emotion/styled';
+import { MarkdownContent } from './markdown-content';
+
+interface PostViewProps {
+  post: Post;
+}
+
+export function PostView({ post }: PostViewProps) {
+  return (
+    <PageShell>
+      <Article>
+        <Header>
+          <PostDate dateTime={post.date}>{post.date}</PostDate>
+          <Title>{post.title}</Title>
+          <Description>{post.description}</Description>
+        </Header>
+        <MarkdownContent content={post.content} />
+      </Article>
+    </PageShell>
+  );
+}
+
+const PageShell = styled.main`
+  display: flex;
+  width: min(100%, 768px);
+  flex-direction: column;
+  gap: 40px;
+  margin: 0 auto;
+  padding: 96px 24px;
+
+  @media (max-width: 640px) {
+    padding: 64px 20px;
+  }
+`;
+
+const Article = styled.article`
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+`;
+
+const Header = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  border-bottom: 1px solid #e4e4e7;
+  padding-bottom: 32px;
+`;
+
+const PostDate = styled.time`
+  color: #71717a;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const Title = styled.h1`
+  margin: 0;
+  color: #18181b;
+  font-size: 40px;
+  font-weight: 650;
+  line-height: 1.15;
+`;
+
+const Description = styled.p`
+  margin: 0;
+  color: #52525b;
+  font-size: 18px;
+  line-height: 1.75;
+`;

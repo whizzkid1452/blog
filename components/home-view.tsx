@@ -1,0 +1,78 @@
+'use client';
+
+import type { PostSummary } from '@/lib/posts';
+import styled from '@emotion/styled';
+import { PostCard } from './post-card';
+
+interface HomeViewProps {
+  posts: PostSummary[];
+}
+
+export function HomeView({ posts }: HomeViewProps) {
+  return (
+    <PageShell>
+      <Header>
+        <Eyebrow>Personal notes</Eyebrow>
+        <Title>Blog</Title>
+        <Description>Essays, engineering notes, and implementation logs.</Description>
+      </Header>
+
+      <PostList aria-label="Posts">
+        {posts.map((post) => (
+          <PostCard key={post.slug} post={post} />
+        ))}
+      </PostList>
+    </PageShell>
+  );
+}
+
+const PageShell = styled.main`
+  display: flex;
+  width: min(100%, 768px);
+  flex-direction: column;
+  gap: 48px;
+  margin: 0 auto;
+  padding: 96px 24px;
+
+  @media (max-width: 640px) {
+    padding: 64px 20px;
+  }
+`;
+
+const Header = styled.header`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+`;
+
+const Eyebrow = styled.p`
+  margin: 0;
+  color: #71717a;
+  font-size: 14px;
+  font-weight: 500;
+`;
+
+const Title = styled.h1`
+  margin: 0;
+  color: #18181b;
+  font-size: 48px;
+  font-weight: 650;
+  line-height: 1.08;
+
+  @media (max-width: 640px) {
+    font-size: 40px;
+  }
+`;
+
+const Description = styled.p`
+  max-width: 640px;
+  margin: 0;
+  color: #52525b;
+  font-size: 18px;
+  line-height: 1.75;
+`;
+
+const PostList = styled.section`
+  display: flex;
+  flex-direction: column;
+`;
