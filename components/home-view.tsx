@@ -6,22 +6,36 @@ import { PostCard } from './post-card';
 
 interface HomeViewProps {
   posts: PostSummary[];
+  eyebrow?: string;
+  title?: string;
+  description?: string;
+  emptyMessage?: string;
 }
 
-export function HomeView({ posts }: HomeViewProps) {
+export function HomeView({
+  posts,
+  eyebrow = 'Personal notes',
+  title = 'Blog',
+  description = 'Essays, engineering notes, and implementation logs.',
+  emptyMessage = 'No posts published yet.',
+}: HomeViewProps) {
   return (
     <PageShell>
       <Header>
-        <Eyebrow>Personal notes</Eyebrow>
-        <Title>Blog</Title>
-        <Description>Essays, engineering notes, and implementation logs.</Description>
+        <Eyebrow>{eyebrow}</Eyebrow>
+        <Title>{title}</Title>
+        <Description>{description}</Description>
       </Header>
 
-      <PostList aria-label="Posts">
-        {posts.map((post) => (
-          <PostCard key={post.slug} post={post} />
-        ))}
-      </PostList>
+      {posts.length > 0 ? (
+        <PostList aria-label="Posts">
+          {posts.map((post) => (
+            <PostCard key={post.slug} post={post} />
+          ))}
+        </PostList>
+      ) : (
+        <EmptyMessage>{emptyMessage}</EmptyMessage>
+      )}
     </PageShell>
   );
 }
@@ -75,4 +89,11 @@ const Description = styled.p`
 const PostList = styled.section`
   display: flex;
   flex-direction: column;
+`;
+
+const EmptyMessage = styled.p`
+  margin: 0;
+  color: #71717a;
+  font-size: 16px;
+  line-height: 1.75;
 `;
