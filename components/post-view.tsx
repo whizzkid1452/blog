@@ -18,7 +18,7 @@ export function PostView({ post }: PostViewProps) {
           <Title>{post.title}</Title>
           <Description>{post.description}</Description>
           <TagList aria-label="Tags">
-            {post.tags.map((tag) => (
+            {post.tags.map(tag => (
               <TagLink key={tag} href={`/tags/${encodeURIComponent(tag)}`}>
                 #{tag}
               </TagLink>

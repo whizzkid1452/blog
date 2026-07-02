@@ -9,7 +9,7 @@ interface PostPageProps {
 }
 
 export function generateStaticParams() {
-  return getPostSummaries().map((post) => ({
+  return getPostSummaries().map(post => ({
     slug: post.slug,
   }));
 }

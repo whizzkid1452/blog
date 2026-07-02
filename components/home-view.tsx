@@ -29,7 +29,7 @@ export function HomeView({
 
       {posts.length > 0 ? (
         <PostList aria-label="Posts">
-          {posts.map((post) => (
+          {posts.map(post => (
             <PostCard key={post.slug} post={post} />
           ))}
         </PostList>

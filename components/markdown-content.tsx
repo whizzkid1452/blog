@@ -9,12 +9,12 @@ interface MarkdownContentProps {
 export function MarkdownContent({ content }: MarkdownContentProps) {
   const blocks = content
     .split(/\n{2,}/)
-    .map((block) => block.trim())
+    .map(block => block.trim())
     .filter(Boolean);
 
   return (
     <Content>
-      {blocks.map((block) => {
+      {blocks.map(block => {
         if (block.startsWith('## ')) {
           return <Heading key={block}>{block.replace(/^## /, '')}</Heading>;
         }

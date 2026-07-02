@@ -14,7 +14,7 @@ export function PostCard({ post }: PostCardProps) {
       <PostMeta>
         <PostDate dateTime={post.date}>{post.date}</PostDate>
         <TagList aria-label="Tags">
-          {post.tags.map((tag) => (
+          {post.tags.map(tag => (
             <TagLink key={tag} href={`/tags/${encodeURIComponent(tag)}`}>
               #{tag}
             </TagLink>

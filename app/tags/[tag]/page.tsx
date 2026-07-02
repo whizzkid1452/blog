@@ -10,7 +10,7 @@ interface TagPageProps {
 }
 
 export function generateStaticParams() {
-  return getTags().map((tag) => ({
+  return getTags().map(tag => ({
     tag,
   }));
 }

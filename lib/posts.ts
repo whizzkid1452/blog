@@ -11,10 +11,10 @@ const tagSchema = z
   .string()
   .trim()
   .min(1)
-  .refine((tag) => !tag.includes('/'), 'Tag cannot include a slash');
+  .refine(tag => !tag.includes('/'), 'Tag cannot include a slash');
 
 const dateSchema = z.preprocess(
-  (value) => {
+  value => {
     if (value instanceof Date) {
       return value.toISOString().slice(0, 10);
     }
@@ -52,11 +52,11 @@ export function getPostSummaries(): PostSummary[] {
 }
 
 export function getPostSummariesByTag(tag: string): PostSummary[] {
-  return getPostSummaries().filter((post) => post.tags.includes(tag));
+  return getPostSummaries().filter(post => post.tags.includes(tag));
 }
 
 export function getTags(): string[] {
-  return Array.from(new Set(getPostSummaries().flatMap((post) => post.tags))).sort((leftTag, rightTag) =>
+  return Array.from(new Set(getPostSummaries().flatMap(post => post.tags))).sort((leftTag, rightTag) =>
     leftTag.localeCompare(rightTag)
   );
 }
@@ -80,7 +80,7 @@ export function getPostBySlug(slug: string): Post | null {
 function getPublishedPosts(): Post[] {
   return getPostFileNames()
     .map(readPostFile)
-    .filter((post) => !post.draft)
+    .filter(post => !post.draft)
     .sort(comparePosts);
 }
 
@@ -95,7 +95,7 @@ function toPostSummary(post: Post): PostSummary {
 }
 
 function getPostFileNameBySlug(slug: string): string | null {
-  return getPostFileNames().find((fileName) => createSlug(fileName) === slug) ?? null;
+  return getPostFileNames().find(fileName => createSlug(fileName) === slug) ?? null;
 }
 
 function getPostFileNames(): string[] {
@@ -125,7 +125,7 @@ function parseFrontmatter({ fileName, data }: { fileName: string; data: unknown 
     return result.data;
   }
 
-  const message = result.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ');
+  const message = result.error.issues.map(issue => `${issue.path.join('.')}: ${issue.message}`).join('; ');
   throw new Error(`Invalid frontmatter in ${fileName}: ${message}`);
 }
 
