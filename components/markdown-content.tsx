@@ -1,6 +1,7 @@
 'use client';
 
 import styled from '@emotion/styled';
+import Link from 'next/link';
 import type { ComponentPropsWithoutRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
@@ -22,11 +23,56 @@ export function MarkdownContent({ content, title }: MarkdownContentProps) {
 }
 
 const MARKDOWN_COMPONENTS: Components = {
-  a: NewTabAnchor,
+  a: MarkdownAnchor,
 };
 
-function NewTabAnchor(anchorProps: ComponentPropsWithoutRef<'a'>) {
-  return <a {...anchorProps} rel="noopener noreferrer" target="_blank" />;
+const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
+const PROTOCOL_RELATIVE_URL_PREFIX = '//';
+
+type HrefNavigationKind = 'externalWeb' | 'internalRoute' | 'other';
+
+function MarkdownAnchor({ href, ...anchorProps }: ComponentPropsWithoutRef<'a'>) {
+  if (href == null) {
+    return <a {...anchorProps} />;
+  }
+
+  const navigationKind = getHrefNavigationKind(href);
+
+  if (navigationKind === 'externalWeb') {
+    return <a {...anchorProps} href={href} rel="noopener noreferrer" target="_blank" />;
+  }
+
+  if (navigationKind === 'internalRoute') {
+    return <Link {...anchorProps} href={href} />;
+  }
+
+  return <a {...anchorProps} href={href} />;
+}
+
+function getHrefNavigationKind(href: string): HrefNavigationKind {
+  if (href.startsWith(PROTOCOL_RELATIVE_URL_PREFIX)) {
+    return 'externalWeb';
+  }
+
+  const absoluteUrl = parseAbsoluteUrl(href);
+
+  if (absoluteUrl == null) {
+    return 'internalRoute';
+  }
+
+  if (WEB_URL_PROTOCOLS.has(absoluteUrl.protocol)) {
+    return 'externalWeb';
+  }
+
+  return 'other';
+}
+
+function parseAbsoluteUrl(href: string): URL | null {
+  try {
+    return new URL(href);
+  } catch {
+    return null;
+  }
 }
 
 const Content = styled.div`
