@@ -33,7 +33,7 @@ const Article = styled.article`
   display: flex;
   flex-direction: column;
   gap: 8px;
-  border-bottom: 1px solid #e4e4e7;
+  border-bottom: 1px solid var(--color-border);
   padding: 24px 0;
 
   &:first-of-type {
@@ -49,7 +49,7 @@ const PostMeta = styled.div`
 `;
 
 const PostDate = styled.time`
-  color: #71717a;
+  color: var(--color-text-muted);
   font-size: 14px;
 `;
 
@@ -60,7 +60,7 @@ const TagList = styled.div`
 `;
 
 const TagLink = styled(Link)`
-  color: #2563eb;
+  color: var(--color-link);
   font-size: 14px;
   text-decoration: none;
 
@@ -78,17 +78,17 @@ const PostTitle = styled.h2`
 `;
 
 const PostLink = styled(Link)`
-  color: #18181b;
+  color: var(--color-text-primary);
   text-decoration: none;
 
   &:hover {
-    color: #52525b;
+    color: var(--color-link-hover);
   }
 `;
 
 const PostDescription = styled.p`
   margin: 0;
-  color: #52525b;
+  color: var(--color-text-secondary);
   font-size: 16px;
   line-height: 1.75;
 `;
