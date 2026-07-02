@@ -61,14 +61,14 @@ const Header = styled.header`
 
 const Eyebrow = styled.p`
   margin: 0;
-  color: #71717a;
+  color: var(--color-text-muted);
   font-size: 14px;
   font-weight: 500;
 `;
 
 const Title = styled.h1`
   margin: 0;
-  color: #18181b;
+  color: var(--color-text-primary);
   font-size: 48px;
   font-weight: 650;
   line-height: 1.08;
@@ -81,7 +81,7 @@ const Title = styled.h1`
 const Description = styled.p`
   max-width: 640px;
   margin: 0;
-  color: #52525b;
+  color: var(--color-text-secondary);
   font-size: 18px;
   line-height: 1.75;
 `;
@@ -93,7 +93,7 @@ const PostList = styled.section`
 
 const EmptyMessage = styled.p`
   margin: 0;
-  color: #71717a;
+  color: var(--color-text-muted);
   font-size: 16px;
   line-height: 1.75;
 `;
