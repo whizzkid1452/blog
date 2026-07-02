@@ -25,7 +25,7 @@ export function PostView({ post }: PostViewProps) {
             ))}
           </TagList>
         </Header>
-        <MarkdownContent content={post.content} />
+        <MarkdownContent content={post.content} title={post.title} />
       </Article>
     </PageShell>
   );
