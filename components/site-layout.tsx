@@ -24,6 +24,7 @@ const PRIMARY_NAVIGATION_LINKS: NavigationLink[] = [
 ];
 
 const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
+const RESUME_URL = 'https://elderly-mosquito-87f.notion.site/38073b56612a80efb6e1f5f7055e5c15?source=copy_link';
 const RECENT_POST_COUNT = 5;
 const DESKTOP_HEADER_HEIGHT = '64px';
 const DESKTOP_SIDEBAR_WIDTH = '280px';
@@ -50,10 +51,13 @@ export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLay
             <ExternalNavigationAnchor
               href={GITHUB_PROFILE_URL}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               aria-label="GitHub profile"
             >
               GitHub
+            </ExternalNavigationAnchor>
+            <ExternalNavigationAnchor href={RESUME_URL} target="_blank" rel="noopener noreferrer" aria-label="Resume">
+              Resume
             </ExternalNavigationAnchor>
           </PrimaryNavigation>
         </HeaderInner>
