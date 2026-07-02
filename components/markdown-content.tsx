@@ -33,14 +33,14 @@ const Content = styled.div`
   display: flex;
   flex-direction: column;
   gap: 24px;
-  color: #3f3f46;
+  color: var(--color-text-secondary);
   font-size: 16px;
   line-height: 2;
 `;
 
 const Title = styled.h2`
   margin: 0;
-  color: #18181b;
+  color: var(--color-text-primary);
   font-size: 30px;
   font-weight: 650;
   line-height: 1.25;
@@ -48,7 +48,7 @@ const Title = styled.h2`
 
 const Heading = styled.h2`
   margin: 16px 0 0;
-  color: #18181b;
+  color: var(--color-text-primary);
   font-size: 24px;
   font-weight: 650;
   line-height: 1.3;
