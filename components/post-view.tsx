@@ -31,16 +31,15 @@ export function PostView({ post }: PostViewProps) {
   );
 }
 
-const PageShell = styled.main`
+const PageShell = styled.div`
   display: flex;
-  width: min(100%, 768px);
+  width: 100%;
   flex-direction: column;
   gap: 40px;
-  margin: 0 auto;
-  padding: 96px 24px;
+  margin: 0;
 
   @media (max-width: 640px) {
-    padding: 64px 20px;
+    gap: 32px;
   }
 `;
 

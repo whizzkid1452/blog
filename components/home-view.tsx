@@ -40,16 +40,15 @@ export function HomeView({
   );
 }
 
-const PageShell = styled.main`
+const PageShell = styled.section`
   display: flex;
-  width: min(100%, 768px);
+  width: 100%;
   flex-direction: column;
   gap: 48px;
-  margin: 0 auto;
-  padding: 96px 24px;
+  margin: 0;
 
   @media (max-width: 640px) {
-    padding: 64px 20px;
+    gap: 40px;
   }
 `;
 
