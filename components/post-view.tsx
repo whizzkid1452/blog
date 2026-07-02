@@ -2,6 +2,7 @@
 
 import type { Post } from '@/lib/posts';
 import styled from '@emotion/styled';
+import Link from 'next/link';
 import { MarkdownContent } from './markdown-content';
 
 interface PostViewProps {
@@ -16,6 +17,13 @@ export function PostView({ post }: PostViewProps) {
           <PostDate dateTime={post.date}>{post.date}</PostDate>
           <Title>{post.title}</Title>
           <Description>{post.description}</Description>
+          <TagList aria-label="Tags">
+            {post.tags.map((tag) => (
+              <TagLink key={tag} href={`/tags/${encodeURIComponent(tag)}`}>
+                #{tag}
+              </TagLink>
+            ))}
+          </TagList>
         </Header>
         <MarkdownContent content={post.content} />
       </Article>
@@ -69,4 +77,21 @@ const Description = styled.p`
   color: #52525b;
   font-size: 18px;
   line-height: 1.75;
+`;
+
+const TagList = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+`;
+
+const TagLink = styled(Link)`
+  color: #2563eb;
+  font-size: 14px;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+    text-underline-offset: 0.2em;
+  }
 `;
