@@ -23,7 +23,10 @@ const PRIMARY_NAVIGATION_LINKS: NavigationLink[] = [
   { href: '/posts', label: 'Posts' },
 ];
 
+const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
 const RECENT_POST_COUNT = 5;
+const DESKTOP_HEADER_HEIGHT = '64px';
+const DESKTOP_SIDEBAR_WIDTH = '280px';
 
 export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLayoutProps) {
   const pathname = usePathname();
@@ -45,11 +48,19 @@ export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLay
                 {link.label}
               </NavigationAnchor>
             ))}
+            <ExternalNavigationAnchor
+              href={GITHUB_PROFILE_URL}
+              target="_blank"
+              rel="noreferrer"
+              aria-label="GitHub profile"
+            >
+              GitHub
+            </ExternalNavigationAnchor>
           </PrimaryNavigation>
         </HeaderInner>
       </SiteHeader>
 
-      <BodyGrid>
+      <BodyLayout>
         <Sidebar aria-label="Blog navigation">
           <SidebarSection>
             <SidebarTitle>Topics</SidebarTitle>
@@ -84,7 +95,7 @@ export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLay
         </Sidebar>
 
         <MainContent>{children}</MainContent>
-      </BodyGrid>
+      </BodyLayout>
 
       <SiteFooter>
         <FooterInner>
@@ -164,44 +175,69 @@ const NavigationAnchor = styled(Link)<{ $isActive: boolean }>`
   }
 `;
 
-const BodyGrid = styled.div`
+const ExternalNavigationAnchor = styled.a`
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+
+  &:hover {
+    background: color-mix(in srgb, var(--color-border) 35%, transparent);
+    color: var(--color-text-primary);
+  }
+`;
+
+const BodyLayout = styled.div`
   display: grid;
   width: 100%;
   flex: 1;
-  grid-template-columns: 240px minmax(0, 1fr);
-  gap: 56px;
+  grid-template-columns: ${DESKTOP_SIDEBAR_WIDTH} minmax(0, 1fr);
   margin: 0 auto;
-  padding: 56px 24px 72px;
 
   @media (max-width: 900px) {
     grid-template-columns: 1fr;
-    gap: 40px;
-  }
-
-  @media (max-width: 640px) {
-    padding: 40px 20px 56px;
   }
 `;
 
 const Sidebar = styled.aside`
-  position: sticky;
-  top: 96px;
+  position: fixed;
+  z-index: 5;
+  top: ${DESKTOP_HEADER_HEIGHT};
+  bottom: 0;
+  left: 0;
   display: flex;
-  max-height: calc(100vh - 128px);
+  width: ${DESKTOP_SIDEBAR_WIDTH};
   flex-direction: column;
   gap: 32px;
-  overflow: auto;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
   border-right: 1px solid var(--color-border);
-  padding-right: 24px;
+  padding: 56px 24px 72px;
+
+  &::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+  }
+
+  &::-webkit-scrollbar-thumb,
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
 
   @media (max-width: 900px) {
     position: static;
-    max-height: none;
+    width: auto;
+    height: auto;
     order: 2;
+    overflow: visible;
     border-top: 1px solid var(--color-border);
     border-right: 0;
-    padding-top: 32px;
-    padding-right: 0;
+    padding: 32px 20px 56px;
   }
 `;
 
@@ -281,11 +317,24 @@ const EmptyText = styled.p`
 `;
 
 const MainContent = styled.main`
+  grid-column: 2;
   min-width: 0;
+  padding: 56px 24px 72px 56px;
+
+  @media (max-width: 900px) {
+    grid-column: auto;
+    order: 1;
+    padding: 40px 20px 0;
+  }
 `;
 
 const SiteFooter = styled.footer`
+  margin-left: ${DESKTOP_SIDEBAR_WIDTH};
   border-top: 1px solid var(--color-border);
+
+  @media (max-width: 900px) {
+    margin-left: 0;
+  }
 `;
 
 const FooterInner = styled.div`

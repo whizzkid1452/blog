@@ -42,10 +42,10 @@ export function HomeView({
 
 const PageShell = styled.section`
   display: flex;
-  width: 100%;
+  width: min(100%, 768px);
   flex-direction: column;
   gap: 48px;
-  margin: 0;
+  margin: 0 auto;
 
   @media (max-width: 640px) {
     gap: 40px;

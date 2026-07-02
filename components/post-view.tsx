@@ -33,10 +33,10 @@ export function PostView({ post }: PostViewProps) {
 
 const PageShell = styled.div`
   display: flex;
-  width: 100%;
+  width: min(100%, 768px);
   flex-direction: column;
   gap: 40px;
-  margin: 0;
+  margin: 0 auto;
 
   @media (max-width: 640px) {
     gap: 32px;
