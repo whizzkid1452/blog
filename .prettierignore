@@ -1,7 +1,0 @@
-node_modules
-.next
-.claude
-next-env.d.ts
-out
-build
-pnpm-lock.yaml
