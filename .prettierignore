@@ -2,5 +2,7 @@ node_modules
 .next
 out
 build
+coverage
+.vercel
 next-env.d.ts
 pnpm-lock.yaml
