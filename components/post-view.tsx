@@ -1,15 +1,16 @@
 'use client';
 
-import type { Post } from '@/lib/posts';
+import type { Post, PostSummary } from '@/lib/posts';
 import styled from '@emotion/styled';
 import Link from 'next/link';
 import { MarkdownContent } from './markdown-content';
 
 interface PostViewProps {
   post: Post;
+  relatedPosts: PostSummary[];
 }
 
-export function PostView({ post }: PostViewProps) {
+export function PostView({ post, relatedPosts }: PostViewProps) {
   return (
     <PageShell>
       <Article>
@@ -27,6 +28,22 @@ export function PostView({ post }: PostViewProps) {
         </Header>
         <MarkdownContent content={post.content} title={post.title} />
       </Article>
+      {relatedPosts.length > 0 ? (
+        <RelatedSection aria-labelledby="related-posts-title">
+          <RelatedTitle id="related-posts-title">Related posts</RelatedTitle>
+          <RelatedList>
+            {relatedPosts.map(relatedPost => (
+              <RelatedItem key={relatedPost.slug}>
+                <RelatedLink href={`/posts/${relatedPost.slug}`}>{relatedPost.title}</RelatedLink>
+                <RelatedMeta>
+                  <time dateTime={relatedPost.date}>{relatedPost.date}</time>
+                  <span>{relatedPost.tags.map(tag => `#${tag}`).join(' ')}</span>
+                </RelatedMeta>
+              </RelatedItem>
+            ))}
+          </RelatedList>
+        </RelatedSection>
+      ) : null}
     </PageShell>
   );
 }
@@ -93,4 +110,56 @@ const TagLink = styled(Link)`
     text-decoration: underline;
     text-underline-offset: 0.2em;
   }
+`;
+
+const RelatedSection = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  border-top: 1px solid var(--color-border);
+  padding-top: 32px;
+`;
+
+const RelatedTitle = styled.h2`
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 22px;
+  font-weight: 650;
+  line-height: 1.3;
+`;
+
+const RelatedList = styled.ul`
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+`;
+
+const RelatedItem = styled.li`
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+`;
+
+const RelatedLink = styled(Link)`
+  color: var(--color-text-primary);
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1.45;
+  text-decoration: none;
+
+  &:hover {
+    color: var(--color-link-hover);
+  }
+`;
+
+const RelatedMeta = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
 `;

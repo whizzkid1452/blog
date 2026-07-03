@@ -1,5 +1,5 @@
 import { PostView } from '@/components/post-view';
-import { getPostBySlug, getPostSummaries } from '@/lib/posts';
+import { getPostBySlug, getPostSummaries, getRelatedPostSummaries } from '@/lib/posts';
 import { createPostPageMetadata } from '@/lib/seo-metadata';
 import { createPostJsonLd } from '@/lib/structured-data';
 import type { Metadata } from 'next';
@@ -36,10 +36,12 @@ export default async function PostPage({ params }: PostPageProps) {
     notFound();
   }
 
+  const relatedPosts = getRelatedPostSummaries(post);
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostJsonLd(post) }} />
-      <PostView post={post} />
+      <PostView post={post} relatedPosts={relatedPosts} />
     </>
   );
 }
