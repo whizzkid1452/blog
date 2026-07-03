@@ -1,5 +1,6 @@
 ---
 title: 'Runtime Scope로 프로젝트 전환 Race Condition 정리하기'
+description: '프로젝트 전환 중 이전 비동기 작업 결과가 새 프로젝트 상태에 섞이는 문제를 Runtime Scope로 방지한 과정을 정리합니다.'
 date: '2026-07-02'
 publishedAt: '2026-07-02T15:57:34+09:00'
 tags: ['architecture', 'async', 'race-condition', 'runtime']

@@ -1,5 +1,6 @@
 ---
 title: '타임라인 Region 만들기 - Canvas 단일 레이어의 한계와 SVG 분리'
+description: '타임라인 줌에서 Canvas 크기 한계로 리전이 사라지는 문제를 SVG 레이어 분리로 해결한 과정을 정리합니다.'
 date: '2026-07-03'
 publishedAt: '2026-07-03T10:11:43+09:00'
 tags: ['timeline', 'canvas', 'svg', 'editor']

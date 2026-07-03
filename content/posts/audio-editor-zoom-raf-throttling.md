@@ -1,5 +1,6 @@
 ---
 title: 'rAF로 오디오 에디터 줌 기능 버벅거림 잡기'
+description: '오디오 에디터 줌 핸들 드래그가 버벅이던 문제를 rAF 기반 업데이트 분리로 줄인 과정을 정리합니다.'
 date: '2026-07-03'
 publishedAt: '2026-07-03T10:12:31+09:00'
 tags: ['performance', 'request-animation-frame', 'audio-editor', 'frontend']

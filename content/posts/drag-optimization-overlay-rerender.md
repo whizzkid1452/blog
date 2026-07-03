@@ -1,5 +1,6 @@
 ---
 title: '[드래그 최적화 시도 3] 오버레이 방식으로 드래그 리렌더 제거하기'
+description: '타임라인 리전 드래그 중 Canvas 리렌더를 피하기 위해 overlay 기반 이동 구조로 바꾼 과정을 정리합니다.'
 date: '2026-07-02'
 publishedAt: '2026-07-02T15:26:20+09:00'
 tags: ['react', 'performance', 'canvas', 'drag']

@@ -1,5 +1,6 @@
 ---
 title: '[드래그 최적화 시도 1] React 경로를 줄이고 한 프레임에 한 번만 그리기'
+description: '타임라인 드래그 중 React commit과 Canvas draw 비용을 측정하고 rAF 기반 처리로 줄인 과정을 정리합니다.'
 date: '2026-07-02'
 publishedAt: '2026-07-02T15:40:23+09:00'
 tags: ['react', 'performance', 'canvas', 'drag']

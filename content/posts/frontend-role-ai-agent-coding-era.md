@@ -1,5 +1,6 @@
 ---
 title: '[AI] 에이전트 코딩 시대에 front-end 개발자로서의 역할에 대한 고찰'
+description: 'AI 코딩 시대에 프론트엔드 개발자가 어떤 판단과 품질 책임을 가져야 하는지 정리합니다.'
 date: '2026-07-03'
 publishedAt: '2026-07-03T10:12:28+09:00'
 tags: ['ai', 'frontend', 'career', 'architecture']

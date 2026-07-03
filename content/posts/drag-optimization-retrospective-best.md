@@ -1,5 +1,6 @@
 ---
 title: '[드래그 최적화 시도 2] 회고록: 정말 최선이었을까?'
+description: '타임라인 드래그 성능 개선 과정을 다시 검토하며 측정, 병목 분리, 재측정의 중요성을 정리합니다.'
 date: '2026-07-02'
 publishedAt: '2026-07-02T15:29:23+09:00'
 tags: ['react', 'performance', 'canvas', 'drag']

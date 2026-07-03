@@ -1,5 +1,6 @@
 ---
 title: 'First Post'
+description: 'Next.js 블로그에서 Markdown 글 파일, 라우팅, 공유 코드 구조를 분리한 기본 구조를 소개합니다.'
 date: '2026-07-02'
 tags: ['nextjs', 'seo']
 draft: false

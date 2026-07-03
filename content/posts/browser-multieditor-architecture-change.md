@@ -1,5 +1,6 @@
 ---
 title: '[Part 2.] 웹브라우저 멀티에디터 만들기 - 아키텍쳐 설계 변화'
+description: '멀티미디어 에디터 타임라인 구현 과정에서 Facade, Session Layer, 폴더 구조를 재정의한 이유를 정리합니다.'
 date: '2026-07-03'
 publishedAt: '2026-07-03T10:12:29+09:00'
 tags: ['architecture', 'session-layer', 'mvc', 'editor']

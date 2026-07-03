@@ -1,5 +1,6 @@
 ---
 title: '[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍쳐 설계'
+description: '웹브라우저 기반 멀티미디어 에디터에서 레이어드 아키텍처와 단방향 데이터 흐름을 선택한 과정을 정리합니다.'
 date: '2026-07-03'
 publishedAt: '2026-07-03T10:12:30+09:00'
 tags: ['architecture', 'ssot', 'frontend', 'editor']
