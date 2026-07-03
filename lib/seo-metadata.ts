@@ -132,7 +132,7 @@ export function createTagPageMetadata(tag: string): Metadata {
 export function createPostPageMetadata(post: Post): Metadata {
   const description = createPostDescription({ description: post.description, content: post.content });
   const url = createAbsoluteUrl(`/posts/${post.slug}`);
-  const image = createSeoImage(post.coverImage, post.coverAlt ?? post.title);
+  const image = createSeoImage(getPostOpenGraphImagePath(post), post.coverAlt ?? post.title);
 
   return {
     title: post.title,
@@ -170,4 +170,8 @@ function createSeoImage(pathname = DEFAULT_OG_IMAGE_PATH, alt = DEFAULT_OG_IMAGE
     height: OG_IMAGE_HEIGHT,
     alt,
   };
+}
+
+function getPostOpenGraphImagePath(post: Post): string {
+  return post.coverImage ?? `/posts/${post.slug}/opengraph-image`;
 }
