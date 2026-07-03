@@ -11,7 +11,7 @@ export function SiteLayoutContainer({ children }: SiteLayoutContainerProps) {
   const tags = getTags();
 
   return (
-    <SiteLayout currentYear={new Date().getFullYear()} tags={tags} recentPosts={posts}>
+    <SiteLayout tags={tags} recentPosts={posts}>
       {children}
     </SiteLayout>
   );

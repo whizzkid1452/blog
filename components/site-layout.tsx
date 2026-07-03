@@ -6,7 +6,6 @@ import styles from './site-layout.module.css';
 
 interface SiteLayoutProps {
   children: ReactNode;
-  currentYear: number;
   tags: string[];
   recentPosts: PostSummary[];
 }
@@ -25,7 +24,7 @@ const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
 const RESUME_URL = 'https://elderly-mosquito-87f.notion.site/38073b56612a80efb6e1f5f7055e5c15?source=copy_link';
 const RECENT_POST_COUNT = 5;
 
-export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLayoutProps) {
+export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
   const visibleRecentPosts = recentPosts.slice(0, RECENT_POST_COUNT);
 
   return (
@@ -101,15 +100,6 @@ export function SiteLayout({ children, currentYear, tags, recentPosts }: SiteLay
 
         <main className={styles.mainContent}>{children}</main>
       </div>
-
-      <footer className={styles.siteFooter}>
-        <div className={styles.footerInner}>
-          <p className={styles.footerText}>© {currentYear} Blog</p>
-          <Link className={styles.footerLink} href="/posts">
-            Archive
-          </Link>
-        </div>
-      </footer>
     </div>
   );
 }
