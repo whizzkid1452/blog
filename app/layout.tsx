@@ -1,5 +1,5 @@
-import { SiteLayout } from '@/components/site-layout';
-import { getPostSummaries, getTags } from '@/lib/posts';
+import { SiteLayoutContainer } from '@/components/site-layout-container';
+import { createRootMetadata } from '@/lib/seo-metadata';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { EmotionRegistry } from './emotion-registry';
@@ -15,26 +15,18 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
-export const metadata: Metadata = {
-  title: 'Blog',
-  description: 'A personal blog built with Next.js.',
-};
+export const metadata: Metadata = createRootMetadata();
 
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const posts = getPostSummaries();
-  const tags = getTags();
-
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`}>
+    <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
         <EmotionRegistry>
-          <SiteLayout currentYear={new Date().getFullYear()} tags={tags} recentPosts={posts}>
-            {children}
-          </SiteLayout>
+          <SiteLayoutContainer>{children}</SiteLayoutContainer>
         </EmotionRegistry>
       </body>
     </html>
