@@ -3,7 +3,7 @@
 import * as Toast from '@radix-ui/react-toast';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import type { ReactNode } from 'react';
-import { createContext, useCallback, useContext, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useMemo, useRef, useState } from 'react';
 import styles from './markdown-content.module.css';
 
 interface MarkdownCodeBlockFeedback {
@@ -89,15 +89,15 @@ export function MarkdownCodeBlockProvider({ children }: MarkdownCodeBlockProvide
 
 export function MarkdownCodeBlock({ children, copyText }: MarkdownCodeBlockProps) {
   const { showCopyResult } = useMarkdownCodeBlockFeedback();
-  const [isCopying, setIsCopying] = useState(false);
-  const isCopyDisabled = isCopying || copyText.length === 0;
+  const isCopyingRef = useRef(false);
+  const isCopyDisabled = copyText.length === 0;
 
   const handleCopy = useCallback(async () => {
-    if (isCopyDisabled) {
+    if (isCopyDisabled || isCopyingRef.current) {
       return;
     }
 
-    setIsCopying(true);
+    isCopyingRef.current = true;
 
     try {
       await writeClipboardText(copyText);
@@ -105,7 +105,7 @@ export function MarkdownCodeBlock({ children, copyText }: MarkdownCodeBlockProps
     } catch {
       showCopyResult('failure');
     } finally {
-      setIsCopying(false);
+      isCopyingRef.current = false;
     }
   }, [copyText, isCopyDisabled, showCopyResult]);
 
@@ -121,7 +121,7 @@ export function MarkdownCodeBlock({ children, copyText }: MarkdownCodeBlockProps
             disabled={isCopyDisabled}
             aria-label="Copy code"
           >
-            {isCopying ? 'Copying...' : 'Copy'}
+            Copy
           </button>
         </Tooltip.Trigger>
         <Tooltip.Portal>
