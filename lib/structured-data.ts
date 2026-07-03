@@ -1,11 +1,12 @@
 import type { Post } from './posts';
 import { getPostPublishedDateTime } from './posts';
 import { createPostDescription } from './seo';
-import { SITE_AUTHOR_NAME, SITE_AUTHOR_URL, createAbsoluteUrl } from './site-config';
+import { DEFAULT_OG_IMAGE_PATH, SITE_AUTHOR_NAME, SITE_AUTHOR_URL, createAbsoluteUrl } from './site-config';
 
 export function createPostJsonLd(post: Post): string {
   const url = createAbsoluteUrl(`/posts/${post.slug}`);
   const publishedTime = getPostPublishedDateTime(post);
+  const image = createAbsoluteUrl(post.coverImage ?? DEFAULT_OG_IMAGE_PATH);
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BlogPosting',
@@ -13,6 +14,7 @@ export function createPostJsonLd(post: Post): string {
     description: createPostDescription({ description: post.description, content: post.content }),
     datePublished: publishedTime,
     dateModified: publishedTime,
+    image,
     url,
     mainEntityOfPage: {
       '@type': 'WebPage',
