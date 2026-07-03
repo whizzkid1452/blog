@@ -1,6 +1,7 @@
 import type { PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
+import { MobileNavigationDialog } from './mobile-navigation-dialog';
 import { PrimaryNavigationLink } from './primary-navigation-link';
 import styles from './site-layout.module.css';
 
@@ -57,6 +58,13 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
               Resume
             </a>
           </nav>
+          <MobileNavigationDialog
+            primaryNavigationLinks={PRIMARY_NAVIGATION_LINKS}
+            githubProfileUrl={GITHUB_PROFILE_URL}
+            resumeUrl={RESUME_URL}
+            tags={tags}
+            recentPosts={visibleRecentPosts}
+          />
         </div>
       </header>
 
