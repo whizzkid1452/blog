@@ -1,9 +1,11 @@
 'use client';
 
 import type { PostSummary } from '@/lib/posts';
+import * as Collapsible from '@radix-ui/react-collapsible';
 import * as Dialog from '@radix-ui/react-dialog';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import type { ReactNode } from 'react';
 import { useState } from 'react';
 import styles from './site-layout.module.css';
 
@@ -18,6 +20,11 @@ interface MobileNavigationDialogProps {
 interface NavigationLink {
   href: string;
   label: string;
+}
+
+interface MobileNavigationCollapsibleSectionProps {
+  title: string;
+  children: ReactNode;
 }
 
 export function MobileNavigationDialog({
@@ -85,8 +92,7 @@ export function MobileNavigationDialog({
             </div>
           </nav>
 
-          <section className={styles.mobileNavigationSection}>
-            <h2 className={styles.mobileNavigationSectionTitle}>Topics</h2>
+          <MobileNavigationCollapsibleSection title="Topics">
             {tags.length > 0 ? (
               <div className={styles.mobileTagList}>
                 {tags.map(tag => (
@@ -100,10 +106,9 @@ export function MobileNavigationDialog({
             ) : (
               <p className={styles.emptyText}>No topics yet.</p>
             )}
-          </section>
+          </MobileNavigationCollapsibleSection>
 
-          <section className={styles.mobileNavigationSection}>
-            <h2 className={styles.mobileNavigationSectionTitle}>Recent</h2>
+          <MobileNavigationCollapsibleSection title="Recent">
             {recentPosts.length > 0 ? (
               <ol className={styles.mobileRecentPostList}>
                 {recentPosts.map(post => (
@@ -122,10 +127,28 @@ export function MobileNavigationDialog({
             ) : (
               <p className={styles.emptyText}>No posts yet.</p>
             )}
-          </section>
+          </MobileNavigationCollapsibleSection>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+function MobileNavigationCollapsibleSection({ title, children }: MobileNavigationCollapsibleSectionProps) {
+  return (
+    <Collapsible.Root className={styles.mobileNavigationSection} defaultOpen>
+      <div className={styles.mobileNavigationSectionHeader}>
+        <h2 className={styles.mobileNavigationSectionTitle}>{title}</h2>
+        <Collapsible.Trigger
+          className={styles.mobileNavigationSectionTrigger}
+          type="button"
+          aria-label={`Toggle ${title}`}
+        >
+          <span aria-hidden="true" />
+        </Collapsible.Trigger>
+      </div>
+      <Collapsible.Content className={styles.mobileNavigationCollapsibleContent}>{children}</Collapsible.Content>
+    </Collapsible.Root>
   );
 }
 
