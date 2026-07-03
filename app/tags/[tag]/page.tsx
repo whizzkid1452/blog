@@ -1,5 +1,6 @@
 import { HomeView } from '@/components/home-view';
 import { getPostSummariesByTag, getTags } from '@/lib/posts';
+import { createTagPageMetadata } from '@/lib/seo-metadata';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -22,10 +23,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     return {};
   }
 
-  return {
-    title: `#${tag}`,
-    description: `Published blog posts tagged with ${tag}.`,
-  };
+  return createTagPageMetadata(tag);
 }
 
 export default async function TagPage({ params }: TagPageProps) {
