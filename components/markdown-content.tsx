@@ -2,10 +2,12 @@
 import { getPublicImageSize } from '@/lib/public-image';
 import Image from 'next/image';
 import Link from 'next/link';
-import type { ComponentPropsWithoutRef } from 'react';
+import type { ComponentPropsWithoutRef, ReactNode } from 'react';
+import { isValidElement } from 'react';
 import ReactMarkdown from 'react-markdown';
 import type { Components } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
 
 interface MarkdownContentProps {
@@ -15,17 +17,20 @@ interface MarkdownContentProps {
 
 export function MarkdownContent({ content, title }: MarkdownContentProps) {
   return (
-    <div className={styles.content}>
-      <ReactMarkdown components={MARKDOWN_COMPONENTS} remarkPlugins={[remarkGfm]}>
-        {removeDuplicateTitle({ content, title })}
-      </ReactMarkdown>
-    </div>
+    <MarkdownCodeBlockProvider>
+      <div className={styles.content}>
+        <ReactMarkdown components={MARKDOWN_COMPONENTS} remarkPlugins={[remarkGfm]}>
+          {removeDuplicateTitle({ content, title })}
+        </ReactMarkdown>
+      </div>
+    </MarkdownCodeBlockProvider>
   );
 }
 
 const MARKDOWN_COMPONENTS: Components = {
   a: MarkdownAnchor,
   img: MarkdownImage,
+  pre: MarkdownPre,
 };
 
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
@@ -78,6 +83,14 @@ function MarkdownImage({ src, alt, title }: ComponentPropsWithoutRef<'img'>) {
   );
 }
 
+function MarkdownPre({ children, ...preProps }: ComponentPropsWithoutRef<'pre'>) {
+  return (
+    <MarkdownCodeBlock copyText={getTextContent(children)}>
+      <pre {...preProps}>{children}</pre>
+    </MarkdownCodeBlock>
+  );
+}
+
 function getHrefNavigationKind(href: string): HrefNavigationKind {
   if (href.startsWith(PROTOCOL_RELATIVE_URL_PREFIX)) {
     return 'externalWeb';
@@ -118,4 +131,20 @@ function removeDuplicateTitle({ content, title }: MarkdownContentProps): string 
   }
 
   return lines.slice(1).join('\n').trimStart();
+}
+
+function getTextContent(node: ReactNode): string {
+  if (typeof node === 'string' || typeof node === 'number') {
+    return String(node);
+  }
+
+  if (Array.isArray(node)) {
+    return node.map(getTextContent).join('');
+  }
+
+  if (isValidElement<{ children?: ReactNode }>(node)) {
+    return getTextContent(node.props.children);
+  }
+
+  return '';
 }

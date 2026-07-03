@@ -21,6 +21,8 @@
     ]
   },
   "dependencies": {
+    "@radix-ui/react-toast": "^1.2.18",
+    "@radix-ui/react-tooltip": "^1.2.11",
     "gray-matter": "^4.0.3",
     "image-size": "^2.0.2",
     "next": "16.2.9",
