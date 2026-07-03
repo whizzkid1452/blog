@@ -94,6 +94,10 @@ export function getPostBySlug(slug: string): Post | null {
   return post;
 }
 
+export function getPostPublishedDateTime(post: Pick<Post, 'date' | 'publishedAt'>): string {
+  return post.publishedAt ?? `${post.date}T00:00:00.000Z`;
+}
+
 function getPublishedPosts(): Post[] {
   return getPostFileNames()
     .map(readPostFile)
@@ -107,6 +111,7 @@ function toPostSummary(post: Post): PostSummary {
     title: post.title,
     description: post.description,
     date: post.date,
+    publishedAt: post.publishedAt,
     tags: post.tags,
   };
 }
@@ -165,7 +170,7 @@ function comparePosts(leftPost: Post, rightPost: Post): number {
 }
 
 function getPostPublishTime(post: Pick<Post, 'date' | 'publishedAt'>): number {
-  return new Date(post.publishedAt ?? `${post.date}T00:00:00.000Z`).getTime();
+  return new Date(getPostPublishedDateTime(post)).getTime();
 }
 
 function isValidDate(value: string): boolean {
