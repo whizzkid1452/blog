@@ -2,7 +2,6 @@ import { SiteLayoutContainer } from '@/components/site-layout-container';
 import { createRootMetadata } from '@/lib/seo-metadata';
 import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
-import { EmotionRegistry } from './emotion-registry';
 import './globals.css';
 
 const geistSans = Geist({
@@ -25,9 +24,7 @@ export default function RootLayout({
   return (
     <html lang="ko" className={`${geistSans.variable} ${geistMono.variable}`}>
       <body>
-        <EmotionRegistry>
-          <SiteLayoutContainer>{children}</SiteLayoutContainer>
-        </EmotionRegistry>
+        <SiteLayoutContainer>{children}</SiteLayoutContainer>
       </body>
     </html>
   );

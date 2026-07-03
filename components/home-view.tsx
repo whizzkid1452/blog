@@ -1,8 +1,6 @@
-'use client';
-
 import type { PostSummary } from '@/lib/posts';
-import styled from '@emotion/styled';
 import { PostCard } from './post-card';
+import styles from './home-view.module.css';
 
 interface HomeViewProps {
   posts: PostSummary[];
@@ -20,79 +18,22 @@ export function HomeView({
   emptyMessage = 'No posts published yet.',
 }: HomeViewProps) {
   return (
-    <PageShell>
-      <Header>
-        <Eyebrow>{eyebrow}</Eyebrow>
-        <Title>{title}</Title>
-        <Description>{description}</Description>
-      </Header>
+    <section className={styles.pageShell}>
+      <header className={styles.header}>
+        <p className={styles.eyebrow}>{eyebrow}</p>
+        <h1 className={styles.title}>{title}</h1>
+        <p className={styles.description}>{description}</p>
+      </header>
 
       {posts.length > 0 ? (
-        <PostList aria-label="Posts">
+        <section className={styles.postList} aria-label="Posts">
           {posts.map(post => (
             <PostCard key={post.slug} post={post} />
           ))}
-        </PostList>
+        </section>
       ) : (
-        <EmptyMessage>{emptyMessage}</EmptyMessage>
+        <p className={styles.emptyMessage}>{emptyMessage}</p>
       )}
-    </PageShell>
+    </section>
   );
 }
-
-const PageShell = styled.section`
-  display: flex;
-  width: min(100%, 768px);
-  flex-direction: column;
-  gap: 48px;
-  margin: 0 auto;
-
-  @media (max-width: 640px) {
-    gap: 40px;
-  }
-`;
-
-const Header = styled.header`
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`;
-
-const Eyebrow = styled.p`
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: 14px;
-  font-weight: 500;
-`;
-
-const Title = styled.h1`
-  margin: 0;
-  color: var(--color-text-primary);
-  font-size: 48px;
-  font-weight: 650;
-  line-height: 1.08;
-
-  @media (max-width: 640px) {
-    font-size: 40px;
-  }
-`;
-
-const Description = styled.p`
-  max-width: 640px;
-  margin: 0;
-  color: var(--color-text-secondary);
-  font-size: 18px;
-  line-height: 1.75;
-`;
-
-const PostList = styled.section`
-  display: flex;
-  flex-direction: column;
-`;
-
-const EmptyMessage = styled.p`
-  margin: 0;
-  color: var(--color-text-muted);
-  font-size: 16px;
-  line-height: 1.75;
-`;

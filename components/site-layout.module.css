@@ -1,0 +1,252 @@
+.siteShell {
+  --desktop-header-height: 64px;
+  --desktop-sidebar-width: 280px;
+
+  display: flex;
+  min-height: 100vh;
+  flex-direction: column;
+}
+
+.siteHeader {
+  position: sticky;
+  z-index: 10;
+  top: 0;
+  border-bottom: 1px solid var(--color-border);
+  background: color-mix(in srgb, var(--background) 92%, transparent);
+  backdrop-filter: blur(16px);
+}
+
+.headerInner {
+  display: flex;
+  width: 100%;
+  min-height: 64px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+.brandLink {
+  color: var(--color-text-primary);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-decoration: none;
+}
+
+.primaryNavigation {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.navigationAnchor,
+.externalNavigationAnchor {
+  border-radius: 6px;
+  padding: 8px 10px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.navigationAnchor[aria-current='page'] {
+  color: var(--color-text-primary);
+  font-weight: 650;
+}
+
+.navigationAnchor:hover,
+.externalNavigationAnchor:hover {
+  background: color-mix(in srgb, var(--color-border) 35%, transparent);
+  color: var(--color-text-primary);
+}
+
+.bodyLayout {
+  display: grid;
+  width: 100%;
+  flex: 1;
+  grid-template-columns: var(--desktop-sidebar-width) minmax(0, 1fr);
+  margin: 0 auto;
+}
+
+.sidebar {
+  position: fixed;
+  z-index: 5;
+  top: var(--desktop-header-height);
+  bottom: 0;
+  left: 0;
+  display: flex;
+  width: var(--desktop-sidebar-width);
+  flex-direction: column;
+  gap: 32px;
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
+  border-right: 1px solid var(--color-border);
+  padding: 56px 24px 72px;
+}
+
+.sidebar::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.sidebar::-webkit-scrollbar-thumb,
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebarSection {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.sidebarTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+}
+
+.tagList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.tagLink {
+  border: 1px solid var(--color-border);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.35;
+  text-decoration: none;
+}
+
+.tagLink:hover {
+  border-color: var(--color-link);
+  color: var(--color-link);
+}
+
+.recentPostList {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.recentPostItem {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.recentPostLink {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 550;
+  line-height: 1.45;
+  text-decoration: none;
+}
+
+.recentPostLink:hover {
+  color: var(--color-link);
+}
+
+.recentPostDate {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+
+.emptyText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mainContent {
+  grid-column: 2;
+  min-width: 0;
+  padding: 56px 24px 72px 56px;
+}
+
+.siteFooter {
+  margin-left: var(--desktop-sidebar-width);
+  border-top: 1px solid var(--color-border);
+}
+
+.footerInner {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.footerText {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+
+.footerLink {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+.footerLink:hover {
+  color: var(--color-link);
+}
+
+@media (max-width: 900px) {
+  .bodyLayout {
+    grid-template-columns: 1fr;
+  }
+
+  .sidebar {
+    position: static;
+    width: auto;
+    height: auto;
+    order: 2;
+    overflow: visible;
+    border-top: 1px solid var(--color-border);
+    border-right: 0;
+    padding: 32px 20px 56px;
+  }
+
+  .mainContent {
+    grid-column: auto;
+    order: 1;
+    padding: 40px 20px 0;
+  }
+
+  .siteFooter {
+    margin-left: 0;
+  }
+}
+
+@media (max-width: 640px) {
+  .headerInner {
+    min-height: 60px;
+    gap: 16px;
+    padding: 0 20px;
+  }
+
+  .footerInner {
+    padding: 24px 20px;
+  }
+}

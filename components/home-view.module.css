@@ -1,0 +1,58 @@
+.pageShell {
+  display: flex;
+  width: min(100%, 768px);
+  flex-direction: column;
+  gap: 48px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eyebrow {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 48px;
+  font-weight: 650;
+  line-height: 1.08;
+}
+
+.description {
+  max-width: 640px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.postList {
+  display: flex;
+  flex-direction: column;
+}
+
+.emptyMessage {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+@media (max-width: 640px) {
+  .pageShell {
+    gap: 40px;
+  }
+
+  .title {
+    font-size: 40px;
+  }
+}
