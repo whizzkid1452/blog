@@ -4,7 +4,7 @@ import matter from 'gray-matter';
 import { z } from 'zod';
 
 const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
-const POST_FILE_EXTENSIONS = ['.md', '.mdx'];
+const POST_FILE_EXTENSION = '.md';
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_TIME_WITH_TIME_ZONE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
 const RELATED_POSTS_LIMIT = 3;
@@ -207,12 +207,12 @@ function parseFrontmatter({ fileName, data }: { fileName: string; data: unknown 
   throw new Error(`Invalid frontmatter in ${fileName}: ${message}`);
 }
 
-function isPostFileName(fileName: string): boolean {
-  return POST_FILE_EXTENSIONS.includes(path.extname(fileName));
+export function isPostFileName(fileName: string): boolean {
+  return path.extname(fileName) === POST_FILE_EXTENSION;
 }
 
 function createSlug(fileName: string): string {
-  return fileName.replace(/\.(md|mdx)$/, '');
+  return fileName.slice(0, -POST_FILE_EXTENSION.length);
 }
 
 function comparePosts(leftPost: Post, rightPost: Post): number {
