@@ -7,6 +7,7 @@ const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
 const POST_FILE_EXTENSIONS = ['.md', '.mdx'];
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_TIME_WITH_TIME_ZONE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
+const RELATED_POSTS_LIMIT = 3;
 
 const tagSchema = z
   .string()
@@ -39,14 +40,50 @@ const dateTimeSchema = z.preprocess(
     .refine(isValidDateTime, 'Expected a valid date-time')
 );
 
-const postFrontmatterSchema = z.object({
-  title: z.string().trim().min(1),
-  description: z.string().trim().min(1).optional(),
-  date: dateSchema,
-  publishedAt: dateTimeSchema.optional(),
-  tags: z.array(tagSchema).min(1),
-  draft: z.boolean().default(false),
-});
+const publicPathSchema = z
+  .string()
+  .trim()
+  .min(1)
+  .refine(pathname => pathname.startsWith('/') && !pathname.startsWith('//'), {
+    message: 'Expected a public-root path starting with /',
+  });
+
+const postFrontmatterSchema = z
+  .object({
+    title: z.string().trim().min(1),
+    description: z.string().trim().min(1).optional(),
+    date: dateSchema,
+    publishedAt: dateTimeSchema.optional(),
+    tags: z.array(tagSchema).min(1),
+    draft: z.boolean().default(false),
+    coverImage: publicPathSchema.optional(),
+    coverAlt: z.string().trim().min(1).optional(),
+  })
+  .superRefine((frontmatter, context) => {
+    if (!frontmatter.draft && frontmatter.description == null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['description'],
+        message: 'Published posts require a description',
+      });
+    }
+
+    if (frontmatter.coverImage != null && frontmatter.coverAlt == null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['coverAlt'],
+        message: 'coverAlt is required when coverImage is provided',
+      });
+    }
+
+    if (frontmatter.coverImage == null && frontmatter.coverAlt != null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['coverImage'],
+        message: 'coverImage is required when coverAlt is provided',
+      });
+    }
+  });
 
 export interface PostSummary {
   slug: string;
@@ -55,6 +92,8 @@ export interface PostSummary {
   date: string;
   publishedAt?: string;
   tags: string[];
+  coverImage?: string;
+  coverAlt?: string;
 }
 
 export interface Post extends PostSummary {
@@ -70,6 +109,21 @@ export function getPostSummaries(): PostSummary[] {
 
 export function getPostSummariesByTag(tag: string): PostSummary[] {
   return getPostSummaries().filter(post => post.tags.includes(tag));
+}
+
+export function getRelatedPostSummaries(post: Pick<Post, 'slug' | 'tags'>): PostSummary[] {
+  const tagSet = new Set(post.tags);
+
+  return getPostSummaries()
+    .filter(candidate => candidate.slug !== post.slug)
+    .map(candidate => ({
+      post: candidate,
+      sharedTagCount: candidate.tags.filter(tag => tagSet.has(tag)).length,
+    }))
+    .filter(candidate => candidate.sharedTagCount > 0)
+    .sort(compareRelatedPosts)
+    .slice(0, RELATED_POSTS_LIMIT)
+    .map(candidate => candidate.post);
 }
 
 export function getTags(): string[] {
@@ -113,6 +167,8 @@ function toPostSummary(post: Post): PostSummary {
     date: post.date,
     publishedAt: post.publishedAt,
     tags: post.tags,
+    coverImage: post.coverImage,
+    coverAlt: post.coverAlt,
   };
 }
 
@@ -167,6 +223,25 @@ function comparePosts(leftPost: Post, rightPost: Post): number {
   }
 
   return leftPost.slug.localeCompare(rightPost.slug);
+}
+
+function compareRelatedPosts(
+  leftPost: { post: PostSummary; sharedTagCount: number },
+  rightPost: { post: PostSummary; sharedTagCount: number }
+): number {
+  const sharedTagCountComparison = rightPost.sharedTagCount - leftPost.sharedTagCount;
+
+  if (sharedTagCountComparison !== 0) {
+    return sharedTagCountComparison;
+  }
+
+  const publishTimeComparison = getPostPublishTime(rightPost.post) - getPostPublishTime(leftPost.post);
+
+  if (publishTimeComparison !== 0) {
+    return publishTimeComparison;
+  }
+
+  return leftPost.post.slug.localeCompare(rightPost.post.slug);
 }
 
 function getPostPublishTime(post: Pick<Post, 'date' | 'publishedAt'>): number {
