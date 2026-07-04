@@ -57,6 +57,24 @@ renderer 간 데이터를 주고받으려면 main process를 경유하는 IPC를
 3. renderer process 간 메모리 store 공유가 불가능하다.
 4. 저장 직전의 최신 snapshot과 화면에 표시되는 snapshot이 일치해야 한다.
 
+이 관계를 흐름으로 정리하면 다음과 같다.
+
+```mermaid
+flowchart LR
+  ScriptPanel["SRT script panel<br/>renderer process"]
+  Editor["Editor<br/>renderer process"]
+  Admin["Admin<br/>renderer process"]
+  ProjectSession["ProjectSession<br/>main process SSOT"]
+  LocalFile["Local project file"]
+
+  ScriptPanel -->|IPC: script row 변경| ProjectSession
+  Editor -->|IPC: editor 변경| ProjectSession
+  ProjectSession -->|snapshot broadcast| ScriptPanel
+  ProjectSession -->|snapshot broadcast| Editor
+  ProjectSession -->|탭 진입 시 snapshot 재검증| Admin
+  ProjectSession -->|실시간 저장| LocalFile
+```
+
 ## 5. main process 내부 상태는 어떻게 관리할까
 
 main process에는 React가 없다. 따라서 React `state`나 `context`는 사용할 수 없다. renderer UI 상태를 위한 Zustand hook도 그대로 쓸 수 없다.
@@ -75,7 +93,7 @@ class는 프로젝트 변경 규칙과 외부 공개 API를 캡슐화하기에 �
 
 그래서 구조는 `ProjectSession` class 안에 vanilla Zustand store를 두는 방식이 적절했다.
 
-```
+```ts
 class ProjectSession {
   private readonly store = createStore<ProjectSnapshot>(() => initialProjectSnapshot);
 
