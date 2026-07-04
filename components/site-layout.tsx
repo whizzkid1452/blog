@@ -54,9 +54,9 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
               href={RESUME_URL}
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Resume"
+              aria-label="About"
             >
-              Resume
+              About
             </a>
           </nav>
           <MobileNavigationDialog

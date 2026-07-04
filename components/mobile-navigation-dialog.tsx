@@ -87,7 +87,7 @@ export function MobileNavigationDialog({
                 rel="noopener noreferrer"
                 onClick={() => setIsOpen(false)}
               >
-                Resume
+                About
               </a>
             </div>
           </nav>
