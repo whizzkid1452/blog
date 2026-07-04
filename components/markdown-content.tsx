@@ -11,6 +11,7 @@ import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
 import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
+import { MarkdownMermaidDiagram } from './markdown-mermaid-diagram';
 
 interface MarkdownContentProps {
   content: string;
@@ -41,6 +42,7 @@ const MARKDOWN_COMPONENTS: Components = {
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
 const PROTOCOL_RELATIVE_URL_PREFIX = '//';
 const MARKDOWN_IMAGE_SIZES = '(max-width: 768px) 100vw, 768px';
+const MERMAID_CODE_LANGUAGE = 'mermaid';
 
 const REHYPE_PRETTY_CODE_OPTIONS = {
   theme: {
@@ -100,11 +102,27 @@ function MarkdownImage({ src, alt, title }: ComponentPropsWithoutRef<'img'>) {
 }
 
 function MarkdownPre({ children, ...preProps }: ComponentPropsWithoutRef<'pre'>) {
+  const codeText = getTextContent(children);
+
+  if (getCodeBlockLanguage(preProps) === MERMAID_CODE_LANGUAGE) {
+    return <MarkdownMermaidDiagram chart={codeText} />;
+  }
+
   return (
-    <MarkdownCodeBlock copyText={getTextContent(children)}>
+    <MarkdownCodeBlock copyText={codeText}>
       <pre {...preProps}>{children}</pre>
     </MarkdownCodeBlock>
   );
+}
+
+function getCodeBlockLanguage(preProps: ComponentPropsWithoutRef<'pre'>): string | null {
+  const language = (preProps as { 'data-language'?: unknown })['data-language'];
+
+  if (typeof language !== 'string') {
+    return null;
+  }
+
+  return language.toLowerCase();
 }
 
 function getHrefNavigationKind(href: string): HrefNavigationKind {

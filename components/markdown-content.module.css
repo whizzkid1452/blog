@@ -185,6 +185,49 @@
   opacity: 0.7;
 }
 
+.mermaidDiagramShell {
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 20px 84px 20px 20px;
+  background: color-mix(in srgb, var(--color-border) 20%, transparent);
+}
+
+.mermaidDiagram {
+  display: flex;
+  min-width: 520px;
+  justify-content: center;
+}
+
+.mermaidDiagram svg {
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+}
+
+.mermaidLoading,
+.mermaidError {
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.mermaidErrorTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-weight: 650;
+}
+
+.mermaidErrorMessage {
+  margin: 4px 0 12px;
+}
+
+.mermaidErrorSource {
+  margin: 0;
+  padding: 12px;
+  white-space: pre;
+}
+
 .tooltipContent {
   z-index: 50;
   border: 1px solid var(--color-border);

@@ -61,10 +61,10 @@ renderer 간 데이터를 주고받으려면 main process를 경유하는 IPC를
 
 ```mermaid
 flowchart LR
-  ScriptPanel["SRT script panel<br/>renderer process"]
-  Editor["Editor<br/>renderer process"]
-  Admin["Admin<br/>renderer process"]
-  ProjectSession["ProjectSession<br/>main process SSOT"]
+  ScriptPanel["SRT script panel renderer"]
+  Editor["Editor renderer"]
+  Admin["Admin renderer"]
+  ProjectSession["ProjectSession main process SSOT"]
   LocalFile["Local project file"]
 
   ScriptPanel -->|IPC: script row 변경| ProjectSession
