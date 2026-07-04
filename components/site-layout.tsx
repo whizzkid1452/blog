@@ -3,6 +3,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { MobileNavigationDialog } from './mobile-navigation-dialog';
 import { PrimaryNavigationLink } from './primary-navigation-link';
+import { SidebarTopicsSection } from './sidebar-topics-section';
 import styles from './site-layout.module.css';
 
 interface SiteLayoutProps {
@@ -70,20 +71,7 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
 
       <div className={styles.bodyLayout}>
         <aside className={styles.sidebar} aria-label="Blog navigation">
-          <section className={styles.sidebarSection}>
-            <h2 className={styles.sidebarTitle}>Topics</h2>
-            {tags.length > 0 ? (
-              <div className={styles.tagList}>
-                {tags.map(tag => (
-                  <Link key={tag} className={styles.tagLink} href={`/tags/${encodeURIComponent(tag)}`}>
-                    #{tag}
-                  </Link>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.emptyText}>No topics yet.</p>
-            )}
-          </section>
+          <SidebarTopicsSection tags={tags} />
 
           <section className={styles.sidebarSection}>
             <h2 className={styles.sidebarTitle}>Recent</h2>
