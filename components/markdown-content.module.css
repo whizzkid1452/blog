@@ -84,9 +84,27 @@
   line-height: 1.7;
 }
 
+.content figure[data-rehype-pretty-code-figure] {
+  margin: 0;
+}
+
 .content code {
   font-family: var(--font-geist-mono), Consolas, 'Courier New', monospace;
   font-size: 0.92em;
+}
+
+.content pre code {
+  display: grid;
+  min-width: max-content;
+}
+
+.content code[data-theme*=' '],
+.content code[data-theme*=' '] span {
+  color: var(--shiki-light);
+}
+
+.content code[data-theme*=' '] [data-line] {
+  display: block;
 }
 
 .content :not(pre) > code {
@@ -219,4 +237,11 @@
   color: var(--color-text-secondary);
   font-size: 13px;
   line-height: 1.45;
+}
+
+@media (prefers-color-scheme: dark) {
+  .content code[data-theme*=' '],
+  .content code[data-theme*=' '] span {
+    color: var(--shiki-dark);
+  }
 }

@@ -4,8 +4,10 @@ import Image from 'next/image';
 import Link from 'next/link';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { isValidElement } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { MarkdownAsync } from 'react-markdown';
 import type { Components } from 'react-markdown';
+import rehypePrettyCode from 'rehype-pretty-code';
+import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code';
 import remarkGfm from 'remark-gfm';
 import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
@@ -15,14 +17,17 @@ interface MarkdownContentProps {
   title?: string;
 }
 
-export function MarkdownContent({ content, title }: MarkdownContentProps) {
+export async function MarkdownContent({ content, title }: MarkdownContentProps) {
+  const renderedContent = await MarkdownAsync({
+    children: removeDuplicateTitle({ content, title }),
+    components: MARKDOWN_COMPONENTS,
+    rehypePlugins: [[rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
+    remarkPlugins: [remarkGfm],
+  });
+
   return (
     <MarkdownCodeBlockProvider>
-      <div className={styles.content}>
-        <ReactMarkdown components={MARKDOWN_COMPONENTS} remarkPlugins={[remarkGfm]}>
-          {removeDuplicateTitle({ content, title })}
-        </ReactMarkdown>
-      </div>
+      <div className={styles.content}>{renderedContent}</div>
     </MarkdownCodeBlockProvider>
   );
 }
@@ -36,6 +41,17 @@ const MARKDOWN_COMPONENTS: Components = {
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
 const PROTOCOL_RELATIVE_URL_PREFIX = '//';
 const MARKDOWN_IMAGE_SIZES = '(max-width: 768px) 100vw, 768px';
+
+const REHYPE_PRETTY_CODE_OPTIONS = {
+  theme: {
+    light: 'github-light',
+    dark: 'github-dark-dimmed',
+  },
+  keepBackground: false,
+  defaultLang: {
+    block: 'plaintext',
+  },
+} satisfies RehypePrettyCodeOptions;
 
 type HrefNavigationKind = 'externalWeb' | 'internalRoute' | 'other';
 
