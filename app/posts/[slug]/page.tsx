@@ -19,7 +19,6 @@ export function generateStaticParams() {
     }));
 }
 
-export const dynamic = 'error';
 export const dynamicParams = false;
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
