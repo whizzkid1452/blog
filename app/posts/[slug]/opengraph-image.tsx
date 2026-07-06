@@ -1,4 +1,4 @@
-import { getPostBySlug, getPostSummaries } from '@/lib/posts';
+import { getPostIndex } from '@/lib/posts';
 import { SITE_AUTHOR_NAME, SITE_NAME } from '@/lib/site-config';
 import { ImageResponse } from 'next/og';
 
@@ -21,14 +21,16 @@ export const contentType = 'image/png';
 export const dynamicParams = false;
 
 export function generateStaticParams() {
-  return getPostSummaries().map(post => ({
-    slug: post.slug,
-  }));
+  return getPostIndex()
+    .getPostSummaries()
+    .map(post => ({
+      slug: post.slug,
+    }));
 }
 
 export default async function PostOpenGraphImage({ params }: PostOpenGraphImageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = getPostIndex().getPostBySlug(slug);
 
   if (post == null) {
     return new Response('Not found', { status: 404 });

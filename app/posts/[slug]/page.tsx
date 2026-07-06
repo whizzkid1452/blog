@@ -1,5 +1,5 @@
 import { PostView } from '@/components/post-view';
-import { getPostBySlug, getPostSummaries, getRelatedPostSummaries } from '@/lib/posts';
+import { getPostIndex } from '@/lib/posts';
 import { createPostPageMetadata } from '@/lib/seo-metadata';
 import { createPostJsonLd } from '@/lib/structured-data';
 import type { Metadata } from 'next';
@@ -12,16 +12,18 @@ interface PostPageProps {
 }
 
 export function generateStaticParams() {
-  return getPostSummaries().map(post => ({
-    slug: post.slug,
-  }));
+  return getPostIndex()
+    .getPostSummaries()
+    .map(post => ({
+      slug: post.slug,
+    }));
 }
 
 export const dynamicParams = false;
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const post = getPostIndex().getPostBySlug(slug);
 
   if (!post) {
     return {};
@@ -32,13 +34,14 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
-  const post = getPostBySlug(slug);
+  const postIndex = getPostIndex();
+  const post = postIndex.getPostBySlug(slug);
 
   if (!post) {
     notFound();
   }
 
-  const relatedPosts = getRelatedPostSummaries(post);
+  const relatedPosts = postIndex.getRelatedPostSummaries(post);
 
   return (
     <>

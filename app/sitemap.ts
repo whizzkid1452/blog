@@ -1,8 +1,9 @@
-import { getPostPublishedDateTime, getPostSummaries, getTags } from '@/lib/posts';
+import { getPostIndex, getPostPublishedDateTime } from '@/lib/posts';
 import { createAbsoluteUrl } from '@/lib/site-config';
 import type { MetadataRoute } from 'next';
 
 export default function sitemap(): MetadataRoute.Sitemap {
+  const postIndex = getPostIndex();
   const staticRoutes: MetadataRoute.Sitemap = [
     {
       url: createAbsoluteUrl('/'),
@@ -16,14 +17,14 @@ export default function sitemap(): MetadataRoute.Sitemap {
     },
   ];
 
-  const postRoutes = getPostSummaries().map(post => ({
+  const postRoutes = postIndex.getPostSummaries().map(post => ({
     url: createAbsoluteUrl(`/posts/${post.slug}`),
     lastModified: new Date(getPostPublishedDateTime(post)),
     changeFrequency: 'monthly' as const,
     priority: 0.7,
   }));
 
-  const tagRoutes = getTags().map(tag => ({
+  const tagRoutes = postIndex.getTags().map(tag => ({
     url: createAbsoluteUrl(`/tags/${encodeURIComponent(tag)}`),
     changeFrequency: 'weekly' as const,
     priority: 0.5,
