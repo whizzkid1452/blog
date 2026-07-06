@@ -666,3 +666,69 @@ aws ec2 delete-security-group --group-id sg-04c17775a3c7a5713 --profile blog
 
 - 이번 검증을 위해 생성한 리소스 중 지속 비용을 만들 가능성이 큰 항목은 정리됐다.
 - 이미 실행된 Fargate task 시간, task에 붙었던 public IPv4 사용 시간, 삭제 전 ECR storage와 CloudWatch Logs 사용량은 소급해서 없앨 수 없다.
+
+## 2026-07-06
+
+### PostIndex 기반 정적 생성 데이터 출처 단일화
+
+목표:
+
+- Next.js App Router의 정적 생성 경로에서 사용하는 공개 글 조회 규칙을 한 곳으로 모은다.
+- sitemap, Metadata, JSON-LD 같은 SEO 산출물이 기대한 URL, 날짜, escape 규칙을 유지하는지 테스트로 고정한다.
+
+확인된 사실:
+
+- 작업 브랜치는 `refactor/post-content-index`다.
+- 프로젝트는 Next.js App Router 기반이며 `pnpm build` 결과에서 `/posts/[slug]`, `/tags/[tag]`, `/posts/[slug]/opengraph-image`가 SSG로 생성된다.
+- 글 데이터는 `content/posts`의 Markdown 파일과 frontmatter에서 읽는다.
+- 기존 `lib/posts.ts`에는 파일 시스템 읽기, 공개 글 필터링, 정렬, 태그 조회, 관련 글 조회 규칙이 함께 있었다.
+- `app/page.tsx`, `app/posts/page.tsx`, `app/posts/[slug]/page.tsx`, `app/tags/[tag]/page.tsx`, `app/feed.xml/route.ts`, `app/sitemap.ts`, `components/site-layout-container.tsx`가 글 목록 또는 태그 조회 결과를 사용한다.
+
+작업:
+
+- `lib/post-index.ts`를 추가해 공개 글 필터링, 발행 시간 기준 정렬, 태그 목록, slug 조회, 관련 글 조회 규칙을 `PostIndex`로 분리했다.
+- `lib/posts.ts`는 Markdown 파일을 읽어 `PostIndex`를 만드는 진입점인 `getPostIndex()`를 제공하도록 정리했다.
+- 기존 공개 함수인 `getPostSummaries`, `getTags`, `getPostBySlug`, `getPostSummariesByTag`, `getRelatedPostSummaries`는 호환을 위해 `PostIndex` 위임 함수로 남겼다.
+- App Router 페이지, RSS, sitemap, layout container가 `getPostIndex()`를 공유하도록 변경했다.
+- sitemap 생성 로직을 `lib/sitemap.ts`의 `createSitemap()`으로 분리해 입력값 기반 테스트가 가능하도록 했다.
+- `lib/post-index.test.ts`, `lib/sitemap.test.ts`, `lib/seo-metadata.test.ts`, `lib/structured-data.test.ts`를 추가했다.
+
+테스트로 고정한 동작:
+
+- draft 글은 공개 글 목록, slug 조회, 태그 조회에서 제외된다.
+- 공개 글 목록은 발행 시간 내림차순으로 정렬된다.
+- 관련 글은 공유 태그 수, 발행 시간, slug 순서로 정렬된다.
+- sitemap은 정적 route, 글 route, URL 인코딩된 tag route를 포함한다.
+- 글 페이지 Metadata는 canonical URL, article Open Graph 필드, 글별 Open Graph image fallback을 포함한다.
+- JSON-LD는 `<` 문자를 `\u003c`로 escape해 script-breaking 문자열을 직접 포함하지 않는다.
+
+검증:
+
+```bash
+npx prettier --write .
+pnpm test
+pnpm lint
+pnpm typecheck
+pnpm build
+```
+
+결과:
+
+- `pnpm test` 통과: 10개 test file, 27개 test.
+- `pnpm lint` 통과.
+- `pnpm typecheck` 통과.
+- `pnpm build` 통과.
+- build 결과에서 76개 static page가 생성됐다.
+- `/posts/[slug]`, `/tags/[tag]`, `/posts/[slug]/opengraph-image`는 계속 SSG route로 표시됐다.
+
+커밋:
+
+- `9fedf309 refactor(posts): add post content index`
+- `7631ad60 refactor(posts): share post index across routes`
+- `dc48d086 test(seo): cover static metadata outputs`
+
+추론:
+
+- 공개 글 조회 규칙을 `PostIndex`로 모았기 때문에 route별 조회 규칙이 서로 달라질 가능성이 줄었다.
+- `getPostIndex()`는 Node.js module scope의 in-memory cache를 사용한다. 이는 Next.js Data Cache가 아니며, 개발 서버 HMR이나 런타임 프로세스 생명주기에 따라 다시 생성될 수 있다.
+- 이번 작업은 정적 생성 산출물의 데이터 출처를 단일화하고 회귀 테스트를 추가한 변경이다. 별도 성능 측정을 하지 않았으므로 빌드 시간 또는 요청 시간 개선을 결과로 주장하지 않는다.
