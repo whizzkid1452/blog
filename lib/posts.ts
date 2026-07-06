@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
 import { z } from 'zod';
+import { validateMarkdownSeo } from './markdown-seo';
 import { PostIndex } from './post-index';
 export { getPostPublishedDateTime } from './post-index';
 
@@ -104,6 +105,11 @@ export interface Post extends PostSummary {
 
 type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 
+interface PostSource {
+  fileName: string;
+  post: Post;
+}
+
 let cachedPostIndex: PostIndex | null = null;
 
 export function getPostIndex(): PostIndex {
@@ -137,7 +143,11 @@ export function getPostBySlug(slug: string): Post | null {
 }
 
 function readAllPosts(): Post[] {
-  return getPostFileNames().map(readPostFile);
+  const postSources = getPostFileNames().map(readPostFile);
+
+  validatePublishedPostMarkdown(postSources);
+
+  return postSources.map(postSource => postSource.post);
 }
 
 function getPostFileNames(): string[] {
@@ -148,15 +158,18 @@ function getPostFileNames(): string[] {
   return fs.readdirSync(POSTS_DIRECTORY).filter(isPostFileName).sort();
 }
 
-function readPostFile(fileName: string): Post {
+function readPostFile(fileName: string): PostSource {
   const fileContent = fs.readFileSync(path.join(POSTS_DIRECTORY, fileName), 'utf8');
   const { data, content } = matter(fileContent);
   const frontmatter = parseFrontmatter({ fileName, data });
 
   return {
-    slug: createSlug(fileName),
-    ...frontmatter,
-    content: content.trim(),
+    fileName,
+    post: {
+      slug: createSlug(fileName),
+      ...frontmatter,
+      content: content.trim(),
+    },
   };
 }
 
@@ -177,6 +190,35 @@ export function isPostFileName(fileName: string): boolean {
 
 function createSlug(fileName: string): string {
   return fileName.slice(0, -POST_FILE_EXTENSION.length);
+}
+
+function validatePublishedPostMarkdown(postSources: PostSource[]): void {
+  const publishedPosts = postSources.map(postSource => postSource.post).filter(post => !post.draft);
+  const internalRoutes = createInternalRouteSet(publishedPosts);
+
+  postSources
+    .filter(postSource => !postSource.post.draft)
+    .forEach(postSource =>
+      validateMarkdownSeo({
+        fileName: postSource.fileName,
+        content: postSource.post.content,
+        internalRoutes,
+      })
+    );
+}
+
+function createInternalRouteSet(posts: Post[]): Set<string> {
+  const routes = new Set<string>(['/', '/posts']);
+
+  posts.forEach(post => {
+    routes.add(`/posts/${post.slug}`);
+
+    post.tags.forEach(tag => {
+      routes.add(`/tags/${encodeURIComponent(tag)}`);
+    });
+  });
+
+  return routes;
 }
 
 function isValidDate(value: string): boolean {
