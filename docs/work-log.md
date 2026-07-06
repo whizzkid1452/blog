@@ -605,3 +605,64 @@ aws ecs wait tasks-stopped \
 - Fargate compute와 task에 연결된 public IPv4 사용 비용은 task 중지 이후 추가로 누적되지 않는 상태와 일치한다.
 - ECR image storage와 CloudWatch Logs storage처럼 task 실행과 독립적인 리소스 비용은 별도로 남을 수 있다.
 
+### 검증용 AWS 리소스 삭제
+
+목표:
+
+- 비용이 계속 누적될 수 있는 검증용 AWS 리소스를 삭제한다.
+- 직접 비용이 없는 구성 리소스도 혼동을 줄이기 위해 함께 정리한다.
+
+확인된 사실:
+
+- 정리 전 `blog-cluster`에는 실행 중인 task가 없었다.
+- ECR repository `blog`가 존재했다.
+- CloudWatch log group `/ecs/blog`이 존재했다.
+- ECS task definition `blog:1`이 active 상태였다.
+- security group `blog-fargate-sg`가 존재했다.
+- IAM role `blog-ecs-task-execution-role`이 존재했다.
+
+작업:
+
+- ECR repository `blog`를 `--force` 옵션으로 삭제했다.
+- CloudWatch log group `/ecs/blog`을 삭제했다.
+- ECS task definition `blog:1`을 deregister해서 inactive 상태로 바꿨다.
+- ECS cluster `blog-cluster`를 삭제했다.
+- IAM role `blog-ecs-task-execution-role`에서 `AmazonECSTaskExecutionRolePolicy`를 detach했다.
+- IAM role `blog-ecs-task-execution-role`을 삭제했다.
+- security group `blog-fargate-sg`를 삭제했다.
+- Elastic IP, NAT Gateway, Application Load Balancer가 없는 것을 확인했다.
+
+검증:
+
+```bash
+aws ecs list-tasks --cluster blog-cluster --desired-status RUNNING --profile blog
+aws ecr delete-repository --repository-name blog --force --profile blog
+aws logs delete-log-group --log-group-name /ecs/blog --profile blog
+aws ecs deregister-task-definition \
+  --task-definition arn:aws:ecs:ap-northeast-2:424503481518:task-definition/blog:1 \
+  --profile blog
+aws ecs delete-cluster --cluster blog-cluster --profile blog
+aws iam detach-role-policy \
+  --role-name blog-ecs-task-execution-role \
+  --policy-arn arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy \
+  --profile blog
+aws iam delete-role --role-name blog-ecs-task-execution-role --profile blog
+aws ec2 delete-security-group --group-id sg-04c17775a3c7a5713 --profile blog
+```
+
+결과:
+
+- 실행 중인 ECS task는 없다.
+- ECR repository `blog`는 삭제됐다.
+- CloudWatch log group `/ecs/blog`은 삭제됐다.
+- ECS cluster `blog-cluster`는 inactive 상태다.
+- security group `blog-fargate-sg`는 조회되지 않는다.
+- IAM role `blog-ecs-task-execution-role`은 조회되지 않는다.
+- Elastic IP 목록은 비어 있다.
+- NAT Gateway 목록은 비어 있다.
+- Application Load Balancer 목록은 비어 있다.
+
+추론:
+
+- 이번 검증을 위해 생성한 리소스 중 지속 비용을 만들 가능성이 큰 항목은 정리됐다.
+- 이미 실행된 Fargate task 시간, task에 붙었던 public IPv4 사용 시간, 삭제 전 ECR storage와 CloudWatch Logs 사용량은 소급해서 없앨 수 없다.
