@@ -1,4 +1,4 @@
-import { getPostSummaries, getTags } from '@/lib/posts';
+import { getPostIndex } from '@/lib/posts';
 import type { ReactNode } from 'react';
 import { SiteLayout } from './site-layout';
 
@@ -7,8 +7,9 @@ interface SiteLayoutContainerProps {
 }
 
 export function SiteLayoutContainer({ children }: SiteLayoutContainerProps) {
-  const posts = getPostSummaries();
-  const tags = getTags();
+  const postIndex = getPostIndex();
+  const posts = postIndex.getPostSummaries();
+  const tags = postIndex.getTags();
 
   return (
     <SiteLayout tags={tags} recentPosts={posts}>

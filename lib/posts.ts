@@ -2,12 +2,13 @@ import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
 import { z } from 'zod';
+import { PostIndex } from './post-index';
+export { getPostPublishedDateTime } from './post-index';
 
 const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
 const POST_FILE_EXTENSION = '.md';
 const DATE_ONLY_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const DATE_TIME_WITH_TIME_ZONE_PATTERN = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,9})?(?:Z|[+-]\d{2}:\d{2})$/;
-const RELATED_POSTS_LIMIT = 3;
 
 const tagSchema = z
   .string()
@@ -103,77 +104,40 @@ export interface Post extends PostSummary {
 
 type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 
+let cachedPostIndex: PostIndex | null = null;
+
+export function getPostIndex(): PostIndex {
+  if (cachedPostIndex != null) {
+    return cachedPostIndex;
+  }
+
+  cachedPostIndex = new PostIndex(readAllPosts());
+
+  return cachedPostIndex;
+}
+
 export function getPostSummaries(): PostSummary[] {
-  return getPublishedPosts().map(toPostSummary);
+  return getPostIndex().getPostSummaries();
 }
 
 export function getPostSummariesByTag(tag: string): PostSummary[] {
-  return getPostSummaries().filter(post => post.tags.includes(tag));
+  return getPostIndex().getPostSummariesByTag(tag);
 }
 
 export function getRelatedPostSummaries(post: Pick<Post, 'slug' | 'tags'>): PostSummary[] {
-  const tagSet = new Set(post.tags);
-
-  return getPostSummaries()
-    .filter(candidate => candidate.slug !== post.slug)
-    .map(candidate => ({
-      post: candidate,
-      sharedTagCount: candidate.tags.filter(tag => tagSet.has(tag)).length,
-    }))
-    .filter(candidate => candidate.sharedTagCount > 0)
-    .sort(compareRelatedPosts)
-    .slice(0, RELATED_POSTS_LIMIT)
-    .map(candidate => candidate.post);
+  return getPostIndex().getRelatedPostSummaries(post);
 }
 
 export function getTags(): string[] {
-  return Array.from(new Set(getPostSummaries().flatMap(post => post.tags))).sort((leftTag, rightTag) =>
-    leftTag.localeCompare(rightTag)
-  );
+  return getPostIndex().getTags();
 }
 
 export function getPostBySlug(slug: string): Post | null {
-  const fileName = getPostFileNameBySlug(slug);
-
-  if (fileName == null) {
-    return null;
-  }
-
-  const post = readPostFile(fileName);
-
-  if (post.draft) {
-    return null;
-  }
-
-  return post;
+  return getPostIndex().getPostBySlug(slug);
 }
 
-export function getPostPublishedDateTime(post: Pick<Post, 'date' | 'publishedAt'>): string {
-  return post.publishedAt ?? `${post.date}T00:00:00.000Z`;
-}
-
-function getPublishedPosts(): Post[] {
-  return getPostFileNames()
-    .map(readPostFile)
-    .filter(post => !post.draft)
-    .sort(comparePosts);
-}
-
-function toPostSummary(post: Post): PostSummary {
-  return {
-    slug: post.slug,
-    title: post.title,
-    description: post.description,
-    date: post.date,
-    publishedAt: post.publishedAt,
-    tags: post.tags,
-    coverImage: post.coverImage,
-    coverAlt: post.coverAlt,
-  };
-}
-
-function getPostFileNameBySlug(slug: string): string | null {
-  return getPostFileNames().find(fileName => createSlug(fileName) === slug) ?? null;
+function readAllPosts(): Post[] {
+  return getPostFileNames().map(readPostFile);
 }
 
 function getPostFileNames(): string[] {
@@ -213,39 +177,6 @@ export function isPostFileName(fileName: string): boolean {
 
 function createSlug(fileName: string): string {
   return fileName.slice(0, -POST_FILE_EXTENSION.length);
-}
-
-function comparePosts(leftPost: Post, rightPost: Post): number {
-  const publishTimeComparison = getPostPublishTime(rightPost) - getPostPublishTime(leftPost);
-
-  if (publishTimeComparison !== 0) {
-    return publishTimeComparison;
-  }
-
-  return leftPost.slug.localeCompare(rightPost.slug);
-}
-
-function compareRelatedPosts(
-  leftPost: { post: PostSummary; sharedTagCount: number },
-  rightPost: { post: PostSummary; sharedTagCount: number }
-): number {
-  const sharedTagCountComparison = rightPost.sharedTagCount - leftPost.sharedTagCount;
-
-  if (sharedTagCountComparison !== 0) {
-    return sharedTagCountComparison;
-  }
-
-  const publishTimeComparison = getPostPublishTime(rightPost.post) - getPostPublishTime(leftPost.post);
-
-  if (publishTimeComparison !== 0) {
-    return publishTimeComparison;
-  }
-
-  return leftPost.post.slug.localeCompare(rightPost.post.slug);
-}
-
-function getPostPublishTime(post: Pick<Post, 'date' | 'publishedAt'>): number {
-  return new Date(getPostPublishedDateTime(post)).getTime();
 }
 
 function isValidDate(value: string): boolean {
