@@ -558,3 +558,50 @@ aws ecs wait tasks-running \
 - 검증이 끝나면 비용 방지를 위해 일회성 task를 중지한다.
 - 운영 형태로 전환하려면 Application Load Balancer와 ECS service를 구성한다.
 - security group inbound를 load balancer에서 오는 트래픽으로 제한한다.
+
+### Fargate 일회성 task 중지
+
+목표:
+
+- 검증용으로 실행한 Fargate task를 중지해 지속적인 Fargate 실행 비용을 멈춘다.
+
+확인된 사실:
+
+- 중지 대상 task ARN은 `arn:aws:ecs:ap-northeast-2:424503481518:task/blog-cluster/a07dd7ae25884538ba1af2548398c52f`다.
+- task 중지 요청 후 desired status는 `STOPPED`로 바뀌었다.
+- 최종 task status는 `STOPPED`다.
+- task stopped time은 `2026-07-06T12:16:19.219000+09:00`다.
+- 컨테이너 `blog`의 최종 status는 `STOPPED`다.
+- 컨테이너 exit code는 `143`이다.
+
+작업:
+
+- 검증용 Fargate task에 stop 요청을 보냈다.
+- task가 실제로 `STOPPED` 상태가 될 때까지 기다렸다.
+- 최종 task와 container 상태를 조회했다.
+
+검증:
+
+```bash
+aws ecs stop-task \
+  --cluster blog-cluster \
+  --task arn:aws:ecs:ap-northeast-2:424503481518:task/blog-cluster/a07dd7ae25884538ba1af2548398c52f \
+  --reason 'Stop temporary validation task to avoid ongoing Fargate cost' \
+  --profile blog
+
+aws ecs wait tasks-stopped \
+  --cluster blog-cluster \
+  --tasks arn:aws:ecs:ap-northeast-2:424503481518:task/blog-cluster/a07dd7ae25884538ba1af2548398c52f \
+  --profile blog
+```
+
+결과:
+
+- 검증용 Fargate task는 중지됐다.
+- 해당 task에 연결된 public IP 접속은 더 이상 유지되는 배포 주소로 볼 수 없다.
+
+추론:
+
+- Fargate compute와 task에 연결된 public IPv4 사용 비용은 task 중지 이후 추가로 누적되지 않는 상태와 일치한다.
+- ECR image storage와 CloudWatch Logs storage처럼 task 실행과 독립적인 리소스 비용은 별도로 남을 수 있다.
+
