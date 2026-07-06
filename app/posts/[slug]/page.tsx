@@ -1,7 +1,7 @@
 import { PostView } from '@/components/post-view';
 import { getPostIndex } from '@/lib/posts';
 import { createPostPageMetadata } from '@/lib/seo-metadata';
-import { createPostJsonLd } from '@/lib/structured-data';
+import { createPostBreadcrumbJsonLd, createPostJsonLd } from '@/lib/structured-data';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -46,6 +46,7 @@ export default async function PostPage({ params }: PostPageProps) {
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostJsonLd(post) }} />
+      <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostBreadcrumbJsonLd(post) }} />
       <PostView post={post} relatedPosts={relatedPosts} />
     </>
   );
