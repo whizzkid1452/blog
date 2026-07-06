@@ -1,36 +1,94 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 기술 블로그
 
-## Getting Started
+## Goal
 
-First, run the development server:
+Markdown 글을 Next.js App Router로 정적 생성해서 검색엔진이 초기 HTML에서 글 본문과 메타데이터를 읽을 수 있게 한다.
+
+이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. **SSR**은 요청 시점마다 서버에서 HTML을 생성하는 Server-Side Rendering을 뜻하며, 이 블로그의 공개 글 페이지 기본 전략은 SSR이 아니라 SSG다.
+
+## Prerequisites
+
+- Node.js 20 계열
+- pnpm
+- 배포 도메인을 나타내는 `NEXT_PUBLIC_SITE_URL`
+
+로컬 개발에서는 `NEXT_PUBLIC_SITE_URL`이 없어도 `http://localhost:3000`을 사용한다. 배포 환경에서는 canonical URL, sitemap, RSS, Open Graph URL이 실제 도메인을 가리키도록 반드시 설정한다.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+NEXT_PUBLIC_SITE_URL=https://example.com
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Step-by-Step Guide
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. 의존성 설치
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+pnpm install
+```
 
-## Learn More
+### 2. 개발 서버 실행
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+pnpm dev
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+브라우저에서 `http://localhost:3000`을 연다.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 3. 글 작성
 
-## Deploy on Vercel
+`content/posts` 디렉터리에 Markdown 파일을 추가한다.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```md
+---
+title: 'Next.js 정적 생성 적용기'
+description: '정적 생성이 블로그 SEO에 주는 이점을 정리합니다.'
+date: '2026-07-06'
+tags:
+  - nextjs
+  - seo
+---
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+본문을 작성합니다.
+```
+
+공개 글은 `description`과 최소 1개 이상의 `tags`가 필요하다. `draft: true`인 글은 공개 목록, sitemap, RSS에서 제외된다.
+
+### 4. 정적 생성 확인
+
+```bash
+pnpm build
+```
+
+빌드 결과에서 다음 표시를 확인한다.
+
+```text
+○  (Static)   prerendered as static content
+●  (SSG)      prerendered as static HTML (uses generateStaticParams)
+```
+
+`/posts/[slug]`와 `/tags/[tag]`가 `SSG`로 표시되면 글 상세와 태그 페이지가 빌드 시점에 생성된 것이다.
+
+## SEO 구조
+
+공개 페이지는 `dynamic = 'error'`를 사용한다. 이 설정은 페이지가 요청 헤더, 쿠키, 검색 파라미터 같은 요청 시점 데이터에 의존하면 정적 생성이 깨졌다는 사실을 빌드에서 드러낸다.
+
+검색엔진 관점에서 이 구조가 유리한 이유는 다음과 같다.
+
+- 글 본문이 초기 HTML에 포함되어 JavaScript 실행 전에도 내용을 읽을 수 있다.
+- 페이지별 `title`, `description`, canonical URL이 생성된다.
+- sitemap이 공개 URL 발견을 돕는다.
+- RSS feed가 최신 글 구독과 외부 수집 경로를 제공한다.
+- `BlogPosting` JSON-LD가 글 제목, 발행일, 작성자, 태그를 구조화된 데이터로 전달한다.
+
+정적 생성은 검색 순위 상승의 충분조건이 아니다. 다만 크롤링 안정성, 색인 가능성, 메타데이터 전달, 초기 응답 성능 측면에서 SEO에 필요한 조건을 더 안정적으로 만족하게 한다.
+
+## Verification
+
+작업 전후에는 다음 명령을 실행한다.
+
+```bash
+pnpm test
+pnpm typecheck
+pnpm lint
+pnpm build
+```
