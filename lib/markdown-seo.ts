@@ -2,6 +2,7 @@ interface ValidateMarkdownSeoParams {
   fileName: string;
   content: string;
   internalRoutes: ReadonlySet<string>;
+  hasPublicImage?: (src: string) => boolean;
 }
 
 interface MarkdownResource {
@@ -15,8 +16,13 @@ const FENCED_CODE_BLOCK_PATTERN = /(```[\s\S]*?```|~~~[\s\S]*?~~~)/g;
 const PROTOCOL_RELATIVE_URL_PREFIX = '//';
 const ROOT_PATH = '/';
 
-export function validateMarkdownSeo({ fileName, content, internalRoutes }: ValidateMarkdownSeoParams): void {
-  const issues = findMarkdownSeoIssues({ content, internalRoutes });
+export function validateMarkdownSeo({
+  fileName,
+  content,
+  internalRoutes,
+  hasPublicImage,
+}: ValidateMarkdownSeoParams): void {
+  const issues = findMarkdownSeoIssues({ content, internalRoutes, hasPublicImage });
 
   if (issues.length === 0) {
     return;
@@ -28,11 +34,12 @@ export function validateMarkdownSeo({ fileName, content, internalRoutes }: Valid
 function findMarkdownSeoIssues({
   content,
   internalRoutes,
-}: Pick<ValidateMarkdownSeoParams, 'content' | 'internalRoutes'>): string[] {
+  hasPublicImage,
+}: Pick<ValidateMarkdownSeoParams, 'content' | 'internalRoutes' | 'hasPublicImage'>): string[] {
   const searchableContent = removeFencedCodeBlocks(content);
   const resources = collectMarkdownResources(searchableContent);
 
-  return resources.flatMap(resource => getMarkdownResourceIssues({ resource, internalRoutes }));
+  return resources.flatMap(resource => getMarkdownResourceIssues({ resource, internalRoutes, hasPublicImage }));
 }
 
 function collectMarkdownResources(content: string): MarkdownResource[] {
@@ -46,14 +53,22 @@ function collectMarkdownResources(content: string): MarkdownResource[] {
 function getMarkdownResourceIssues({
   resource,
   internalRoutes,
+  hasPublicImage,
 }: {
   resource: MarkdownResource;
   internalRoutes: ReadonlySet<string>;
+  hasPublicImage?: (src: string) => boolean;
 }): string[] {
   const issues: string[] = [];
 
   if (resource.kind === 'image' && resource.label === '') {
     issues.push(`image "${resource.destination}" requires alt text`);
+  }
+
+  if (resource.kind === 'image' && hasPublicImage != null && isPublicPath(resource.destination)) {
+    if (!hasPublicImage(resource.destination)) {
+      issues.push(`image "${resource.destination}" does not match a public asset`);
+    }
   }
 
   const internalPath = getInternalRoutePath(resource.destination);
@@ -66,11 +81,15 @@ function getMarkdownResourceIssues({
 }
 
 function getInternalRoutePath(destination: string): string | null {
-  if (!destination.startsWith(ROOT_PATH) || destination.startsWith(PROTOCOL_RELATIVE_URL_PREFIX)) {
+  if (!isPublicPath(destination)) {
     return null;
   }
 
   return normalizeInternalPath(new URL(destination, 'https://example.com').pathname);
+}
+
+function isPublicPath(destination: string): boolean {
+  return destination.startsWith(ROOT_PATH) && !destination.startsWith(PROTOCOL_RELATIVE_URL_PREFIX);
 }
 
 function normalizeInternalPath(pathname: string): string {

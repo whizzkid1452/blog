@@ -4,6 +4,7 @@ import matter from 'gray-matter';
 import { z } from 'zod';
 import { validateMarkdownSeo } from './markdown-seo';
 import { PostIndex } from './post-index';
+import { hasPublicImage } from './public-image';
 export { getPostPublishedDateTime } from './post-index';
 
 const POSTS_DIRECTORY = path.join(process.cwd(), 'content', 'posts');
@@ -203,6 +204,7 @@ function validatePublishedPostMarkdown(postSources: PostSource[]): void {
         fileName: postSource.fileName,
         content: postSource.post.content,
         internalRoutes,
+        hasPublicImage,
       })
     );
 }

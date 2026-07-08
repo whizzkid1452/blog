@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getPublicImageSize } from './public-image';
+import { getPublicImageSize, hasPublicImage } from './public-image';
 
 describe('getPublicImageSize', () => {
   it('returns dimensions for an image stored under public', () => {
@@ -16,5 +16,17 @@ describe('getPublicImageSize', () => {
 
   it('rejects path traversal outside the public directory', () => {
     expect(getPublicImageSize('/../package.json')).toBeNull();
+  });
+});
+
+describe('hasPublicImage', () => {
+  it('returns whether a public-root image exists', () => {
+    expect(hasPublicImage('/next.svg')).toBe(true);
+    expect(hasPublicImage('/missing-image.png')).toBe(false);
+  });
+
+  it('does not treat external URLs or path traversal as public images', () => {
+    expect(hasPublicImage('https://example.com/image.png')).toBe(false);
+    expect(hasPublicImage('/../package.json')).toBe(false);
   });
 });
