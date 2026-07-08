@@ -52,7 +52,7 @@ export function MobileNavigationDialog({
             <Dialog.Description className={styles.visuallyHidden}>
               Browse primary links, topics, and recent posts.
             </Dialog.Description>
-            <Dialog.Close className={styles.mobileNavigationCloseButton} type="button">
+            <Dialog.Close className={styles.mobileNavigationCloseButton} type="button" aria-label="Close navigation">
               Close
             </Dialog.Close>
           </header>
@@ -76,6 +76,7 @@ export function MobileNavigationDialog({
                 href={githubProfileUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="GitHub profile"
                 onClick={() => setIsOpen(false)}
               >
                 GitHub
@@ -85,6 +86,7 @@ export function MobileNavigationDialog({
                 href={resumeUrl}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="About"
                 onClick={() => setIsOpen(false)}
               >
                 About
