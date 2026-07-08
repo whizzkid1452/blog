@@ -1,5 +1,6 @@
 'use client';
 
+import { writeClipboardText } from '@/lib/clipboard';
 import * as Toast from '@radix-ui/react-toast';
 import * as Tooltip from '@radix-ui/react-tooltip';
 import type { ReactNode } from 'react';
@@ -145,33 +146,4 @@ function useMarkdownCodeBlockFeedback(): MarkdownCodeBlockFeedback {
   }
 
   return context;
-}
-
-async function writeClipboardText(text: string): Promise<void> {
-  if (navigator.clipboard != null) {
-    await navigator.clipboard.writeText(text);
-    return;
-  }
-
-  copyTextWithTextArea(text);
-}
-
-function copyTextWithTextArea(text: string): void {
-  const textArea = document.createElement('textarea');
-  textArea.value = text;
-  textArea.style.position = 'fixed';
-  textArea.style.top = '0';
-  textArea.style.left = '0';
-  textArea.style.opacity = '0';
-
-  document.body.append(textArea);
-  textArea.focus();
-  textArea.select();
-
-  const isCopied = document.execCommand('copy');
-  textArea.remove();
-
-  if (!isCopied) {
-    throw new Error('Failed to copy text');
-  }
 }
