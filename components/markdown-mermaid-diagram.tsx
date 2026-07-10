@@ -196,6 +196,8 @@ function getMermaidDiagramContent(
       <div
         ref={diagramContainerRef}
         className={styles.mermaidDiagram}
+        role="img"
+        aria-label="Rendered Mermaid diagram"
         dangerouslySetInnerHTML={{ __html: renderState.svg }}
       />
     );
@@ -203,7 +205,7 @@ function getMermaidDiagramContent(
 
   if (renderState.kind === 'error') {
     return (
-      <div className={styles.mermaidError}>
+      <div className={styles.mermaidError} role="alert">
         <p className={styles.mermaidErrorTitle}>Mermaid diagram failed to render.</p>
         <p className={styles.mermaidErrorMessage}>{renderState.message}</p>
         <pre className={styles.mermaidErrorSource}>{chartSource}</pre>
@@ -211,7 +213,11 @@ function getMermaidDiagramContent(
     );
   }
 
-  return <div className={styles.mermaidLoading}>Rendering Mermaid diagram...</div>;
+  return (
+    <div className={styles.mermaidLoading} role="status" aria-live="polite">
+      Rendering Mermaid diagram...
+    </div>
+  );
 }
 
 function createMermaidConfig(colorScheme: ColorScheme): MermaidConfig {

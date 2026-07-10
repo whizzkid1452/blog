@@ -70,6 +70,7 @@ export function MarkdownCodeBlockProvider({ children }: MarkdownCodeBlockProvide
           <Toast.Root
             className={styles.toastRoot}
             open={toastState.open}
+            aria-live="polite"
             onOpenChange={open =>
               setToastState(currentToastState => ({
                 ...currentToastState,
@@ -80,7 +81,7 @@ export function MarkdownCodeBlockProvider({ children }: MarkdownCodeBlockProvide
             <Toast.Title className={styles.toastTitle}>{toastState.title}</Toast.Title>
             <Toast.Description className={styles.toastDescription}>{toastState.description}</Toast.Description>
           </Toast.Root>
-          <Toast.Viewport className={styles.toastViewport} />
+          <Toast.Viewport className={styles.toastViewport} aria-label="Code copy notifications" />
         </Toast.Provider>
       </Tooltip.Provider>
     </MarkdownCodeBlockFeedbackContext.Provider>
