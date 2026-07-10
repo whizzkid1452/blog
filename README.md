@@ -4,11 +4,11 @@
 
 Markdown 글을 Next.js App Router로 정적 생성해서 검색엔진이 초기 HTML에서 글 본문과 메타데이터를 읽을 수 있게 한다.
 
-이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. **SSR**은 요청 시점마다 서버에서 HTML을 생성하는 Server-Side Rendering을 뜻하며, 이 블로그의 공개 글 페이지 기본 전략은 SSR이 아니라 SSG다.
+이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. **정적 호스팅**은 미리 생성한 파일을 별도의 Node.js 서버 없이 전달하는 배포 방식을 뜻한다. **SSR**은 요청 시점마다 서버에서 HTML을 생성하는 Server-Side Rendering을 뜻하며, 이 블로그의 공개 글 페이지 기본 전략은 SSR이 아니라 SSG다.
 
 ## Prerequisites
 
-- Node.js 20 계열
+- Node.js 22 계열
 - pnpm
 - 배포 도메인을 나타내는 `NEXT_PUBLIC_SITE_URL`
 
@@ -67,6 +67,22 @@ pnpm build
 ```
 
 `/posts/[slug]`와 `/tags/[tag]`가 `SSG`로 표시되면 글 상세와 태그 페이지가 빌드 시점에 생성된 것이다.
+
+`out` 디렉터리에 정적 호스팅에 필요한 HTML, CSS, JavaScript, 이미지 파일이 생성된다.
+
+### 5. 정적 산출물 미리보기
+
+빌드가 끝난 후 정적 파일 서버로 `out` 디렉터리를 확인한다.
+
+```bash
+pnpm dlx serve@14.2.5 out
+```
+
+브라우저에서 `http://localhost:3000`을 열고 글 목록, 글 상세, 태그 페이지를 확인한다.
+
+### 6. AWS 배포
+
+`main` 브랜치를 AWS Amplify Hosting에 연결하면 저장소의 `amplify.yml`이 `out` 디렉터리를 빌드하고 배포한다. 자세한 절차는 [AWS 정적 호스팅 배포 가이드](./docs/aws-deployment-plan.md)를 따른다.
 
 ## SEO 구조
 
