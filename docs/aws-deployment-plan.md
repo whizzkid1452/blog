@@ -1,292 +1,149 @@
-# AWS 서버와 DB 배포 계획
+# AWS Amplify 정적 호스팅 배포
 
 ## Goal
 
-현재 파일 기반 Next.js 블로그를 AWS에 직접 배포하고, 이후 PostgreSQL 기반 데이터 저장 구조로 점진적으로 전환한다.
+Markdown 기반 Next.js 블로그를 Node.js 서버, Application Load Balancer, RDS, NAT Gateway 없이 AWS Amplify Hosting에 배포한다.
 
-이 문서에서 "서버"는 별도 Express 서버가 아니라, Next.js 애플리케이션을 Node.js 런타임에서 실행하는 서버 프로세스를 뜻한다. 예를 들어 `next start` 또는 standalone Docker 이미지 안의 `server.js`가 여기에 해당한다.
+이 문서에서 **정적 export**는 `next build`가 배포 가능한 파일을 `out` 디렉터리에 생성하는 과정을 뜻한다. **정적 호스팅**은 그 파일을 요청 시점의 서버 렌더링 없이 Content Delivery Network(CDN)에서 전달하는 방식을 뜻한다.
 
-## 현재 상태
+## Prerequisites
+
+- Node.js 22
+- pnpm 11.9.0
+- GitHub의 `whizzkid1452/blog` 저장소에 접근할 수 있는 계정
+- AWS 계정과 Amplify Hosting 사용 권한
+- 커스텀 도메인을 사용하는 경우 실제 공개 URL
+
+현재 AWS 계정이 Paid plan이어도 플랜 자체의 월정액이 발생하는 것은 아니다. Amplify의 빌드, 저장, 데이터 전송 사용량에 따라 종량제 비용이 발생하며, 적용 가능한 AWS 크레딧이 있으면 해당 비용에 먼저 사용된다.
+
+## Architecture
+
+```text
+GitHub main branch
+  ↓ push
+AWS Amplify build
+  ↓ pnpm build
+out directory
+  ↓ deploy
+Amplify Hosting CDN
+  ↓ HTTPS
+Visitor
+```
 
 ### 확인된 사실
 
-- 프로젝트는 Next.js App Router 기반 애플리케이션이다.
-- `package.json`의 Next.js 버전은 `16.2.9`다.
-- 글 데이터는 DB가 아니라 `content/posts` 디렉터리의 Markdown 파일에 저장된다.
-- `lib/posts.ts`는 `fs.readFileSync`와 `gray-matter`를 사용해 Markdown 파일과 frontmatter를 읽는다.
-- 현재 공개 글 목록, 태그 목록, 글 상세 페이지, RSS는 파일 시스템의 글 데이터를 기준으로 생성된다.
+- 공개 글과 태그 데이터는 `content/posts`의 Markdown 파일에 있다.
+- 글 상세와 태그 경로는 `generateStaticParams()`로 빌드 시점에 결정된다.
+- `next.config.ts`는 `output: 'export'`를 사용한다.
+- `pnpm build`는 공개 페이지, RSS, sitemap, robots, Open Graph 이미지를 `out`에 생성한다.
+- `amplify.yml`은 `out`을 배포 산출물로 지정한다.
 
 ### 추론
 
-- 현재 구조는 DB가 없어도 배포할 수 있는 파일 기반 블로그 구조와 일치한다.
-- DB를 도입하는 작업은 단순한 배포 설정 변경이 아니라, 글 저장소와 조회 흐름을 바꾸는 애플리케이션 구조 변경이다.
-- 따라서 AWS 배포와 DB 전환을 한 번에 진행하면, 빌드 문제, 네트워크 문제, DB 스키마 문제, 데이터 마이그레이션 문제를 동시에 디버깅해야 한다.
+- 현재 기능에는 요청마다 실행되는 Node.js 서버가 필요하지 않다.
+- ECS, Load Balancer, RDS, NAT Gateway를 제거하면 방문자가 없어도 발생하는 시간 기반 비용의 위험이 줄어든다.
+- Amplify의 Next.js SSR 지원 버전은 이 배포의 필요조건이 아니다. Amplify가 받는 입력은 Next.js 서버가 아니라 정적 export 산출물이기 때문이다.
 
 ### 가정
 
-- DB를 붙이려는 목적은 운영 필수 요건보다 학습과 확장 경험에 가깝다.
-- 이후 추가할 수 있는 동적 기능은 관리자 글 작성, 조회수, 댓글, 검색, 초안 관리 중 일부다.
-- 초기 배포 대상 Region은 서울 리전인 `ap-northeast-2`로 둔다. 다른 Region을 선택하면 RDS, ECS, ECR, Secrets Manager 리소스를 같은 Region에 맞춘다.
+- 운영 브랜치는 `main`이다.
+- 글 작성과 수정은 Markdown 변경 후 재배포하는 방식으로 진행한다.
+- 로그인, 관리자 편집기, 댓글 저장과 같은 서버 기능은 현재 범위에 포함하지 않는다.
 
-## 배포 전략
+## Step-by-Step Guide
 
-### 선택안
+### 1. 로컬 정적 export 검증
 
-1. S3 + CloudFront
-   - 정적 export가 가능한 경우 가장 단순하다.
-   - 서버 런타임과 DB 연결을 직접 다루는 학습에는 맞지 않는다.
+PowerShell에서는 다음 명령을 실행한다.
 
-2. Amplify Hosting
-   - Git 연동과 프론트엔드 배포는 간단하다.
-   - AWS 문서 기준 Amplify Hosting compute는 Next.js 12-15 SSR 지원을 명시한다.
-   - 현재 프로젝트는 Next.js 16.2.9이므로, Next.js 16 SSR 지원을 별도로 검증하지 않으면 기본 선택지로 두기 어렵다.
-
-3. ECS Express Mode 또는 ECS Fargate
-   - Next.js 애플리케이션을 Docker 이미지로 만들고 AWS에서 컨테이너로 실행한다.
-   - RDS PostgreSQL, VPC, security group, Secrets Manager, CloudWatch를 함께 다룰 수 있다.
-   - 서버와 DB 배포를 직접 익히려는 목적에 가장 잘 맞는다.
-
-### 결정
-
-초기 목표에는 ECS Express Mode 또는 ECS Fargate를 사용한다.
-
-선택 근거는 다음과 같다.
-
-- Next.js 16 애플리케이션을 일반 Node.js 컨테이너로 실행할 수 있다.
-- RDS PostgreSQL을 private subnet에 두고, 애플리케이션 컨테이너에서만 접근하도록 네트워크 경계를 설정할 수 있다.
-- 배포 산출물, 런타임 환경 변수, 로그, health check, HTTPS, 도메인 연결을 직접 확인할 수 있다.
-- AWS App Runner는 2026년 4월 30일부터 신규 고객에게 열리지 않는다고 AWS 문서가 명시하므로, 새 프로젝트의 기본 선택지로 두지 않는다.
-
-## 대상 아키텍처
-
-```text
-사용자
-  ↓
-Route 53
-  ↓
-Application Load Balancer
-  ↓
-ECS Express Mode 또는 ECS Fargate
-  ↓
-Next.js Node.js 서버
-  ↓
-RDS PostgreSQL
-```
-
-정적 이미지와 폰트는 처음에는 Next.js 컨테이너의 `public` 디렉터리에서 제공한다. 이미지가 많아지거나 업로드 기능을 추가하면 S3와 CloudFront를 별도 정적 자산 저장소로 분리한다.
-
-## 단계별 계획
-
-### 1. 로컬 배포 형태 확정
-
-목표는 로컬에서 production build와 production server 실행을 먼저 검증하는 것이다.
-
-작업:
-
-- `pnpm typecheck`로 TypeScript 타입 오류를 확인한다.
-- `pnpm lint`로 ESLint 오류를 확인한다.
-- `pnpm build`로 Next.js production build를 확인한다.
-- `pnpm start`로 production server를 실행한다.
-- `/`, `/posts`, `/posts/[slug]`, `/tags/[tag]`, `/feed.xml`, `/robots.txt`, `/sitemap.xml`을 확인한다.
-
-완료 기준:
-
-- production build가 성공한다.
-- production server에서 주요 페이지가 200 응답을 반환한다.
-- Markdown 기반 글 목록과 상세 페이지가 정상 렌더링된다.
-
-### 2. Docker 배포 산출물 만들기
-
-목표는 AWS에 올릴 수 있는 동일한 실행 단위를 만드는 것이다.
-
-작업:
-
-- `next.config.ts`에 standalone output을 설정한다.
-- `Dockerfile`을 추가한다.
-- Docker 이미지에 `.next/standalone`, `.next/static`, `public`, `content`를 포함한다.
-- 컨테이너의 실행 포트는 `3000`으로 둔다.
-- `/api/health` Route Handler를 추가해 load balancer health check에 사용한다.
-
-완료 기준:
-
-- `docker build`가 성공한다.
-- `docker run -p 3000:3000`으로 실행한 컨테이너에서 주요 페이지가 정상 응답한다.
-- `/api/health`가 DB 없이도 200 응답을 반환한다.
-
-### 3. AWS 컨테이너 배포
-
-목표는 DB 없이 현재 블로그를 AWS에서 먼저 공개하는 것이다.
-
-작업:
-
-- ECR repository를 생성한다.
-- Docker 이미지를 ECR에 push한다.
-- ECS Express Mode 또는 ECS Fargate 서비스를 생성한다.
-- 컨테이너 포트 `3000`을 load balancer target으로 연결한다.
-- CloudWatch Logs에서 애플리케이션 로그를 확인한다.
-- Route 53과 ACM으로 도메인과 HTTPS를 연결한다.
-
-완료 기준:
-
-- AWS 제공 URL 또는 커스텀 도메인에서 블로그 첫 화면이 열린다.
-- 주요 페이지가 200 응답을 반환한다.
-- CloudWatch Logs에서 서버 시작 로그와 요청 로그를 확인할 수 있다.
-
-### 4. PostgreSQL 도입
-
-목표는 DB 연결, schema migration, 런타임 secret 관리를 배포 환경에서 검증하는 것이다.
-
-작업:
-
-- RDS PostgreSQL 인스턴스를 생성한다.
-- RDS는 public access를 끄고 private subnet에 둔다.
-- RDS security group은 ECS service security group에서 오는 PostgreSQL 포트만 허용한다.
-- `DATABASE_URL`은 Secrets Manager 또는 SSM Parameter Store에 저장한다.
-- 애플리케이션 런타임 환경 변수로 `DATABASE_URL`을 주입한다.
-- ORM은 Prisma 또는 Drizzle 중 하나를 선택한다.
-
-권장 선택:
-
-- 빠른 개발과 migration 경험이 목적이면 Prisma를 선택한다.
-- SQL과 타입 기반 query builder 경험을 더 중시하면 Drizzle을 선택한다.
-
-완료 기준:
-
-- 로컬과 AWS에서 같은 migration이 적용된다.
-- 애플리케이션 컨테이너가 RDS에 연결할 수 있다.
-- DB 연결 실패 시 로그에서 원인을 추적할 수 있다.
-
-### 5. 글 데이터 모델 설계
-
-목표는 Markdown frontmatter 구조를 DB schema로 옮길 수 있게 만드는 것이다.
-
-초기 테이블:
-
-```text
-posts
-- id
-- slug
-- title
-- description
-- content
-- date
-- published_at
-- draft
-- cover_image
-- cover_alt
-- created_at
-- updated_at
-
-tags
-- id
-- name
-
-post_tags
-- post_id
-- tag_id
-```
-
-설계 기준:
-
-- `slug`는 공개 URL에 사용하므로 unique constraint를 둔다.
-- `draft`가 `true`인 글은 공개 목록, sitemap, RSS에서 제외한다.
-- 태그는 문자열 배열로 저장하지 않고 `tags`와 `post_tags`로 분리한다.
-- 본문은 초기에는 Markdown 문자열로 저장한다.
-
-완료 기준:
-
-- 기존 Markdown frontmatter 필드를 손실 없이 DB row로 표현할 수 있다.
-- 공개 글 조회, slug 조회, 태그별 조회, 관련 글 조회를 SQL 또는 ORM query로 작성할 수 있다.
-
-### 6. 데이터 접근 계층 분리
-
-목표는 파일 기반 저장소와 DB 기반 저장소를 교체 가능하게 만드는 것이다.
-
-작업:
-
-- `PostRepository` 역할의 인터페이스를 정의한다.
-- 파일 기반 구현은 현재 `lib/posts.ts`의 동작을 감싼다.
-- DB 기반 구현은 PostgreSQL에서 같은 형태의 데이터를 반환한다.
-- UI 컴포넌트는 파일 시스템 또는 DB 구현을 직접 알지 않도록 한다.
-
-완료 기준:
-
-- 공개 페이지는 저장소 구현이 파일인지 DB인지 몰라도 같은 props를 받는다.
-- DB 전환 중에도 기존 Markdown 기반 렌더링을 유지할 수 있다.
-- 테스트에서 repository 구현을 mock 또는 stub으로 대체할 수 있다.
-
-### 7. Markdown 데이터 마이그레이션
-
-목표는 기존 `content/posts` 글을 DB로 안전하게 옮기는 것이다.
-
-작업:
-
-- `content/posts` 파일을 읽는 migration script를 작성한다.
-- frontmatter 검증 로직은 기존 schema와 동일한 규칙을 사용한다.
-- 같은 `slug`가 이미 있으면 update하거나 skip하는 정책을 명시한다.
-- migration 후 글 개수, 태그 개수, slug 목록을 검증한다.
-
-완료 기준:
-
-- DB의 공개 글 수가 기존 Markdown 공개 글 수와 일치한다.
-- 각 글의 title, description, date, tags, draft, content가 예상대로 저장된다.
-- `/posts/[slug]`에서 기존 URL이 유지된다.
-
-### 8. 읽기 흐름 전환
-
-목표는 공개 페이지의 데이터 소스를 DB로 바꾸는 것이다.
-
-작업:
-
-- 글 목록 조회를 DB repository로 전환한다.
-- slug 상세 조회를 DB repository로 전환한다.
-- 태그 목록과 태그별 글 조회를 DB repository로 전환한다.
-- RSS, sitemap, metadata 생성 경로도 같은 repository를 사용하게 맞춘다.
-
-완료 기준:
-
-- 기존 URL이 깨지지 않는다.
-- draft 글이 공개 목록, RSS, sitemap에서 제외된다.
-- Markdown 기반 결과와 DB 기반 결과가 같은지 비교할 수 있다.
-
-### 9. 운영 기본값 설정
-
-목표는 배포 후 장애 원인을 좁힐 수 있는 최소 운영 장치를 갖추는 것이다.
-
-작업:
-
-- `/api/health`는 프로세스 생존 확인만 담당한다.
-- `/api/ready`는 DB 연결 가능 여부까지 확인한다.
-- CloudWatch log retention 기간을 설정한다.
-- 배포 실패, 5xx 증가, CPU 또는 memory 사용량에 대한 alarm을 설정한다.
-- RDS automated backup을 켠다.
-- RDS password는 코드나 `.env` 파일에 커밋하지 않는다.
-
-완료 기준:
-
-- 애플리케이션 프로세스 문제와 DB 연결 문제를 서로 다른 endpoint로 구분할 수 있다.
-- 배포 후 오류가 CloudWatch에서 확인된다.
-- DB secret이 repository에 저장되지 않는다.
-
-## 검증 계획
-
-### 로컬 검증
-
-```bash
-pnpm typecheck
-pnpm lint
+```powershell
+$env:NEXT_PUBLIC_SITE_URL='https://example.com'
+pnpm install --frozen-lockfile
 pnpm build
-pnpm start
 ```
 
-Docker 도입 후:
+Bash 계열 셸에서는 다음 명령을 실행한다.
 
 ```bash
-docker build -t blog .
-docker run --rm -p 3000:3000 blog
+NEXT_PUBLIC_SITE_URL=https://example.com pnpm install --frozen-lockfile
+NEXT_PUBLIC_SITE_URL=https://example.com pnpm build
 ```
 
-DB 도입 후:
+빌드가 끝나면 `out/index.html`, `out/posts.html`, `out/feed.xml`, `out/sitemap.xml`이 존재해야 한다.
+
+### 2. 정적 산출물 미리보기
+
+```bash
+pnpm dlx serve@14.2.5 out
+```
+
+`http://localhost:3000`에서 다음 경로를 확인한다.
+
+- `/`
+- `/posts`
+- 공개 글의 `/posts/{slug}`
+- 공개 태그의 `/tags/{tag}`
+- `/feed.xml`
+- `/sitemap.xml`
+- `/robots.txt`
+
+### 3. GitHub 저장소 연결
+
+1. AWS 콘솔에서 **Amplify**를 연다.
+2. **Create new app** 또는 **Deploy an app**을 선택한다.
+3. Git 공급자로 **GitHub**을 선택한다.
+4. `whizzkid1452/blog` 저장소와 `main` 브랜치를 선택한다.
+5. 저장소 루트의 `amplify.yml`을 빌드 설정으로 사용하는지 확인한다.
+
+이 저장소는 단일 애플리케이션이므로 Amplify의 **My app is a monorepo** 옵션을 선택하지 않는다.
+
+### 4. 빌드 설정 확인
+
+`amplify.yml`은 다음 작업을 수행한다.
+
+1. Node.js 22를 선택한다.
+2. pnpm 11.9.0으로 의존성을 설치한다.
+3. `pnpm build`를 실행한다.
+4. `out` 디렉터리를 배포한다.
+
+커스텀 `NEXT_PUBLIC_SITE_URL`이 없으면 Amplify가 제공하는 `AWS_BRANCH`와 `AWS_APP_ID`로 기본 URL을 구성한다.
+
+```text
+https://{branch}.{app-id}.amplifyapp.com
+```
+
+따라서 첫 배포에서도 canonical URL, sitemap URL, Open Graph URL을 만들 수 있다.
+
+### 5. 첫 배포
+
+1. Amplify 설정 검토 화면에서 **Save and deploy**를 선택한다.
+2. Provision, Build, Deploy, Verify 단계가 모두 성공했는지 확인한다.
+3. Amplify가 제공한 `amplifyapp.com` 주소에서 블로그를 연다.
+
+빌드가 실패하면 로그에서 가장 먼저 `pnpm install`, `NEXT_PUBLIC_SITE_URL`, `pnpm build` 단계를 구분해 확인한다.
+
+### 6. 커스텀 도메인 연결
+
+커스텀 도메인이 없다면 이 단계를 건너뛴다.
+
+1. Amplify의 **Hosting → Custom domains**에서 도메인을 연결한다.
+2. Amplify의 환경 변수에 `NEXT_PUBLIC_SITE_URL=https://실제-도메인`을 추가한다.
+3. `main` 브랜치를 다시 배포한다.
+4. 페이지의 canonical, Open Graph, sitemap URL이 커스텀 도메인을 가리키는지 확인한다.
+
+`NEXT_PUBLIC_SITE_URL`은 공개 URL이므로 secret이 아니다. 비밀번호나 API key는 이 접두사의 환경 변수에 저장하지 않는다.
+
+### 7. 비용 알림 확인
+
+1. AWS Billing의 **Budgets**에서 월 예산 알림을 유지한다.
+2. **Credits**에서 남은 크레딧과 만료일을 확인한다.
+3. **Bills**에서 Amplify의 실제 사용 비용과 크레딧 적용 결과를 확인한다.
+
+Budget은 비용 발생을 차단하는 장치가 아니라 임계값 알림이다.
+
+### Verify Final Result
+
+로컬 검증:
 
 ```bash
 pnpm test
@@ -295,71 +152,35 @@ pnpm lint
 pnpm build
 ```
 
-### AWS 검증
+배포 검증:
 
-- 배포 URL에서 `/`가 200 응답을 반환한다.
-- `/posts`가 공개 글 목록을 보여준다.
-- `/feed.xml`이 XML content type으로 응답한다.
-- `/sitemap.xml`에 공개 글 URL이 포함된다.
-- `/api/health`가 200 응답을 반환한다.
-- DB 도입 후 `/api/ready`가 RDS 연결 성공 시 200 응답을 반환한다.
-- RDS security group이 외부 전체 공개 접근을 허용하지 않는다.
+- 첫 화면과 글 목록이 HTTP 200으로 응답한다.
+- 글 상세와 태그 페이지가 새로고침 후에도 열린다.
+- `/feed.xml`이 RSS XML을 반환한다.
+- `/sitemap.xml`에 공개 글과 태그 URL이 있다.
+- `/robots.txt`의 sitemap URL이 실제 배포 주소를 가리킨다.
+- 글 상세 HTML의 canonical URL과 Open Graph URL이 실제 배포 주소를 가리킨다.
 
-## 리스크와 대응
+## FAQ
 
-### Next.js 16과 AWS managed hosting 호환성
+### 글을 수정하면 서버를 재시작해야 하는가
 
-확인된 사실은 현재 프로젝트가 Next.js 16.2.9라는 점이다. AWS Amplify 문서에서 확인한 지원 범위는 Next.js 12-15 SSR이다.
+아니다. Markdown 변경을 `main`에 반영하면 Amplify가 새 정적 파일을 빌드하고 배포한다.
 
-따라서 Amplify SSR 배포를 선택하면 호환성이 불확실하다. 이 불확실성을 줄이기 위해 Next.js를 일반 Node.js 컨테이너로 실행하는 ECS 계열 배포를 우선한다.
+### `/api/health`가 제거된 이유는 무엇인가
 
-### DB 전환으로 인한 공개 URL 변경
+정적 호스팅에는 상시 실행되는 애플리케이션 프로세스가 없다. 따라서 프로세스 생존 여부를 확인하는 health endpoint가 성립하지 않는다. Amplify의 배포 상태와 공개 URL 응답으로 가용성을 확인한다.
 
-`slug`는 기존 파일 이름에서 만들어진 공개 URL 식별자다. DB 전환 시 slug 생성 규칙이 바뀌면 기존 URL이 깨질 수 있다.
+### DB를 나중에 추가할 수 있는가
 
-대응:
+가능하지만 정적 호스팅 전환과는 별개의 변경 목적이다. 요청 시점 DB 조회가 필요해지면 API 또는 서버 런타임의 필요조건을 먼저 정의하고 별도 PR에서 배포 구조를 결정한다.
 
-- migration script에서 기존 파일 이름 기반 slug를 그대로 저장한다.
-- `posts.slug`에 unique constraint를 둔다.
-- slug 변경이 필요하면 redirect table을 별도로 둔다.
+### 사용하지 않을 때 비용을 중단하려면 어떻게 하는가
 
-### 빌드 시점 데이터와 런타임 데이터의 차이
+Amplify 콘솔의 앱 설정에서 앱을 삭제한다. GitHub 저장소를 삭제하는 것만으로 AWS 리소스가 자동 삭제된다고 가정하면 안 된다.
 
-현재 파일 기반 구조는 빌드 시점 또는 서버 실행 시점에 파일을 읽는다. DB 전환 후에는 요청 시점 또는 cache revalidation 시점에 DB를 읽는다.
+## References
 
-대응:
-
-- 공개 글 목록과 상세 페이지의 cache 정책을 명시한다.
-- 글 작성 또는 수정 기능을 붙이기 전까지는 수동 재배포 또는 명시적 revalidation 정책 중 하나를 선택한다.
-- cache 문제를 디버깅할 수 있도록 응답 생성 시점과 데이터 갱신 시점을 로그로 남긴다.
-
-### 비용 증가
-
-RDS, ECS/Fargate, Application Load Balancer, NAT Gateway, CloudWatch Logs는 비용이 발생한다.
-
-대응:
-
-- 학습 단계에서는 최소 사양을 사용한다.
-- NAT Gateway가 필요한 구조인지 먼저 검토한다.
-- 사용하지 않는 preview 리소스와 오래된 ECR 이미지를 정리한다.
-- RDS는 필요 없을 때 중지하거나 삭제한다.
-
-## 작업 순서 요약
-
-1. 현재 파일 기반 블로그를 production build로 검증한다.
-2. Docker standalone 배포 형태를 만든다.
-3. DB 없이 ECS에 먼저 배포한다.
-4. RDS PostgreSQL과 secret 주입을 설정한다.
-5. 글 schema와 repository 경계를 만든다.
-6. Markdown 데이터를 DB로 마이그레이션한다.
-7. 공개 읽기 흐름을 DB로 전환한다.
-8. health check, logging, backup, alarm을 운영 기본값으로 추가한다.
-
-## 참고 문서
-
-- Next.js self-hosting: https://nextjs.org/docs/app/guides/self-hosting
-- Next.js standalone output: https://nextjs.org/docs/pages/api-reference/config/next-config-js/output
-- Amazon ECS Express Mode: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/express-service-overview.html
-- Amazon RDS PostgreSQL 시작하기: https://docs.aws.amazon.com/AmazonRDS/latest/UserGuide/CHAP_GettingStarted.CreatingConnecting.PostgreSQL.html
-- AWS App Runner availability change: https://docs.aws.amazon.com/apprunner/latest/dg/apprunner-availability-change.html
-- AWS Amplify Next.js 지원 범위: https://docs.aws.amazon.com/amplify/latest/userguide/ssr-amplify-support.html
+- [Deploy a Next.js app to Amplify Hosting](https://docs.aws.amazon.com/amplify/latest/userguide/getting-started-next.html)
+- [Amplify environment variables](https://docs.aws.amazon.com/amplify/latest/userguide/environment-variables.html)
+- [Connecting a custom domain](https://docs.aws.amazon.com/amplify/latest/userguide/custom-domains.html)
