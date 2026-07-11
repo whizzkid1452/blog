@@ -12,6 +12,11 @@ import remarkGfm from 'remark-gfm';
 import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
 import { MarkdownMermaidDiagram } from './markdown-mermaid-diagram';
+import {
+  createMarkdownHeadingIdResolver,
+  prepareMarkdownContent,
+  type MarkdownTableOfContentsItem,
+} from './markdown-table-of-contents';
 
 interface MarkdownContentProps {
   content: string;
@@ -19,25 +24,25 @@ interface MarkdownContentProps {
 }
 
 export async function MarkdownContent({ content, title }: MarkdownContentProps) {
+  const preparedContent = prepareMarkdownContent({ content, title });
   const renderedContent = await MarkdownAsync({
-    children: removeDuplicateTitle({ content, title }),
-    components: MARKDOWN_COMPONENTS,
+    children: preparedContent.content,
+    components: createMarkdownComponents({ tableOfContentsItems: preparedContent.tableOfContentsItems }),
     rehypePlugins: [[rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
     remarkPlugins: [remarkGfm],
   });
 
   return (
     <MarkdownCodeBlockProvider>
-      <div className={styles.content}>{renderedContent}</div>
+      <div className={styles.content}>
+        {preparedContent.tableOfContentsItems.length > 0 ? (
+          <MarkdownTableOfContents items={preparedContent.tableOfContentsItems} />
+        ) : null}
+        {renderedContent}
+      </div>
     </MarkdownCodeBlockProvider>
   );
 }
-
-const MARKDOWN_COMPONENTS: Components = {
-  a: MarkdownAnchor,
-  img: MarkdownImage,
-  pre: MarkdownPre,
-};
 
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
 const PROTOCOL_RELATIVE_URL_PREFIX = '//';
@@ -57,7 +62,72 @@ const REHYPE_PRETTY_CODE_OPTIONS = {
 
 type HrefNavigationKind = 'externalWeb' | 'internalRoute' | 'other';
 
-function MarkdownAnchor({ href, ...anchorProps }: ComponentPropsWithoutRef<'a'>) {
+interface CreateMarkdownComponentsParams {
+  tableOfContentsItems: MarkdownTableOfContentsItem[];
+}
+
+interface MarkdownTableOfContentsProps {
+  items: MarkdownTableOfContentsItem[];
+}
+
+interface MarkdownHeadingProps extends ComponentPropsWithoutRef<'h2'> {
+  headingIdResolver: ReturnType<typeof createMarkdownHeadingIdResolver>;
+  level: 2 | 3;
+  node?: unknown;
+}
+
+interface MarkdownAstNodeProps {
+  node?: unknown;
+}
+
+type MarkdownAnchorProps = ComponentPropsWithoutRef<'a'> & MarkdownAstNodeProps;
+type MarkdownImageProps = ComponentPropsWithoutRef<'img'> & MarkdownAstNodeProps;
+type MarkdownPreProps = ComponentPropsWithoutRef<'pre'> & MarkdownAstNodeProps;
+
+function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownComponentsParams): Components {
+  const headingIdResolver = createMarkdownHeadingIdResolver({ tableOfContentsItems });
+
+  return {
+    a: MarkdownAnchor,
+    h2: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={2} />,
+    h3: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={3} />,
+    img: MarkdownImage,
+    pre: MarkdownPre,
+  };
+}
+
+function MarkdownTableOfContents({ items }: MarkdownTableOfContentsProps) {
+  return (
+    <details className={styles.tableOfContents}>
+      <summary className={styles.tableOfContentsSummary}>목차</summary>
+      <ol className={styles.tableOfContentsList}>
+        {items.map(item => (
+          <li className={styles.tableOfContentsListItem} key={item.id}>
+            <a className={styles.tableOfContentsLink} href={`#${item.id}`}>
+              {item.title}
+            </a>
+          </li>
+        ))}
+      </ol>
+    </details>
+  );
+}
+
+function MarkdownHeading({ children, headingIdResolver, level, ...headingPropsWithNode }: MarkdownHeadingProps) {
+  const HeadingTag = `h${level}` as const;
+  const headingProps = omitMarkdownAstNodeProp(headingPropsWithNode);
+  const headingId = headingProps.id ?? headingIdResolver.resolveId(getTextContent(children));
+
+  return (
+    <HeadingTag {...headingProps} id={headingId}>
+      {children}
+    </HeadingTag>
+  );
+}
+
+function MarkdownAnchor({ href, ...anchorPropsWithNode }: MarkdownAnchorProps) {
+  const anchorProps = omitMarkdownAstNodeProp(anchorPropsWithNode);
+
   if (href == null) {
     return <a {...anchorProps} />;
   }
@@ -75,7 +145,7 @@ function MarkdownAnchor({ href, ...anchorProps }: ComponentPropsWithoutRef<'a'>)
   return <a {...anchorProps} href={href} />;
 }
 
-function MarkdownImage({ src, alt, title }: ComponentPropsWithoutRef<'img'>) {
+function MarkdownImage({ src, alt, title }: MarkdownImageProps) {
   if (typeof src !== 'string' || src.trim() === '') {
     return null;
   }
@@ -101,8 +171,9 @@ function MarkdownImage({ src, alt, title }: ComponentPropsWithoutRef<'img'>) {
   );
 }
 
-function MarkdownPre({ children, ...preProps }: ComponentPropsWithoutRef<'pre'>) {
+function MarkdownPre({ children, ...prePropsWithNode }: MarkdownPreProps) {
   const codeText = getTextContent(children);
+  const preProps = omitMarkdownAstNodeProp(prePropsWithNode);
 
   if (getCodeBlockLanguage(preProps) === MERMAID_CODE_LANGUAGE) {
     return <MarkdownMermaidDiagram chart={codeText} />;
@@ -151,20 +222,11 @@ function parseAbsoluteUrl(href: string): URL | null {
   }
 }
 
-function removeDuplicateTitle({ content, title }: MarkdownContentProps): string {
-  if (title == null) {
-    return content;
-  }
+function omitMarkdownAstNodeProp<TProps extends MarkdownAstNodeProps>(props: TProps): Omit<TProps, 'node'> {
+  const elementProps = { ...props };
+  delete elementProps.node;
 
-  const trimmedTitle = title.trim();
-  const lines = content.split('\n');
-  const firstLine = lines[0]?.trim();
-
-  if (firstLine !== `# ${trimmedTitle}`) {
-    return content;
-  }
-
-  return lines.slice(1).join('\n').trimStart();
+  return elementProps;
 }
 
 function getTextContent(node: ReactNode): string {
