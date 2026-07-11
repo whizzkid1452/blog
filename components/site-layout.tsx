@@ -1,4 +1,4 @@
-import type { PostSummary } from '@/lib/posts';
+import { getPostPublishedDateTime, type PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { MobileNavigationDialog } from './mobile-navigation-dialog';
@@ -27,7 +27,7 @@ const RESUME_URL = 'https://elderly-mosquito-87f.notion.site/38073b56612a80efb6e
 const RECENT_POST_COUNT = 5;
 
 export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
-  const visibleRecentPosts = recentPosts.slice(0, RECENT_POST_COUNT);
+  const visibleRecentPosts = getRecentPostsByPublishedDate(recentPosts);
 
   return (
     <div className={styles.siteShell}>
@@ -98,4 +98,22 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
       </div>
     </div>
   );
+}
+
+function getRecentPostsByPublishedDate(posts: PostSummary[]): PostSummary[] {
+  return posts.slice().sort(comparePostSummariesByPublishedDate).slice(0, RECENT_POST_COUNT);
+}
+
+function comparePostSummariesByPublishedDate(leftPost: PostSummary, rightPost: PostSummary): number {
+  const publishedDateComparison = getPostSummaryPublishTime(rightPost) - getPostSummaryPublishTime(leftPost);
+
+  if (publishedDateComparison !== 0) {
+    return publishedDateComparison;
+  }
+
+  return leftPost.slug.localeCompare(rightPost.slug);
+}
+
+function getPostSummaryPublishTime(post: PostSummary): number {
+  return new Date(getPostPublishedDateTime(post)).getTime();
 }

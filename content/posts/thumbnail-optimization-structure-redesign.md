@@ -1,8 +1,8 @@
 ---
 title: '[썸네일 생성 최적화 시도 2]썸네일 생성 구조 재설계하기'
 description: '타임라인 썸네일 생성을 poster, visible tile, backfill로 나누어 초기 표시와 성능을 개선한 설계를 정리합니다.'
-date: '2026-07-02'
-publishedAt: '2026-07-02T15:45:30+09:00'
+date: '2026-06-06'
+publishedAt: '2026-06-06T00:53:42+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'timeline']
 draft: false
 ---

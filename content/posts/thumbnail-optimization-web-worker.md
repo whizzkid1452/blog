@@ -1,8 +1,8 @@
 ---
 title: '[썸네일 최적화 시도 1]Web Worker 를 이용한 썸네일 생성 최적화'
 description: '비디오 썸네일 생성 지연을 줄이기 위해 Web Worker 전략을 적용하고 측정한 과정을 정리합니다.'
-date: '2026-07-03'
-publishedAt: '2026-07-03T10:00:45+09:00'
+date: '2026-04-17'
+publishedAt: '2026-04-17T14:26:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'editor']
 draft: false
 ---

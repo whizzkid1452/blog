@@ -1,8 +1,8 @@
 ---
 title: '[썸네일 생성 최적화 시도 3] Web Worker를 다시 의심하고 검증하기'
 description: 'Web Worker 기반 썸네일 생성 전략을 다시 측정하며 언제 효과가 있는지 검증한 과정을 정리합니다.'
-date: '2026-07-02'
-publishedAt: '2026-07-02T15:42:40+09:00'
+date: '2026-06-09'
+publishedAt: '2026-06-09T11:23:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'webcodecs']
 draft: false
 ---

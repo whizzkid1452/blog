@@ -1,8 +1,8 @@
 ---
 title: '[Part 1] 브라우저에서 멀티미디어 export하기- 문제 정의와 아키텍처 설계'
 description: '브라우저 기반 멀티미디어 에디터에서 MP4 export를 구현하기 위해 문제를 정의하고 아키텍처를 설계한 과정을 정리합니다.'
-date: '2026-07-03'
-publishedAt: '2026-07-03T10:12:27+09:00'
+date: '2026-04-13'
+publishedAt: '2026-04-13T19:28:05+09:00'
 tags: ['export', 'webcodecs', 'architecture', 'multimedia']
 draft: false
 ---

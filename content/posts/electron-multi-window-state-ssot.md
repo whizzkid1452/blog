@@ -1,8 +1,8 @@
 ---
 title: 'Electron에서 여러 창의 상태를 하나의 진실로 맞추기'
 description: 'Electron 멀티 윈도우 환경에서 분산된 프로젝트 상태를 SSOT 기준으로 정리한 설계 과정을 설명합니다.'
-date: '2026-07-02'
-publishedAt: '2026-07-02T15:21:28+09:00'
+date: '2026-06-13'
+publishedAt: '2026-06-13T19:49:37+09:00'
 tags: ['electron', 'state-management', 'zustand']
 draft: false
 ---

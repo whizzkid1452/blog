@@ -1,7 +1,8 @@
 ---
 title: '상태 관리 도구 선택 기준과 Store 분리의 중요성'
 description: 'React Context 리렌더 문제를 기준으로 상태 관리 도구 선택과 Store 분리 기준을 정리합니다.'
-date: '2026-07-02'
+date: '2026-07-01'
+publishedAt: '2026-07-01T11:05:59+09:00'
 tags: ['react', 'context', 'zustand', 'performance']
 draft: false
 ---
