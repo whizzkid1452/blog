@@ -7,7 +7,7 @@ tags: ['performance', 'request-animation-frame', 'audio-editor', 'frontend']
 draft: false
 ---
 
-rAF에 대한 추가적인 정보는 이 글을 참고해주세요: [TIL | rAF란?](https://insight74278.tistory.com/4)
+rAF에 대한 추가적인 정보는 이 글을 참고해주세요: [TIL | rAF란?](/posts/request-animation-frame)
 
 ## 문제 상황
 
