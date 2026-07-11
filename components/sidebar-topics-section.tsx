@@ -4,16 +4,16 @@ import * as Collapsible from '@radix-ui/react-collapsible';
 import Link from 'next/link';
 import { useState } from 'react';
 import styles from './site-layout.module.css';
+import { getCollapsedSidebarTopicTags, getExpandedSidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 
 interface SidebarTopicsSectionProps {
   tags: string[];
 }
 
-const COLLAPSED_TOPIC_TAG_COUNT = 10;
-
 export function SidebarTopicsSection({ tags }: SidebarTopicsSectionProps) {
-  const [isOpen, setIsOpen] = useState(true);
-  const collapsedTags = tags.slice(0, COLLAPSED_TOPIC_TAG_COUNT);
+  const [isOpen, setIsOpen] = useState(false);
+  const collapsedTags = getCollapsedSidebarTopicTags(tags);
+  const expandedTags = getExpandedSidebarTopicTags(tags);
 
   return (
     <Collapsible.Root asChild open={isOpen} onOpenChange={setIsOpen}>
@@ -23,10 +23,14 @@ export function SidebarTopicsSection({ tags }: SidebarTopicsSectionProps) {
           <Collapsible.Trigger className={styles.sidebarSectionTrigger} type="button" aria-label="Toggle topics" />
         </div>
 
-        {!isOpen && tags.length > 0 ? <TopicTagList tags={collapsedTags} /> : null}
+        {!isOpen && collapsedTags.length > 0 ? <TopicTagList tags={collapsedTags} /> : null}
 
         <Collapsible.Content className={styles.sidebarCollapsibleContent}>
-          {tags.length > 0 ? <TopicTagList tags={tags} /> : <p className={styles.emptyText}>No topics yet.</p>}
+          {expandedTags.length > 0 ? (
+            <TopicTagList tags={expandedTags} />
+          ) : (
+            <p className={styles.emptyText}>No topics yet.</p>
+          )}
         </Collapsible.Content>
       </section>
     </Collapsible.Root>
@@ -38,7 +42,7 @@ function TopicTagList({ tags }: { tags: string[] }) {
     <div className={styles.tagList}>
       {tags.map(tag => (
         <Link key={tag} className={styles.tagLink} href={`/tags/${encodeURIComponent(tag)}`}>
-          #{tag}
+          #{getSidebarTopicLabel(tag)}
         </Link>
       ))}
     </div>
