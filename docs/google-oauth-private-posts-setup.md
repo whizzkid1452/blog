@@ -50,15 +50,16 @@ https://blog.example.com/auth/callback
 
 ### 3. 환경 변수 설정하기
 
-`.env.example`을 `.env.local`로 복사하고 실제 값을 입력한다.
+`.env.example`을 `.env.local`로 복사하고 공개 사이트 URL을 입력한다.
 
 ```dotenv
-SUPABASE_URL=https://<project-ref>.supabase.co
-SUPABASE_PUBLISHABLE_KEY=sb_publishable_...
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
 ```
 
-운영 환경의 `NEXT_PUBLIC_SITE_URL`에는 HTTPS 운영 주소를 입력한다. Google Client Secret은 애플리케이션 환경 변수나 저장소에 넣지 않고 Supabase Provider 설정에만 저장한다.
+Supabase 프로젝트 URL과 Publishable key는
+[`environment.ts`](../lib/supabase/environment.ts)에 공개 상수로 저장되어 있다. 운영 환경의 `NEXT_PUBLIC_SITE_URL`에는
+HTTPS 운영 주소를 입력한다. Google Client Secret은 애플리케이션 환경 변수나 저장소에 넣지 않고 Supabase Provider
+설정에만 저장한다.
 
 ### 4. 비공개 글 표시하기
 

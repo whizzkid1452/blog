@@ -28,30 +28,13 @@ Supabase Dashboard의 SQL Editor에서
 
 테이블 제약 조건은 글 slug, 닉네임 1~~40자, 댓글 1~~1,000자를 검사한다.
 
-### 2. 로컬 환경 변수 설정
+### 2. Supabase 공개 설정 확인
 
-`.env.example`을 `.env.local`로 복사하고 Supabase Dashboard의 Connect 화면에서 확인한 값을 입력한다.
+Supabase 프로젝트 URL과 Publishable key는
+[`environment.ts`](../lib/supabase/environment.ts)에 공개 상수로 저장한다.
 
-```bash
-cp .env.example .env.local
-```
-
-PowerShell에서는 다음 명령을 사용한다.
-
-```powershell
-Copy-Item .env.example .env.local
-```
-
-```dotenv
-SUPABASE_URL=https://your-project-ref.supabase.co
-SUPABASE_PUBLISHABLE_KEY=sb_publishable_your_key
-```
-
-두 값은 서버의 댓글 API에서만 읽는다. `SUPABASE_SECRET_KEY`는 필요하지 않으며 사용하지 않는다.
-
-### 3. 배포 환경 변수 설정
-
-배포 서비스에도 `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`를 같은 이름으로 추가한다.
+다른 Supabase 프로젝트로 변경할 때만 두 상수를 수정한다. `SUPABASE_SECRET_KEY`는 필요하지 않으며 사용하지 않는다.
+배포 환경에 Supabase 환경 변수를 추가할 필요는 없다.
 
 ### Verify Final Result
 
