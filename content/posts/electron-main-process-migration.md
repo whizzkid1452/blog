@@ -1,164 +1,345 @@
 ---
-title: '[Part 5.] Main SSOT 설계의 검증 계획과 선택 비용'
-description: 'Main SSOT가 해결하려는 가설과 검증 기준, 새로 생기는 비용과 다시 설계를 비교할 조건을 정리합니다.'
+title: '[Part 6.] Main SSOT로 점진적으로 이관하기'
+description: '기존 Renderer Store와 History를 유지한 채 기능별로 Main SSOT로 옮기는 순서와 검증 기준을 정리합니다.'
 date: '2026-07-14'
-publishedAt: '2026-07-14T09:40:00+09:00'
-tags: ['electron', 'testing', 'architecture', 'ssot']
+publishedAt: '2026-07-14T09:50:00+09:00'
+tags: ['electron', 'migration', 'testing', 'architecture']
 draft: false
 ---
 
 <details>
 <summary>목차 펼쳐보기</summary>
 
-- [1. 자연스러운 설계가 검증된 설계는 아니다](#1-자연스러운-설계가-검증된-설계는-아니다)
-- [2. 무엇을 통과해야 선택을 유지할 수 있는가](#2-무엇을-통과해야-선택을-유지할-수-있는가)
-- [3. 상태 정합성만 좋아지는 것은 아니다](#3-상태-정합성만-좋아지는-것은-아니다)
-- [4. 이 설계가 맞는 조건](#4-이-설계가-맞는-조건)
-- [5. 다시 비교해야 하는 조건](#5-다시-비교해야-하는-조건)
-- [6. 아직 제품 결정이 필요한 부분](#6-아직-제품-결정이-필요한-부분)
-- [7. 마치며](#7-마치며)
+- [1. 들어가며](#1-들어가며)
+- [2. 이관 원칙](#2-이관-원칙)
+- [3. 네 단계 이관](#3-네-단계-이관)
+- [4. PR 분리](#4-pr-분리)
+- [5. 검증 계획](#5-검증-계획)
+- [6. 선택의 비용](#6-선택의-비용)
+- [7. 조건부 최적성](#7-조건부-최적성)
+- [8. 남은 결정](#8-남은-결정)
+- [9. 최종 구조](#9-최종-구조)
+- [10. 처음 질문에 대한 답](#10-처음-질문에-대한-답)
+- [11. 마치며](#11-마치며)
 
 </details>
 
-[이전 글: Part 4. 자동저장의 완료 지점과 복구 전략](/posts/electron-main-process-autosave)
+[이전 글: Part 5. 자동저장의 책임과 디스크 저장 보장](/posts/electron-main-process-autosave)
 
-## 1. 자연스러운 설계가 검증된 설계는 아니다
+## 1. 들어가며
 
-지금까지 저장 가능한 프로젝트 상태를 Main이 확정하고, 각 창은 그 결과를 받아 화면을 갱신하도록 경계를 다시 나눴다. 저장과 Undo/Redo도 Main의 같은 프로젝트 상태를 사용하도록 설계했다.
+설계가 정리되어도 기존 Renderer Store와 Undo/Redo와 자동저장을 한 PR에서 모두 제거할 수는 없었다. 아직 Main으로 옮기지 않은 기능의 상태가 저장에서 빠질 수 있고 같은 기능에 두 History가 생길 수 있다.
 
-이 구조는 처음 확인한 문제와 일관된다. 하지만 논리적으로 자연스럽다는 사실만으로 실제 문제를 해결했다고 단정할 수는 없다.
+결론부터 적으면, **기반 타입과 Main 흐름을 먼저 추가한 뒤 SRT부터 기능별로 변경 권한을 옮기고 마지막에 기존 Store와 저장 코드를 제거한다**. 각 단계는 독립적으로 build와 test가 통과해야 한다.
 
-현재 구분할 수 있는 근거는 다음과 같다.
+이 글의 "해결"은 구현 완료 후 측정된 결과가 아니다. 현재 근거로 설계가 줄이려는 위험을 뜻한다. 실제 효과는 아래 검증 계획으로 확인해야 한다.
 
-| 구분                  | 내용                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------- |
-| 확인한 사실           | 여러 창이 같은 JavaScript Store를 직접 공유하지 않았고, 저장 코드가 마지막 편집과 다른 상태를 읽을 수 있었다. |
-| 설계로 기대하는 결과  | Main이 최종 상태를 정하면 저장과 각 창이 같은 문서 번호를 따라갈 수 있다.                                     |
-| 아직 확인하지 못한 것 | 대표 프로젝트의 입력 지연, 복구 시간, 파일 저장 시간과 실제 데이터 손실 범위                                  |
+## 2. 이관 원칙
 
-따라서 이 글은 검증 결과가 아니라 **검증 계획과 설계를 다시 비교할 기준**을 다룬다.
+### 2-1. 기능별 전환
 
-## 2. 무엇을 통과해야 선택을 유지할 수 있는가
+프로젝트 전체를 한 번에 바꾸지 않는다. SRT text, SRT time range, Timeline 배치, split처럼 변경 단위를 나눈다.
 
-설계의 핵심 가설과 통과 기준을 다음처럼 정리했다.
+각 기능은 어느 한 시점부터 다음 규칙을 따른다.
 
-| 가설                              | 확인 방법                                     | 통과 기준                                       |
-| --------------------------------- | --------------------------------------------- | ----------------------------------------------- |
-| 모든 창이 같은 상태를 본다.       | 서로 다른 창에서 연속으로 자막을 수정한다.    | 모든 창이 같은 문서 번호와 값을 가진다.         |
-| 이벤트 누락을 복구한다.           | 중간 변경 이벤트 하나를 의도적으로 버린다.    | 누락을 감지하고 Main의 전체 상태로 복구한다.    |
-| Undo/Redo가 창과 무관하다.        | 서로 다른 창에서 수정과 Undo/Redo를 실행한다. | 문서와 모든 창의 결과가 일치한다.               |
-| 최신 상태가 파일에 남는다.        | 저장 중 여러 변경을 연속으로 발생시킨다.      | 마지막 문서 번호가 파일에 저장된다.             |
-| 저장 실패 뒤 다시 시도할 수 있다. | 권한 오류와 파일 잠금을 만든다.               | dirty와 오류 상태가 유지되고 재시도가 가능하다. |
-| 비정상 종료 후 복구할 수 있다.    | 쓰기 단계별로 Main을 종료한다.                | 정상 파일 또는 검증된 복구 후보를 찾는다.       |
-| Main이 입력을 방해하지 않는다.    | 대표 프로젝트에서 연속 입력을 측정한다.       | 제품에서 정한 응답 시간 기준을 만족한다.        |
+- 전환 전: 기존 Renderer Store와 History가 변경 권한을 가진다.
+- 전환 후: Main `ProjectSession`만 변경 권한을 가진다.
 
-테스트가 통과하기 전에는 “상태 불일치를 해결했다”거나 “데이터 손실을 줄였다”고 확정해서 표현할 수 없다.
+같은 기능에 두 변경 경로를 동시에 열어 두지 않는다.
 
-<details>
-<summary>세부 검증 항목</summary>
+### 2-2. 읽기와 쓰기 분리
 
-### 상태 동기화
+처음에는 Main snapshot을 읽는 화면을 추가하되 기존 쓰기 경로를 유지할 수 있다. 하지만 쓰기 경로 전환 시점에는 feature flag 하나로 기존 path와 Main action path 중 하나만 활성화한다.
 
-- 요청 응답과 확정 이벤트가 순서와 관계없이 한 번만 반영되는가
-- 이전 문서 번호의 이벤트를 무시하는가
-- 새 창이 다른 창이 아니라 Main의 최신 상태에서 시작하는가
-- 프로젝트를 바꾼 뒤 이전 프로젝트 이벤트를 거절하는가
+### 2-3. 제거는 마지막
 
-### Undo/Redo
+새 경로가 검증되기 전에 기존 Store와 History를 삭제하지 않는다. 반대로 전환이 끝난 기능의 이전 코드는 오래 유지하지 않는다. 두 경로가 오래 공존하면 어떤 값이 원본인지 다시 불명확해진다.
 
-- 한 번의 드래그와 Split이 각각 한 이력으로 기록되는가
-- 새 변경 후 Redo 이력이 제거되는가
-- 이력이 참조하는 asset이 너무 일찍 삭제되지 않는가
-- 화면 실행 상태 복구가 실패하면 전체 상태로 다시 만들 수 있는가
+## 3. 네 단계 이관
 
-### 자동저장과 복구
+### 3-1. 1단계: 타입과 순수 reducer
 
-- debounce가 계속 밀리지 않도록 최대 지연 시간이 동작하는가
-- 진행 중인 쓰기와 대기 중인 최신 상태가 섞이지 않는가
-- temp file, backup과 정상 파일을 내용 검증으로 구분하는가
-- 종료 전 저장과 강제 종료 복구가 각각 기대대로 동작하는가
-- 같은 파일을 두 앱 인스턴스가 열 때 충돌을 감지하는가
+먼저 Electron과 React에 의존하지 않는 타입을 만든다.
 
-</details>
+- `ProjectDocument`
+- `ProjectSnapshot`
+- `ProjectAction`
+- `ProjectPatch`
+- `ProjectUpdateResult`
+- `ProjectHistoryEntry`
 
-<details>
-<summary>측정할 값과 환경 기록</summary>
+action별 reducer와 inverse patch를 단위 테스트한다. 이 단계에서는 기존 화면 동작을 바꾸지 않는다.
 
-같은 대표 프로젝트와 같은 장치에서 다음 값을 측정한다.
+### 3-2. 2단계: Main 흐름
 
-- 사용자 입력부터 화면 반영까지의 시간
+다음 구성요소를 추가한다.
+
+- `ProjectSession`
+- IPC Handler와 `ProjectEventBridge`
+- 최초 구독 handshake
+- `ProjectSaveManager`
+- 비동기 `ProjectFileStorage`
+- `AssetImportHandler`
+
+Main state update와 file write를 분리하고 IPC 입력값을 검증한다. Renderer에 Electron API 전체를 노출하지 않고 action별 Preload API만 노출한다. Electron 공식 IPC guide도 `ipcRenderer.send` 전체를 직접 노출하지 말고 필요한 API만 제한하라고 안내한다. [Electron IPC](https://www.electronjs.org/docs/latest/tutorial/ipc)
+
+### 3-3. 3단계: Renderer 소비 경로
+
+SRT부터 다음 순서로 전환한다.
+
+1. `ProjectEventAdapter`와 TanStack Query Cache 연결
+2. SRT component가 `ProjectSnapshot`을 읽도록 변경
+3. SRT 입력이 `ProjectAction`을 보내도록 변경
+4. SRT Undo/Redo를 Main History로 전환
+5. 기존 SRT Store의 프로젝트 원본과 History 제거
+
+이후 Timeline 배치와 split을 같은 방식으로 옮긴다. AudioEngine이 필요한 기능은 `ProjectRuntimeSyncAdapter`를 함께 추가한다.
+
+Renderer `SaveController`는 Main 자동저장이 안정된 뒤 저장 UI 역할만 남긴다.
+
+### 3-4. 4단계: 기존 구조 정리
+
+- Renderer의 프로젝트 자동저장 제거
+- IndexedDB의 project document 원본 저장 제거
+- 중복된 프로젝트 Zustand Store 제거
+- 전환이 끝난 Renderer History 제거
+- 사용하지 않는 asset 정리 정책 적용
+
+UI Zustand와 runtime cache까지 제거하지 않는다. 삭제 기준은 "Zustand인가"가 아니라 "Main ProjectDocument와 같은 원본을 다시 소유하는가"다.
+
+## 4. PR 분리
+
+PR은 라인 수가 아니라 한 가지 변경 목적을 기준으로 나눈다.
+
+### 4-1. 기반 타입 PR
+
+- 공통 타입
+- 순수 reducer
+- forward patch와 inverse patch 테스트
+
+기존 제품 동작은 바꾸지 않는다.
+
+### 4-2. Main 흐름 PR
+
+- `ProjectSession`
+- IPC request와 event
+- 구독 handshake
+- `ProjectSaveManager`
+
+Renderer의 기존 소비자는 아직 유지할 수 있다.
+
+### 4-3. 기능별 전환 PR
+
+- SRT read path와 action path 전환
+- SRT Main History 전환
+- Timeline read path와 action path 전환
+- Timeline Runtime Sync Adapter
+
+SRT와 Timeline은 검증 범위와 회귀 위험이 다르므로 별도 PR로 나눈다.
+
+### 4-4. 정리 PR
+
+- 사용하지 않는 Store와 History 삭제
+- 이전 SaveController 로직 삭제
+- 임시 feature flag 삭제
+
+각 PR은 `test`, `typecheck`, `lint`, `build`가 통과해야 다음 PR의 base가 된다.
+
+## 5. 검증 계획
+
+### 5-1. 상태 일치
+
+| 시나리오 | 기대 결과 |
+| --- | --- |
+| Editor에서 SRT 수정 | Main version이 한 번 증가하고 열린 모든 창이 같은 version을 가진다. |
+| 요청 응답과 event 중복 | Renderer가 한 번만 적용한다. |
+| 중간 version event 누락 | Renderer가 전체 snapshot을 다시 받아 복구한다. |
+| 새 Script Panel 창 열기 | Main의 최신 snapshot으로 시작한다. |
+| Admin 탭 진입 | 디스크 재조회 없이 Main 기준 최신 상태를 표시한다. |
+
+### 5-2. Undo와 Redo
+
+- 다른 창에서 실행한 Undo 결과가 모든 창에 반영되는지 확인한다.
+- drag 한 번이 History entry 한 개가 되는지 확인한다.
+- Main document와 AudioEngine region 구조를 비교한다.
+- Undo가 참조하는 asset이 보존되는지 확인한다.
+- 전환한 기능에 Renderer History가 남아 있지 않은지 확인한다.
+
+### 5-3. 저장과 장애
+
+- 자동저장과 수동 저장이 같은 파일에 동시에 쓰지 않는지 확인한다.
+- 저장 중 새 version이 들어오면 최신 snapshot이 이어서 저장되는지 확인한다.
+- 새 프로젝트가 recovery 폴더에 저장되는지 확인한다.
+- 정상 종료 시 pending 저장을 flush하는지 확인한다.
+- Renderer 강제 종료 후 Main session이 유지되는지 확인한다.
+- 파일 쓰기 실패 후 dirty와 error 상태가 유지되는지 확인한다.
+- 오래된 TTS 결과가 최신 item을 덮지 않는지 확인한다.
+
+### 5-4. 성능
+
+구조 변경 전과 후에 같은 대표 프로젝트로 측정한다.
+
+- action 요청부터 화면 반영까지의 시간
 - Main event loop 지연
-- 변경 이벤트와 전체 상태의 IPC payload 크기
-- 프로젝트 파일 쓰기 시간
-- 전체 상태로 화면 실행 객체를 다시 만드는 시간
-- Cache 갱신 뒤 다시 그려지는 Component 범위
+- snapshot과 patch payload byte 크기
+- project file 저장 시간
+- SRT row 하나 수정 시 리렌더된 component 수
 
-Electron, 내장 Node.js, React, TanStack Query 버전과 운영체제도 함께 기록해야 결과를 다시 비교할 수 있다.
+현재는 기준 수치가 없으므로 성능 개선을 주장할 수 없다. 먼저 기존값을 측정하고 제품 허용값을 정해야 한다.
 
-CPU 사용이 큰 작업 때문에 Main 응답성이 실제로 나빠진다면 Worker나 Electron Utility Process로 분리한다. 측정 전에 모든 작업을 미리 분리하지 않는다.
+### 5-5. version 규칙 테스트
 
-</details>
+아래 테스트는 중복과 정상 다음 version과 gap을 분리한다.
 
-## 3. 상태 정합성만 좋아지는 것은 아니다
+```ts
+// project-version.test.ts
+import { describe, expect, it } from 'vitest';
 
-Main SSOT는 기존 위험을 줄이는 대신 새로운 복잡성을 만든다.
+function decideUpdate(currentVersion: number, receivedVersion: number): 'ignore' | 'apply' | 'reload' {
+  if (receivedVersion <= currentVersion) {
+    return 'ignore';
+  }
 
-| 줄이려는 위험                        | 새로 생기는 비용                               |
-| ------------------------------------ | ---------------------------------------------- |
-| 화면과 저장이 다른 상태를 읽는다.    | 모든 저장 가능한 변경이 IPC를 거친다.          |
-| 창마다 Undo/Redo 결과가 달라진다.    | 이벤트 중복, 순서 역전과 누락을 처리해야 한다. |
-| 새 창이 오래된 상태로 시작한다.      | 초기 구독과 전체 상태 복구 규칙이 필요하다.    |
-| 창 종료와 함께 저장 책임이 사라진다. | Main의 저장 실패와 종료 흐름을 관리해야 한다.  |
+  if (receivedVersion === currentVersion + 1) {
+    return 'apply';
+  }
 
-SSOT가 복잡성을 없애는 것은 아니다. 최종값을 정하고 실패를 복구하는 규칙을 한 위치에서 확인할 수 있게 옮긴다.
+  return 'reload';
+}
 
-## 4. 이 설계가 맞는 조건
+describe('project update version', () => {
+  it.each([
+    { current: 3, received: 3, expected: 'ignore' },
+    { current: 3, received: 4, expected: 'apply' },
+    { current: 3, received: 5, expected: 'reload' },
+  ] as const)('$current -> $received uses $expected', ({ current, received, expected }) => {
+    expect(decideUpdate(current, received)).toBe(expected);
+  });
+});
+```
 
-다음 조건을 함께 만족하면 Main SSOT는 이 편집기에 적합한 후보다.
+## 6. 선택의 비용
 
-1. 여러 창이 같은 로컬 프로젝트를 편집한다.
-2. 프로젝트 파일 저장이 Main을 거친다.
-3. 프로젝트를 직렬화 가능한 값으로 표현할 수 있다.
-4. Main의 상태 변경은 짧고 중간 비동기 작업 없이 끝난다.
-5. 무거운 미디어 작업을 상태 변경 경로와 분리할 수 있다.
+### 6-1. 줄이려는 위험
 
-하나의 창만 사용하거나 서버가 이미 최종 상태를 관리한다면 이 구조보다 단순한 방법이 있을 수 있다.
+- 편집 state와 저장 state가 서로 다른 Store를 읽는 위험
+- 창마다 Undo/Redo 결과가 달라지는 위험
+- 새 창이 이전 디스크 version으로 시작하는 위험
+- Renderer 종료와 함께 자동저장이 끊기는 위험
 
-## 5. 다시 비교해야 하는 조건
+### 6-2. 새로 드는 비용
 
-다음 결과가 확인되면 현재 선택을 유지하지 않고 다른 구조와 다시 비교한다.
+- 저장 가능한 모든 변경이 IPC를 거친다.
+- type-safe patch 종류를 관리해야 한다.
+- `ProjectRuntimeSyncAdapter`를 구현하고 검증해야 한다.
+- 최초 구독 buffer와 version gap 복구가 필요하다.
+- 이관 중 기존 경로와 새 경로를 함께 이해해야 한다.
 
-- IPC 왕복이 입력 경험의 허용 범위를 넘는다.
-- 전체 상태 복구가 오래 걸려 편집을 방해한다.
-- 변경 종류가 지나치게 늘어 규칙을 유지하기 어렵다.
-- 화면 실행 상태를 문서와 맞추는 비용이 너무 크다.
-- Main 내부 구독이 복잡해져 Class field만으로 흐름을 추적하기 어렵다.
+SSOT를 Main으로 옮긴다고 복잡성이 사라지지는 않는다. 복잡성을 최종값 결정과 복구 규칙이 보이는 위치로 옮긴다.
 
-마지막 조건에서는 Main 전용 상태 Store를 다시 비교할 수 있다. 현재 선택은 영구 규칙이 아니라 지금 확인한 요구사항에 맞춘 시작점이다.
+## 7. 조건부 최적성
 
-## 6. 아직 제품 결정이 필요한 부분
+이 설계를 모든 Electron 앱의 최적 구조라고 말할 수는 없다. 다음 조건에서 이 프로젝트에 적합한 후보라고 판단했다.
 
-<details>
-<summary>기술 구조만으로 정할 수 없는 정책</summary>
+1. 여러 Renderer가 같은 로컬 프로젝트 문서를 편집한다.
+2. Main에는 직렬화 가능한 문서만 둔다.
+3. Main state update는 짧고 동기적이다.
+4. 무거운 작업은 비동기 I/O나 별도 process로 분리한다.
+5. Renderer cache 갱신 비용이 허용 범위 안에 있다.
 
-1. 자동저장이 허용할 수 있는 데이터 손실 시간
-2. 모든 변경을 별도 복구 기록에 남길지
-3. 같은 자막의 동시 수정을 거절할지 나중 값으로 덮을지
-4. 앱 재시작 뒤 Undo/Redo 이력을 복원할지
-5. 이력과 asset을 얼마나 오래 보존할지
-6. 입력 지연과 복구 시간의 허용 기준
+다음 측정 결과가 나오면 결정을 다시 검토한다.
 
-이 값은 측정 결과만으로도 정할 수 없다. 데이터 중요도와 사용자가 기대하는 동작을 함께 확인해야 한다.
+- 큰 snapshot에서 TanStack Query structural sharing 비용이 크다.
+- patch 수가 지나치게 늘어 유지보수가 어렵다.
+- IPC latency가 입력 UX의 허용값을 넘는다.
+- AudioEngine rebuild fallback 시간이 너무 길다.
 
-</details>
+이 경우 cache를 기능별 query로 나누거나 읽기 전용 Zustand를 비교할 수 있다. 단 query를 나누면 여러 조각의 version을 함께 맞추는 규칙이 추가된다.
 
-## 7. 마치며
+## 8. 남은 결정
 
-이번 문제에서 Store가 여러 개라는 사실 자체는 원인이 아니었다. 같은 프로젝트의 최종값을 여러 위치가 정하고 있고, 그 순서와 저장 기준이 없었던 것이 문제였다.
+현재 증거만으로 확정할 수 없는 항목이다.
 
-Main SSOT는 이 결정권을 한 곳으로 모으는 설계다. 이 선택이 실제로 적합한지는 상태 정합성, 복구와 응답 시간을 검증한 뒤에만 판단할 수 있다.
+1. 자동저장이 허용하는 최대 데이터 손실 시간
+2. action 응답 전 복구용 변경 기록이 필요한지 여부
+3. 같은 SRT row의 충돌을 거절할지 merge UI를 제공할지 여부
+4. 앱 재실행 후 History를 복원할지 여부
+5. History와 asset의 보존 기간
+6. action latency와 Main event loop 지연의 허용값
 
-> 좋은 설계는 처음부터 바뀌지 않는 설계가 아니라, 선택 근거와 실패 조건을 설명할 수 있는 설계라고 생각한다.
+이 결정을 숨기고 구조를 완료된 답으로 표현하지 않는다. 제품 정책과 측정값이 생기면 문서를 갱신한다.
+
+## 9. 최종 구조
+
+```mermaid
+flowchart TB
+  subgraph Renderers["Renderer Processes"]
+    Editor["Editor\nQuery Cache와 UI Zustand"]
+    Script["SRT Panel\nQuery Cache와 UI Zustand"]
+    Admin["Admin\nQuery Cache"]
+    Runtime["ProjectRuntimeSyncAdapter\nAudioEngine 갱신"]
+    SaveUi["SaveController\n저장 UI"]
+  end
+
+  Preload["Preload의 제한된 Project API"]
+
+  subgraph Main["Main Process: ProjectDocument SSOT"]
+    Bridge["IPC Handler와 ProjectEventBridge"]
+    Session["ProjectSession\nDocument와 version과 History"]
+    Reducer["ProjectStateReducer"]
+    SaveManager["ProjectSaveManager\ndebounce와 한 번에 하나의 쓰기"]
+    FileStorage["ProjectFileStorage\ntemp와 backup과 recovery"]
+    Asset["AssetImportHandler"]
+    Mode["WorkspaceModeStore"]
+
+    Bridge --> Session
+    Session --> Reducer
+    Session --> SaveManager
+    SaveManager --> FileStorage
+    Bridge --> Asset
+    Bridge --> Mode
+  end
+
+  Editor -->|"ProjectAction"| Preload
+  Script -->|"ProjectAction"| Preload
+  Admin -->|"ProjectAction"| Preload
+  SaveUi -->|"save와 saveAs"| Preload
+  Preload --> Bridge
+  Bridge -->|"같은 확정 update"| Editor
+  Bridge -->|"같은 확정 update"| Script
+  Bridge -->|"같은 확정 update"| Admin
+  Bridge --> Runtime
+```
+
+## 10. 처음 질문에 대한 답
+
+### 10-1. 프로젝트 문서의 SSOT
+
+Main `ProjectSession`에 둔다. 단 Main에 모든 UI state를 두지는 않는다.
+
+### 10-2. Renderer의 상태
+
+TanStack Query Cache에 읽기 전용 `ProjectSnapshot`을 둔다. UI와 AudioEngine runtime state는 Renderer Zustand와 실행 객체에 남긴다.
+
+### 10-3. 자동저장
+
+Main `ProjectSaveManager`가 담당한다. Renderer `SaveController`는 저장 요청과 상태 표시를 담당한다.
+
+### 10-4. Undo와 Redo
+
+Main은 직렬화 가능한 document patch History를 관리한다. Renderer `ProjectRuntimeSyncAdapter`는 확정 결과를 AudioEngine에 반영한다.
+
+### 10-5. 일반 IPC와 MessagePort
+
+저장 가능한 변경과 낮은 빈도 event는 일반 IPC를 사용한다. 연속 playhead처럼 저장하지 않는 고빈도 event는 측정 후 MessagePort를 검토한다.
+
+## 11. 마치며
+
+이번 설계에서 가장 크게 배운 것은 Store를 한 곳에 모으는 방법이 아니었다. **상태마다 최종 변경 권한과 수명주기와 복구 기준을 따로 정하는 관점**이었다.
+
+Main SSOT는 상태 복사본을 없애지 않는다. 복사본이 원본처럼 수정되는 일을 막는다. 자동저장을 Main으로 옮겨도 모든 disk write가 즉시 보장되지는 않는다. 보장 수준을 분리해서 말해야 한다. Undo/Redo를 Main으로 옮겨도 AudioEngine까지 Main에 둘 필요는 없다. 문서와 실행 상태를 나누면 된다.
+
+좋은 구조는 가장 많은 기술을 넣은 구조가 아니라 어떤 조건에서 선택했고 어떤 측정에서 다시 바꿀지 설명할 수 있는 구조라는 것을 다시 확인했다.
 
 [시리즈 처음부터 읽기: Part 1. Electron 멀티 윈도우에서 저장 결과가 달라진 이유](/posts/electron-multi-window-state-ssot)
 
@@ -166,7 +347,15 @@ Main SSOT는 이 결정권을 한 곳으로 모으는 설계다. 이 선택이 �
 
 ## 참고
 
-- [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
-- [Electron IPC](https://www.electronjs.org/docs/latest/tutorial/ipc)
+**Electron 공식 문서**
+
+- [Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
+- [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc)
+- [MessagePorts in Electron](https://www.electronjs.org/docs/latest/tutorial/message-ports)
 - [Electron Performance](https://www.electronjs.org/docs/latest/tutorial/performance)
-- [Node.js File System](https://nodejs.org/api/fs.html)
+
+**React와 상태 cache 공식 문서**
+
+- [React useSyncExternalStore](https://react.dev/reference/react/useSyncExternalStore)
+- [TanStack Query Overview](https://tanstack.com/query/latest/docs/framework/react/overview)
+- [TanStack Query QueryClient](https://tanstack.com/query/latest/docs/reference/QueryClient)

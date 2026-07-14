@@ -1,201 +1,330 @@
 ---
-title: '[Part 2.] Main이 프로젝트 상태를 정하고 각 창에 전달하는 방법'
-description: '저장 가능한 프로젝트 상태의 결정권을 Main에 두고 각 Renderer가 같은 결과를 받는 흐름을 설명합니다.'
+title: '[Part 2.] Main Process에 ProjectDocument SSOT를 둔 이유'
+description: 'SSOT 후보와 Main 내부 상태 도구를 비교하고 ProjectSession의 책임 경계를 설계합니다.'
 date: '2026-07-14'
 publishedAt: '2026-07-14T09:10:00+09:00'
-tags: ['electron', 'state-management', 'ssot', 'ipc']
+tags: ['electron', 'state-management', 'ssot', 'typescript']
 draft: false
 ---
 
 <details>
 <summary>목차 펼쳐보기</summary>
 
-- [1. 원본과 화면용 복사본을 구분했다](#1-원본과-화면용-복사본을-구분했다)
-- [2. Main이 관리할 상태의 경계](#2-main이-관리할-상태의-경계)
-- [3. Main을 선택한 이유](#3-main을-선택한-이유)
-- [4. 변경 요청과 확정 결과](#4-변경-요청과-확정-결과)
-- [5. 문서 번호로 누락을 찾는다](#5-문서-번호로-누락을-찾는다)
-- [6. Main과 각 창의 책임](#6-main과-각-창의-책임)
-- [7. 마치며](#7-마치며)
+- [1. 들어가며](#1-들어가며)
+- [2. SSOT의 범위](#2-ssot의-범위)
+- [3. SSOT 위치 비교](#3-ssot-위치-비교)
+- [4. Class private field와 Vanilla Zustand 비교](#4-class-private-field와-vanilla-zustand-비교)
+- [5. 상태 분류](#5-상태-분류)
+- [6. Main과 Renderer의 책임](#6-main과-renderer의-책임)
+- [7. 전체 구조](#7-전체-구조)
+- [8. 최소 구현](#8-최소-구현)
+- [9. 선택의 조건](#9-선택의-조건)
+- [10. 마치며](#10-마치며)
 
 </details>
 
 [이전 글: Part 1. Electron 멀티 윈도우에서 저장 결과가 달라진 이유](/posts/electron-multi-window-state-ssot)
 
-## 1. 원본과 화면용 복사본을 구분했다
+## 1. 들어가며
 
-앞선 글에서 저장과 화면이 서로 다른 상태를 읽고 있다는 문제를 확인했다. 해결하려면 모든 창이 공유하는 프로젝트의 최종값을 한 곳에서 정해야 했다.
+앞선 글에서 같은 프로젝트 값을 여러 Renderer Store가 각각 수정하고 있다는 문제를 확인했다. 이제 최종값을 정하는 위치를 선택해야 했다. 후보는 Renderer별 Store 유지, 특정 Renderer 지정, Main `ProjectSession` 세 가지였다.
 
-여기서 “한 곳”은 값의 복사본이 하나뿐이라는 뜻이 아니다. 각 창은 화면을 그리기 위해 프로젝트 값의 복사본을 가질 수 있다. 다만 복사본이 최종값을 직접 결정하지 않는다.
+결론부터 적으면, **직렬화 가능한 `ProjectDocument`와 version과 Undo/Redo History를 Main `ProjectSession`이 소유하도록 설계했다**. Main 내부에는 먼저 TypeScript Class의 private field를 사용한다. Vanilla Zustand는 현재 필요한 기능이 생겼을 때 다시 검토한다.
 
-> Main이 프로젝트의 최종 상태를 정하고, 각 창은 그 결과를 받아 화면을 갱신한다.
+## 2. SSOT의 범위
 
-<details>
-<summary>이 글에서 사용하는 내부 이름</summary>
+### 2-1. 이 글의 정의
 
-- 프로젝트 상태 관리자: ProjectSession
-- 저장 가능한 프로젝트 상태: ProjectDocument
-- 화면용 복사본: ProjectSnapshot
-- 변경 요청: ProjectAction
-- 확정된 변경 결과: ProjectUpdate
+이 글에서 SSOT는 최종값을 확정하는 권한이 한 곳에 있다는 뜻이다. 값의 복사본이 한 벌만 존재한다는 뜻은 아니다.
 
-본문에서는 역할을 중심으로 설명하고, 내부 이름은 구현 경계를 구분할 때만 사용한다.
+- Main의 `ProjectDocument`: 최종 확정 상태
+- Renderer의 `ProjectSnapshot`: 화면 표시용 읽기 전용 복사본
+- 디스크의 `project.json`: 마지막으로 저장이 완료된 상태
 
-</details>
+디스크 파일은 저장 debounce 동안 Main memory보다 이전 version일 수 있다. 따라서 앱이 실행 중일 때 최신 상태의 기준은 Main memory다.
 
-## 2. Main이 관리할 상태의 경계
+### 2-2. Main에 두는 상태
 
-Main에는 프로젝트 파일에 저장되는 값과 그 변경 이력만 둔다.
+- 프로젝트 기본 정보
+- SRT row
+- Timeline item 배치
+- asset 참조
+- 프로젝트 version
+- Undo/Redo History
+- 현재 프로젝트 경로와 저장 상태
 
-| 구분                      | 위치    | 예시                                           |
-| ------------------------- | ------- | ---------------------------------------------- |
-| 저장 가능한 프로젝트 상태 | Main    | 자막, Timeline 배치, asset 참조, 프로젝트 설정 |
-| 화면용 복사본             | 각 창   | Main이 확정한 프로젝트 상태                    |
-| UI와 실행 상태            | 해당 창 | 선택, 모달, 드래그 좌표, 재생 객체             |
+### 2-3. Main에 두지 않는 상태
 
-오디오 버퍼나 Timeline 실행 객체는 Main으로 옮기지 않았다. 특정 창의 실행 환경에 속하고 프로젝트 파일에 그대로 저장할 수도 없기 때문이다.
+- 모달 열림 여부
+- hover와 focus
+- 드래그 중인 임시 좌표
+- 연속 playhead 위치
+- DOM Node
+- `AudioBuffer`와 AudioEngine 실행 객체
 
-이 경계를 먼저 정하니 Zustand나 TanStack Query를 어디에 쓸지도 단순해졌다. 도구가 상태의 소유권을 정하는 것이 아니라, 이미 정한 책임에 맞춰 도구를 배치했다.
+후자의 값들은 프로젝트 파일에 그대로 저장할 수 없거나 특정 Renderer의 화면과 실행 환경에만 필요하다.
 
-## 3. Main을 선택한 이유
+## 3. SSOT 위치 비교
 
-프로젝트의 최종 상태를 둘 위치로 세 가지를 비교했다.
+| 후보 | 장점 | 비용과 한계 |
+| --- | --- | --- |
+| Renderer별 Store 유지 | 기존 수정량이 작다. | 최종값 결정 규칙과 저장 전 조립이 계속 필요하다. |
+| Editor Renderer 지정 | 웹 앱의 상위 Store와 비슷하다. | Editor가 닫히면 수명주기가 끊기고 Admin 중심 흐름이 복잡해진다. |
+| Main `ProjectSession` | 창과 독립적인 수명주기와 로컬 파일 접근을 함께 가진다. | 모든 저장 가능한 변경이 IPC를 거친다. |
 
-| 후보               | 장점                                         | 한계                                           |
-| ------------------ | -------------------------------------------- | ---------------------------------------------- |
-| 각 창의 Store 유지 | 기존 코드 변경이 작다.                       | 저장 전 상태 조립과 충돌 규칙이 계속 필요하다. |
-| 특정 편집 창       | 웹 앱의 상위 Store와 비슷하다.               | 그 창이 닫히면 상태 수명주기가 끊긴다.         |
-| Main               | 창과 독립적으로 상태와 파일 저장을 관리한다. | 저장 가능한 변경이 IPC를 거친다.               |
+Electron 공식 문서에서 Main Process는 앱의 entry point이며 창과 앱 생명주기를 관리한다. 각 `BrowserWindow`는 별도 Renderer Process를 만든다. [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
 
-이 프로젝트에는 다음 조건이 함께 있었다.
+이 사실만으로 Main SSOT가 정답이 되지는 않는다. 이 프로젝트에서는 다음 조건이 함께 있었기 때문에 Main을 선택했다.
 
-1. 여러 창이 같은 로컬 프로젝트를 편집한다.
-2. 프로젝트 파일 저장은 Main의 파일 시스템 접근을 거친다.
-3. 편집 창이 닫혀도 보조 패널이나 관리 화면이 남을 수 있다.
-4. 저장과 Undo/Redo가 같은 프로젝트 상태를 사용해야 한다.
+1. 여러 Renderer가 같은 프로젝트를 편집한다.
+2. 프로젝트 파일 저장이 Main을 거친다.
+3. Editor가 닫혀도 Script Panel이나 Admin이 남을 수 있다.
+4. 저장과 Undo/Redo가 같은 문서를 사용해야 한다.
 
-그래서 Main을 선택했다. Electron이 이 구조를 강제해서가 아니라, 이 앱의 창 수명주기와 저장 조건에 가장 잘 맞았기 때문이다.
+## 4. Class private field와 Vanilla Zustand 비교
 
-<details>
-<summary>Main과 Renderer의 도구 선택</summary>
+### 4-1. 처음 고려한 구조
 
-Main의 프로젝트 상태 관리자는 별도 상태 라이브러리 없이 Class field와 method로 시작한다. 필요한 기능은 현재 상태 읽기, 변경 적용, 문서 번호 증가, 이력 기록과 결과 발행이다.
+처음에는 `ProjectSession` Class 안에 Vanilla Zustand Store를 넣으려 했다. Zustand의 `createStore`는 React Hook 없이 `getState`, `setState`, `subscribe`를 제공한다. [Zustand createStore](https://zustand.docs.pmnd.rs/apis/create-store)
 
-TypeScript의 `private`는 주로 컴파일 시점 접근을 제한한다. 런타임에서도 field 접근을 막아야 한다면 ECMAScript private field인 `#document`를 사용해야 한다.
+하지만 "Main에 React가 없다"는 사실은 Vanilla Zustand를 써야 하는 근거가 아니었다. 필요한 기능을 다시 적어 보았다.
 
-각 창의 화면용 복사본은 기존 비동기 데이터 흐름을 재사용하기 위해 TanStack Query Cache에 둔다. 이때 query key에는 프로젝트 식별자를 포함하고, 자동 refetch, retry, `gcTime`은 Main 이벤트와 재연결 규칙에 맞게 명시한다. Cache 값은 직접 변경하지 않고 불변 갱신한다.
+- 현재 문서 읽기
+- action으로 문서 변경
+- version 증가
+- History 기록
+- 변경 결과 발행
+- 자동저장 요청
 
-Main 내부에 selector 구독이나 middleware가 실제로 필요해지면 Vanilla Zustand를 다시 비교할 수 있다. 지금은 필요한 기능보다 도구가 더 많기 때문에 도입하지 않는다.
+이 기능은 Class의 private field와 method만으로 구현할 수 있었다.
 
-- [TanStack Query QueryClient](https://tanstack.com/query/latest/docs/reference/QueryClient)
-- [TanStack Query Important Defaults](https://tanstack.com/query/latest/docs/framework/react/guides/important-defaults)
+### 4-2. private field 선택
 
-</details>
+`ProjectSession`이 이미 변경 method를 제공한다면 외부에서 `setState`를 직접 호출하게 할 이유가 없다. 오히려 setter가 두 개가 되면 변경 규칙을 우회할 수 있다.
 
-## 4. 변경 요청과 확정 결과
+| 기준 | Class private field | Class 안의 Vanilla Zustand |
+| --- | --- | --- |
+| 상태 은닉 | private로 강제 가능 | Store API 노출 범위를 따로 막아야 한다. |
+| selector 구독 | 직접 구현 필요 | 기본 제공한다. |
+| middleware | 직접 구현 필요 | 생태계를 사용할 수 있다. |
+| 현재 요구사항 | 충분하다. | 기능이 겹친다. |
 
-각 창은 수정한 전체 프로젝트를 보내지 않는다. “자막 문장을 바꾼다”처럼 사용자의 의도를 담은 변경 요청을 Main에 보낸다.
+따라서 현재 설계에서는 private field를 선택했다. 이것은 Zustand가 부적합하다는 일반 결론이 아니다.
 
-Main은 요청을 검증하고 프로젝트 상태를 바꾼다. 이후 새 문서 번호와 확정된 변경 결과를 모든 관련 창에 보낸다.
+### 4-3. 다시 검토할 조건
+
+다음 중 하나가 실제 요구사항이 되면 Vanilla Zustand를 다시 비교한다.
+
+- Main 내부 여러 모듈이 서로 다른 selector로 상태를 구독한다.
+- Store middleware가 직접 구현보다 단순하다.
+- 상태 추적 도구가 필요하다.
+- 성능 측정에서 selector 단위 구독이 필요하다고 확인된다.
+
+## 5. 상태 분류
+
+상태를 세 종류로 나누었다.
+
+| 상태 | 위치 | 변경 권한 | 예시 |
+| --- | --- | --- | --- |
+| `ProjectDocument` | Main | Main만 가짐 | SRT, Timeline, asset 참조 |
+| `ProjectSnapshot` | 각 Renderer cache | 읽기 전용 | 화면에 표시할 확정 프로젝트 |
+| UI와 runtime state | 각 Renderer | 해당 Renderer | selection, drag preview, AudioEngine |
+
+Renderer에 Zustand가 남는 이유도 여기서 분명해졌다. **화면 리렌더가 필요한 모든 상태가 아니라 Renderer만 알아도 되는 UI와 runtime 상태를 관리하기 위해서**다. Main의 프로젝트 원본을 다시 소유하기 위해 쓰는 것은 아니다.
+
+## 6. Main과 Renderer의 책임
+
+### 6-1. Main
+
+- `ProjectSession`: action 검증과 state update와 version과 History
+- `ProjectStateReducer`: 이전 문서와 action으로 다음 문서 계산
+- `ProjectEventBridge`: 확정된 변경 결과를 열린 Renderer에 발행
+- `ProjectSaveManager`: debounce와 저장 상태와 종료 전 flush
+- `ProjectFileStorage`: project file 읽기와 쓰기와 교체
+- `AssetImportHandler`: 로컬 미디어 복사 후 `AssetRef` 생성
+- `WorkspaceModeStore`: Editor와 Studio의 동시 진입 방지
+
+### 6-2. Renderer
+
+- `ProjectEventAdapter`: Main event를 받아 cache 갱신
+- TanStack Query Cache: `ProjectSnapshot` 읽기 전용 복사본
+- `ProjectRuntimeSyncAdapter`: document 변경을 AudioEngine에 반영
+- UI Zustand: selection과 modal과 drag preview
+- `SaveController`: 저장 버튼과 저장 상태 UI
+- `AssetImportController`: 파일 선택 UI와 import 요청
+
+### 6-3. ProjectSession이 하지 않는 일
+
+`ProjectSession`이 Main의 모든 일을 맡으면 다시 큰 Class가 된다. 다음 책임은 밖으로 뺐다.
+
+- 파일 포맷과 실제 파일 쓰기
+- debounce timer
+- IPC 구독자 목록
+- `AudioBuffer` 생성
+- React cache 갱신
+
+`ProjectSession`은 프로젝트 상태 변경 규칙에만 집중한다.
+
+## 7. 전체 구조
+
+색상을 직접 지정하지 않고 Mermaid 기본 theme를 사용했다. 밝은 화면과 어두운 화면에서 글자 대비를 theme가 결정하도록 하기 위해서다.
 
 ```mermaid
-sequenceDiagram
-  participant R1 as "요청한 창"
-  participant M as "Main"
-  participant R2 as "다른 창"
+flowchart TB
+  subgraph Main["Main Process: 프로젝트 원본"]
+    IPC["IPC Handler와 Event Bridge"]
+    Session["ProjectSession\nProjectDocument와 version과 History"]
+    Reducer["ProjectStateReducer"]
+    SaveManager["ProjectSaveManager"]
+    FileStorage["ProjectFileStorage"]
+    AssetHandler["AssetImportHandler"]
+    AssetStorage["AssetFileStorage"]
+    Mode["WorkspaceModeStore"]
 
-  R1->>M: "변경 요청"
-  M->>M: "검증, 상태 변경, 문서 번호 증가"
-  M-->>R1: "요청 처리 결과"
-  M-->>R1: "확정된 변경 이벤트"
-  M-->>R2: "같은 변경 이벤트"
+    IPC --> Session
+    Session --> Reducer
+    Session --> SaveManager
+    SaveManager --> FileStorage
+    IPC --> AssetHandler
+    AssetHandler --> AssetStorage
+    IPC --> Mode
+  end
+
+  subgraph Editor["Editor Renderer"]
+    EditorAdapter["ProjectEventAdapter"]
+    EditorCache["TanStack Query Cache"]
+    EditorRuntime["ProjectRuntimeSyncAdapter"]
+    EditorUi["UI Zustand"]
+  end
+
+  subgraph Script["SRT Panel Renderer"]
+    ScriptAdapter["ProjectEventAdapter"]
+    ScriptCache["TanStack Query Cache"]
+    ScriptUi["UI Zustand"]
+  end
+
+  subgraph Admin["Admin Renderer"]
+    AdminAdapter["ProjectEventAdapter"]
+    AdminCache["TanStack Query Cache"]
+  end
+
+  IPC -->|"확정된 update"| EditorAdapter
+  IPC -->|"확정된 update"| ScriptAdapter
+  IPC -->|"확정된 update"| AdminAdapter
+  EditorAdapter --> EditorCache
+  EditorAdapter --> EditorRuntime
+  ScriptAdapter --> ScriptCache
+  AdminAdapter --> AdminCache
+  EditorUi -. "저장하지 않는 UI state" .-> EditorRuntime
 ```
 
-요청 응답은 성공 여부와 요청 식별자만 전달한다. 실제 화면 갱신은 요청한 창을 포함한 모든 창이 같은 이벤트 처리 경로를 사용한다. 이렇게 하면 요청 응답과 이벤트에 같은 변경 내용을 중복해서 적용하지 않아도 된다.
+## 8. 최소 구현
 
-<details>
-<summary>변경 결과의 세부 형식</summary>
+아래 예제는 SRT text 변경만 포함한 최소 TypeScript 코드다. reducer는 사이드이펙트가 없고 `ProjectSession`만 version과 event를 관리한다.
 
-확정된 변경 결과에는 최소한 다음 정보가 필요하다.
+```ts
+// project-session.ts
+export interface ProjectDocument {
+  rows: Record<string, { id: string; text: string }>;
+}
 
-- 프로젝트 식별자
-- 순서가 계속 증가하는 문서 번호
-- 변경된 값
+export type ProjectAction = {
+  type: 'srt/textChanged';
+  rowId: string;
+  text: string;
+};
 
-요청 식별자는 요청 재시도나 로그 연결에 사용할 수 있다. 문서 번호는 변경 적용 순서와 이벤트 누락을 판단한다. 두 값의 역할을 섞지 않는다.
+export interface ProjectUpdateResult {
+  version: number;
+  document: ProjectDocument;
+}
 
-평상시에는 변경된 부분만 보내고, 새 창을 열거나 이벤트 누락을 복구할 때는 전체 프로젝트 상태를 보낸다. 범용 문자열 경로보다 프로젝트 변경 종류가 드러나는 형태를 사용하면 잘못된 경로를 줄일 수 있다.
+export function applyProjectAction(document: ProjectDocument, action: ProjectAction): ProjectDocument {
+  return {
+    ...document,
+    rows: {
+      ...document.rows,
+      [action.rowId]: {
+        ...document.rows[action.rowId],
+        text: action.text,
+      },
+    },
+  };
+}
 
-</details>
+export class ProjectSession {
+  #document: ProjectDocument;
+  #version = 0;
 
-## 5. 문서 번호로 누락을 찾는다
+  constructor(document: ProjectDocument) {
+    this.#document = document;
+  }
 
-각 창은 마지막으로 적용한 문서 번호를 기억한다. 현재 번호가 12라면 다음처럼 처리한다.
+  dispatch(action: ProjectAction): ProjectUpdateResult {
+    this.#document = applyProjectAction(this.#document, action);
+    this.#version += 1;
 
-| 받은 문서 번호 | 처리                                              |
-| -------------- | ------------------------------------------------- |
-| 12 이하        | 이미 적용한 결과이므로 무시한다.                  |
-| 13             | 변경을 적용한다.                                  |
-| 14 이상        | 중간 이벤트를 놓쳤으므로 전체 상태를 다시 받는다. |
+    return { version: this.#version, document: this.#document };
+  }
+}
+```
 
-이 규칙은 중복, 순서 역전과 이벤트 누락을 다룬다. 두 창이 같은 자막을 서로 다른 의도로 수정한 의미적 충돌까지 해결하지는 않는다.
+순수 reducer는 다음처럼 검증할 수 있다.
 
-<details>
-<summary>새 창이 이벤트를 놓치지 않는 초기화 순서</summary>
+```ts
+// project-session.test.ts
+import { expect, it } from 'vitest';
+import { applyProjectAction } from './project-session';
 
-새 창은 다음 순서로 시작한다.
+it('changes only the selected SRT row', () => {
+  const before = {
+    rows: {
+      a: { id: 'a', text: 'before' },
+      b: { id: 'b', text: 'keep' },
+    },
+  };
 
-1. 창 내부의 이벤트 listener를 먼저 등록한다.
-2. Main에서 구독 등록과 현재 전체 상태 읽기를 하나의 동기 handler에서 처리한다.
-3. 초기화 중 들어온 이벤트는 잠시 보관한다.
-4. 전체 상태보다 큰 문서 번호의 이벤트만 순서대로 적용한다.
-5. 창이 닫히면 listener와 구독을 정리한다.
+  const after = applyProjectAction(before, {
+    type: 'srt/textChanged',
+    rowId: 'a',
+    text: 'after',
+  });
 
-구독 등록과 현재 상태 읽기 사이에 비동기 작업이 들어가면 다시 빈틈이 생긴다. 이 구간은 Main에서 중간 `await` 없이 처리해야 한다.
+  expect(after.rows.a.text).toBe('after');
+  expect(after.rows.b).toBe(before.rows.b);
+});
+```
 
-</details>
+실제 구현에서는 전체 document 대신 type-safe patch를 결과로 보낸다. 이 부분은 다음 글에서 다룬다.
 
-<details>
-<summary>충돌, 오래된 작업과 고빈도 이벤트</summary>
+## 9. 선택의 조건
 
-두 창이 같은 자막을 수정할 때 단순히 도착 순서대로 적용하면 마지막 요청이 최종값이 된다. 충돌을 사용자에게 알려야 한다면 요청에 편집을 시작한 시점의 항목 번호를 포함하고, 현재 번호와 다를 때 Main이 거절하도록 설계할 수 있다.
+이 설계는 다음 조건에서 적합하다고 판단했다.
 
-TTS 생성이나 waveform 분석처럼 오래 걸리는 작업은 시작한 프로젝트, 대상 항목과 당시 문서 번호를 결과에 함께 둔다. 결과 적용 직전에 현재 상태와 비교하면 이미 닫힌 프로젝트나 바뀐 항목에 오래된 결과를 적용하는 일을 막을 수 있다.
+1. Main에는 직렬화 가능한 프로젝트 문서만 둔다.
+2. `dispatch`, `undo`, `redo`의 state update는 짧고 동기적으로 끝낸다.
+3. 파일 I/O와 미디어 처리는 state update 밖에서 비동기로 실행한다.
+4. Renderer는 Main의 확정 상태를 직접 수정하지 않는다.
 
-연속 playhead와 drag preview처럼 저장하지 않는 고빈도 값은 먼저 해당 창의 local state로 처리한다. 실제 병목을 측정한 뒤에만 MessagePort 같은 별도 통신 경로를 검토한다.
+Main에서 긴 동기 작업을 실행하면 앱 전체 응답성에 영향을 줄 수 있다. CPU 사용이 큰 작업은 측정 후 Worker나 Electron Utility Process로 분리해야 한다. Electron 문서도 Utility Process를 CPU 집약적이거나 장애 가능성이 큰 작업의 분리 수단으로 설명한다. [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model#the-utility-process)
 
-</details>
+## 10. 마치며
 
-## 6. Main과 각 창의 책임
+이번 선택에서 중요했던 것은 상태 도구의 기능 수가 아니었다. 필요한 기능보다 도구가 더 많은지 먼저 확인했다. 현재 `ProjectSession`에는 Class private field가 충분했다.
 
-Main은 다음 책임을 가진다.
+동시에 Renderer의 Store를 모두 없애지 않았다. 프로젝트 원본과 UI state는 수명주기와 변경 권한이 다르기 때문이다. 다음 글에서는 Renderer가 Main의 확정 결과를 받아 화면을 갱신하는 방법을 정리한다.
 
-- 변경 요청을 검증하고 프로젝트 상태에 반영한다.
-- 문서 번호와 Undo/Redo 이력을 갱신한다.
-- 확정된 변경 결과를 모든 관련 창에 보낸다.
-- 최신 프로젝트 상태의 저장을 요청한다.
-
-각 창은 다음 책임을 가진다.
-
-- Main에서 받은 화면용 복사본을 그린다.
-- 사용자 입력을 변경 요청으로 바꿔 Main에 보낸다.
-- 확정된 결과를 재생 객체 같은 실행 상태에 반영한다.
-- 선택, 모달, 드래그처럼 해당 창에만 필요한 UI 상태를 관리한다.
-
-프로젝트 상태 관리자는 파일 쓰기, debounce timer, 창 구독자 목록과 React Cache까지 직접 맡지 않는다. 상태 변경 규칙 외의 책임은 별도 경계로 나눈다.
-
-## 7. 마치며
-
-각 창에 프로젝트 복사본이 있다고 해서 최종 상태가 여러 개가 되는 것은 아니다. 중요한 것은 복사본의 개수가 아니라 누가 변경을 확정하는가이다.
-
-Main이 상태를 확정하고, 각 창은 같은 이벤트와 문서 번호를 따라간다. 다음 글에서는 화면 실행 객체에 묶여 있던 Undo/Redo를 이 구조 위에서 하나의 문서 이력으로 바꾼 과정을 설명한다.
-
-[다음 글: Part 3. Undo/Redo를 하나의 문서 이력으로 통합하기](/posts/electron-main-process-undo-redo)
+[다음 글: Part 3. Renderer가 Main의 확정 상태를 받는 방법](/posts/electron-main-process-renderer-sync)
 
 ---
 
 ## 참고
 
-- [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
-- [Electron IPC](https://www.electronjs.org/docs/latest/tutorial/ipc)
-- [Electron ipcRenderer](https://www.electronjs.org/docs/latest/api/ipc-renderer)
+**Electron 공식 문서**
+
+- [Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
+- [Inter-Process Communication](https://www.electronjs.org/docs/latest/tutorial/ipc)
+
+**상태 관리 공식 문서**
+
+- [Zustand createStore](https://zustand.docs.pmnd.rs/apis/create-store)

@@ -1,8 +1,8 @@
 ---
-title: '[Part 4.] 자동저장의 완료 지점과 복구 전략'
-description: '메모리 반영과 파일 저장을 구분하고 최신 프로젝트를 순서대로 저장하며 실패 후 복구하는 기준을 설명합니다.'
+title: '[Part 5.] 자동저장의 책임과 디스크 저장 보장'
+description: 'Renderer SaveController와 Main ProjectSaveManager의 역할을 나누고 자동저장과 복구의 보장 수준을 구분합니다.'
 date: '2026-07-14'
-publishedAt: '2026-07-14T09:30:00+09:00'
+publishedAt: '2026-07-14T09:40:00+09:00'
 tags: ['electron', 'autosave', 'state-management', 'file-system']
 draft: false
 ---
@@ -10,170 +10,274 @@ draft: false
 <details>
 <summary>목차 펼쳐보기</summary>
 
-- [1. 실시간 저장이라는 말부터 다시 정의했다](#1-실시간-저장이라는-말부터-다시-정의했다)
-- [2. 화면과 저장의 책임을 나눴다](#2-화면과-저장의-책임을-나눴다)
-- [3. 메모리는 즉시 바꾸고 파일은 뒤에서 저장한다](#3-메모리는-즉시-바꾸고-파일은-뒤에서-저장한다)
-- [4. 파일 쓰기는 하나씩 실행하고 최신 상태만 남긴다](#4-파일-쓰기는-하나씩-실행하고-최신-상태만-남긴다)
-- [5. 저장 완료를 세 단계로 구분했다](#5-저장-완료를-세-단계로-구분했다)
-- [6. 정상 파일을 지키면서 복구 가능성을 남긴다](#6-정상-파일을-지키면서-복구-가능성을-남긴다)
-- [7. 마치며](#7-마치며)
+- [1. 들어가며](#1-들어가며)
+- [2. 저장 책임 분리](#2-저장-책임-분리)
+- [3. 기본 자동저장 흐름](#3-기본-자동저장-흐름)
+- [4. 실시간 저장의 두 의미](#4-실시간-저장의-두-의미)
+- [5. 안전한 파일 교체](#5-안전한-파일-교체)
+- [6. 충돌과 오래된 비동기 결과](#6-충돌과-오래된-비동기-결과)
+- [7. 장애 복구](#7-장애-복구)
+- [8. 성능 확인](#8-성능-확인)
+- [9. 최소 구현](#9-최소-구현)
+- [10. 마치며](#10-마치며)
 
 </details>
 
-[이전 글: Part 3. Undo/Redo를 하나의 문서 이력으로 통합하기](/posts/electron-main-process-undo-redo)
+[이전 글: Part 4. 흩어진 Undo/Redo를 Main History로 통합하기](/posts/electron-main-process-undo-redo)
 
-## 1. 실시간 저장이라는 말부터 다시 정의했다
+## 1. 들어가며
 
-“변경 내용을 실시간으로 로컬 PC에 저장한다”는 요구사항은 명확해 보였다. 하지만 실제로는 서로 다른 완료 지점을 포함하고 있었다.
+기존 Renderer `SaveController`는 여러 Store를 읽고 프로젝트 문서를 조립하고 debounce timer를 관리하고 파일 저장을 요청하고 UI 상태까지 바꿨다. Main에 `ProjectDocument` SSOT를 두면 이 책임을 다시 나눌 수 있다.
 
-1. Main의 메모리에 변경이 반영됨
-2. 프로젝트 파일 쓰기가 끝남
-3. 운영체제가 저장 장치에 데이터를 동기화함
+결론부터 적으면, **자동저장 시점과 파일 쓰기는 Main `ProjectSaveManager`가 담당하고 Renderer `SaveController`는 저장 버튼과 저장 상태 표시만 담당한다**. 기본안은 Main memory에 즉시 반영하고 디스크에는 debounce 후 저장하는 방식이다.
 
-세 단계는 같은 의미가 아니다. 메모리에 반영한 뒤 바로 응답하면 입력은 빠르지만, 파일 저장 전 앱이 비정상 종료될 때 최근 변경을 잃을 수 있다.
+단 이 방식은 모든 action이 즉시 디스크에 기록된다는 뜻이 아니다. 제품이 요구하는 데이터 손실 허용 시간을 먼저 정해야 한다.
 
-그래서 먼저 제품이 허용할 수 있는 데이터 손실 시간을 정해야 했다. 자동저장 구현만으로 보장 수준이 자동으로 결정되지는 않는다.
+## 2. 저장 책임 분리
 
-## 2. 화면과 저장의 책임을 나눴다
+### 2-1. Renderer SaveController
 
-기존 저장 코드는 여러 화면 상태를 모아 프로젝트 문서를 만들고, 저장 시점과 UI 상태까지 함께 관리했다. Main이 프로젝트의 최종 상태를 가지면서 이 책임을 나눌 수 있었다.
+Renderer는 사용자와 가까운 역할만 가진다.
 
-각 창은 사용자와 가까운 역할만 맡는다.
+- 저장 버튼 클릭 처리
+- Save As 경로 선택 UI 요청
+- `saving`, `saved`, `error` 상태 표시
+- 실패 안내와 재시도 버튼
+- 앱 종료 전 저장 확인 UI
 
-- 저장과 다른 이름으로 저장 요청
-- 저장 중, 저장 완료와 실패 표시
-- 실패 안내와 재시도
-- 종료 전 저장 확인
+Renderer는 여러 Store를 다시 모아 `ProjectDocument`를 만들지 않는다.
 
-Main은 실제 저장 상태를 관리한다.
+### 2-2. Main ProjectSaveManager
 
-- 최신 프로젝트 상태와 문서 번호
-- 자동저장 시점
-- 진행 중인 파일 쓰기
-- 마지막으로 저장된 문서 번호
-- 재시도와 종료 전 저장
+Main은 최신 문서와 실제 저장 상태를 알고 있다.
 
-파일 API 호출은 다시 별도 계층으로 분리한다. JSON 변환, 임시 파일 쓰기, 파일 교체와 복구 파일 검증을 자동저장 시점 결정과 섞지 않는다.
+- 문서 update 구독
+- debounce timer
+- 프로젝트별로 한 번에 하나의 파일 쓰기 실행
+- 저장 중 새 update가 오면 최신 snapshot 보관
+- `diskSavedVersion` 갱신
+- 수동 저장과 자동저장의 중복 쓰기 방지
+- 앱 종료 전 `flush`
 
-## 3. 메모리는 즉시 바꾸고 파일은 뒤에서 저장한다
+### 2-3. ProjectFileStorage
 
-기본 흐름은 다음과 같다.
+실제 파일 API 호출은 별도 `ProjectFileStorage`로 둔다.
+
+- JSON 직렬화
+- temp file 쓰기
+- project file 교체
+- backup과 recovery file 읽기
+- 파일 형식 version 확인
+
+이 분리로 `ProjectSaveManager`는 fake storage를 주입해 timer와 version 동작을 테스트할 수 있다.
+
+## 3. 기본 자동저장 흐름
 
 ```mermaid
 sequenceDiagram
-  participant R as "사용자 화면"
-  participant M as "Main 프로젝트 상태"
-  participant A as "자동저장"
-  participant F as "파일 쓰기"
+  participant R as "Renderer"
+  participant S as "Main ProjectSession"
+  participant M as "ProjectSaveManager"
+  participant F as "ProjectFileStorage"
 
-  R->>M: "변경 요청"
-  M->>M: "메모리 상태와 문서 번호 변경"
-  M-->>R: "확정된 결과"
-  M->>A: "최신 상태 저장 요청"
-  A->>F: "지연 후 파일 쓰기"
-  F-->>A: "파일 교체 완료"
+  R->>S: "ProjectAction"
+  S->>S: "memory state와 version 즉시 update"
+  S-->>R: "확정된 update"
+  S->>M: "save requested(version)"
+  M->>M: "debounce와 최신 snapshot 보관"
+  M->>F: "한 번에 하나의 file write"
+  F-->>M: "교체 완료"
+  M->>M: "diskSavedVersion 갱신"
 ```
 
-Main의 메모리 상태는 변경 요청을 처리할 때 바로 바꾼다. 디스크 쓰기는 입력마다 실행하지 않고 짧게 지연해 중복 작업을 줄인다.
+### 3-1. 한 번에 하나만 쓰기
 
-이 방식은 “모든 변경이 즉시 디스크에 기록된다”는 뜻이 아니다. 파일 저장 전 비정상 종료가 발생하면 지연 구간의 변경을 잃을 수 있다.
+같은 project file에 두 번의 비동기 쓰기가 동시에 실행되면 완료 순서가 요청 순서와 달라질 수 있다. 그래서 프로젝트별 파일 쓰기는 **queued sequential execution**, 즉 앞선 쓰기가 끝난 뒤 다음 쓰기를 시작하는 방식으로 제한한다.
 
-## 4. 파일 쓰기는 하나씩 실행하고 최신 상태만 남긴다
+이것을 모든 action의 전역 순차 처리와 혼동하지 않는다. Main memory의 state update는 즉시 실행하고 디스크 쓰기만 한 번에 하나씩 실행한다.
 
-같은 프로젝트 파일에 여러 비동기 쓰기를 동시에 실행하면 완료 순서가 요청 순서와 달라질 수 있다. 따라서 프로젝트마다 파일 쓰기는 한 번에 하나만 실행한다.
+### 3-2. 최신 snapshot만 유지
 
-문서 번호 10을 저장하는 동안 11, 12, 13이 들어왔다고 가정해 보자. 11과 12를 모두 파일로 만들 필요는 없다. 현재 쓰기가 끝난 뒤 대기 중인 가장 최신 상태인 13만 저장한다.
+version 10을 저장하는 동안 11, 12, 13이 들어오면 11과 12를 각각 파일로 만들 필요는 없다. 현재 쓰기가 끝난 뒤 최신 version 13을 저장한다. 중간 snapshot을 합치는 것이 아니라 **아직 저장하지 않은 최신 snapshot으로 교체**하는 방식이다.
 
-이 동작은 다음 두 규칙의 조합이다.
+### 3-3. 저장 완료 version
 
-- 프로젝트별 순차 쓰기
-- 대기 중인 상태를 최신 값 하나로 합치기
+`projectFileVersion`은 Main memory의 현재 version이다. `diskSavedVersion`은 project file 교체가 끝난 version이다.
 
-편집이 계속되면 debounce가 계속 밀릴 수 있다. 따라서 실제 정책에서는 최대 지연 시간인 `maxWait` 또는 주기적 checkpoint 중 하나를 함께 정해야 한다.
+```ts
+const isDirty = projectFileVersion !== diskSavedVersion;
+```
 
-마지막 저장 문서 번호도 따로 기록한다. 문서 번호 10 저장이 끝났을 때 현재 메모리가 13이라면 화면에 “모두 저장됨”을 표시하면 안 된다. 마지막 저장 번호만 10으로 바꾸고 13 저장을 이어간다.
+version 10 저장이 끝났을 때 Main이 이미 version 13이면 saved 상태로 표시하지 않는다. `diskSavedVersion`만 10으로 바꾸고 다음 저장을 계속한다.
 
-<details>
-<summary>파일 쓰기 순서를 제한하는 이유</summary>
+## 4. 실시간 저장의 두 의미
 
-Node.js 문서는 같은 파일에 여러 `writeFile` 작업을 완료 대기 없이 실행하는 것이 안전하지 않다고 설명한다. 이 글의 순차 쓰기는 모든 사용자 변경을 하나의 비동기 Queue에 넣는다는 뜻이 아니다.
+"변경되는 모든 내용은 실시간으로 local PC에 저장한다"는 요구사항은 두 가지로 해석될 수 있었다.
 
-프로젝트 상태 변경은 Main 메모리에서 짧게 끝낸다. 순서를 제한하는 대상은 같은 프로젝트 파일에 대한 쓰기 작업뿐이다.
+| 방식 | action 응답 | 장점 | 비용 |
+| --- | --- | --- | --- |
+| memory 즉시 반영과 disk debounce | Main memory update 후 응답 | 입력 지연이 작고 중복 쓰기를 줄인다. | debounce 구간에서 앱 전체가 비정상 종료되면 최근 변경을 잃을 수 있다. |
+| disk 기록 후 응답 | 복구용 변경 기록 또는 project file 쓰기 후 응답 | 응답한 action의 disk 기록 범위를 더 강하게 설명할 수 있다. | 입력 지연과 파일 쓰기 횟수와 복구 로직이 늘어난다. |
+
+### 4-1. 기본 선택
+
+현재는 허용 가능한 데이터 손실 시간이 정해지지 않았다. 따라서 기본 구현안은 memory 즉시 반영과 짧은 disk debounce다. 이것을 "모든 변경이 즉시 디스크에 보장된다"고 표현하면 안 된다.
+
+### 4-2. 더 강한 보장이 필요할 때
+
+모든 action 응답 전에 local disk 기록이 필요하다면 다음 대안을 검토한다.
+
+1. 직렬화 가능한 action을 복구용 변경 기록 파일에 추가한다.
+2. 파일 쓰기 완료 후 action 응답을 보낸다.
+3. 앱 시작 시 마지막 snapshot 위에 변경 기록을 다시 적용한다.
+4. 일정 시점에 최신 snapshot file로 합치고 이전 기록을 정리한다.
+
+이 경우 action의 queued sequential execution과 파일 flush 정책이 필요하다. Node.js 파일 API의 callback이나 Promise가 resolve되었다는 사실과 물리 장치까지 동기화되었다는 보장도 구분해야 한다. `fsPromises.writeFile`과 `filehandle.sync()`는 다른 단계다. [Node.js File System](https://nodejs.org/api/fs.html)
+
+어느 수준을 선택할지는 제품 정책과 측정값이 있어야 결정할 수 있다.
+
+## 5. 안전한 파일 교체
+
+project file을 바로 덮어쓰는 대신 다음 순서를 사용한다.
+
+1. 같은 프로젝트 폴더의 temp file에 비동기로 쓴다.
+2. 쓰기 성공 후 기존 정상 파일을 backup으로 보존한다.
+3. temp file을 project file 경로로 교체한다.
+4. 교체가 성공한 뒤 `diskSavedVersion`을 갱신한다.
+5. 실패하면 dirty 상태를 유지하고 temp file을 정리한다.
+
+이 방식은 쓰기 도중 기존 정상 파일까지 손상될 위험을 줄인다. 모든 운영체제와 파일 시스템에서 완전한 원자성을 보장한다고 단정할 수는 없다. 교체 동작과 권한 오류와 잠금 방식은 Windows와 macOS에서 따로 검증해야 한다.
+
+### 5-1. 새 프로젝트
+
+아직 사용자가 경로를 정하지 않은 새 프로젝트는 앱 전용 recovery 폴더에 저장한다. Save As가 성공하면 정식 경로를 기록하고 recovery file을 정리한다.
+
+### 5-2. 종료 전 flush
+
+정상 종료 요청에서는 debounce timer를 취소하고 pending 최신 snapshot 저장을 기다린다. 프로세스 강제 종료와 전원 손실에는 이 흐름이 실행되지 않을 수 있으므로 recovery 정책을 별도로 둔다.
+
+## 6. 충돌과 오래된 비동기 결과
+
+### 6-1. 같은 row 수정
+
+Main이 도착한 action 순서대로 적용하면 마지막 update가 최종값이 된다. 이 규칙은 순서를 정할 뿐 같은 SRT row를 두 창이 서로 다른 의도로 바꾼 충돌을 알려주지는 않는다.
+
+충돌을 확인하려면 action에 `baseItemVersion`을 넣는다.
+
+```ts
+interface ChangeSrtTextAction {
+  type: 'srt/textChanged';
+  rowId: string;
+  baseItemVersion: number;
+  text: string;
+}
+```
+
+현재 item version과 다르면 Main은 action을 거절하고 최신 row를 돌려줄 수 있다. 자동 merge UI까지 제공할지는 별도 제품 결정이다.
+
+### 6-2. 늦게 도착한 작업
+
+TTS 생성이나 waveform 분석처럼 오래 걸리는 작업은 시작한 프로젝트가 이미 닫힌 뒤 끝날 수 있다. 결과에 다음 값을 포함한다.
+
+- `projectSessionKey`
+- 대상 `itemId`
+- 시작 시점의 `baseItemVersion`
+
+Main은 결과를 적용하기 직전에 현재 값과 비교한다. 일치하지 않으면 오래된 결과로 판단하고 버린다. 취소 가능한 작업은 `AbortSignal`도 사용하지만 취소 요청만으로 결과 적용 검증을 대체하지 않는다.
+
+## 7. 장애 복구
+
+| 상황 | 처리 |
+| --- | --- |
+| Renderer 종료 | Main session과 저장은 유지하고 해당 구독만 정리한다. |
+| 새 Renderer 시작 | Main의 최신 snapshot으로 초기화한다. |
+| 파일 쓰기 실패 | dirty 유지, error 표시, 재시도 가능 상태로 둔다. |
+| temp file만 남음 | 시작 시 정상 파일과 version을 비교해 정리하거나 복구 후보로 제시한다. |
+| Main 비정상 종료 | 마지막 정상 project file과 recovery file을 확인한다. |
+
+복구 파일을 자동으로 덮어쓸지 사용자에게 선택하게 할지는 데이터 중요도에 따라 정한다. 현재 설계에서는 더 최신인 recovery 후보가 있음을 알리고 선택하게 하는 쪽을 우선한다.
+
+## 8. 성능 확인
+
+Main에 SSOT를 둔다고 무거운 작업까지 Main에서 실행하면 안 된다. 다음 값을 먼저 측정한다.
+
+- action 요청부터 Renderer 화면 반영까지의 시간
+- Main event loop 지연
+- patch와 snapshot의 IPC payload 크기
+- 대표 프로젝트의 파일 저장 시간
+- TanStack Query cache 갱신과 component 리렌더 범위
+- typing과 pointer move와 playhead event 빈도
+
+CPU 사용이 큰 작업이 Main 응답성을 실제로 해친다고 확인되면 Worker나 Electron Utility Process로 분리한다. Electron은 Utility Process를 CPU 집약적이거나 장애 가능성이 큰 작업에 사용할 수 있다고 설명한다. [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model#the-utility-process)
+
+## 9. 최소 구현
+
+아래 예제는 파일 쓰기를 한 번에 하나만 실행하고 쓰는 동안 들어온 요청 중 최신 snapshot을 다음 대상으로 남긴다.
+
+```ts
+// project-save-manager.ts
+interface ProjectSnapshot {
+  version: number;
+  content: string;
+}
+
+interface ProjectFileStorage {
+  write(snapshot: ProjectSnapshot): Promise<void>;
+}
+
+export class ProjectSaveManager {
+  #isSaving = false;
+  #pendingSnapshot: ProjectSnapshot | null = null;
+  #diskSavedVersion = 0;
+
+  constructor(private readonly storage: ProjectFileStorage) {}
+
+  requestSave(snapshot: ProjectSnapshot): void {
+    this.#pendingSnapshot = snapshot;
+    void this.#drain();
+  }
+
+  getDiskSavedVersion(): number {
+    return this.#diskSavedVersion;
+  }
+
+  async #drain(): Promise<void> {
+    if (this.#isSaving) {
+      return;
+    }
+
+    this.#isSaving = true;
+
+    try {
+      while (this.#pendingSnapshot != null) {
+        const snapshot = this.#pendingSnapshot;
+        this.#pendingSnapshot = null;
+        await this.storage.write(snapshot);
+        this.#diskSavedVersion = snapshot.version;
+      }
+    } finally {
+      this.#isSaving = false;
+    }
+  }
+}
+```
+
+실제 구현은 쓰기 실패 시 pending snapshot을 보존하고 error 상태를 발행해야 한다. debounce는 `requestSave` 앞에 두고 `flush`는 timer를 건너뛰어 최신 snapshot을 바로 저장한다.
+
+## 10. 마치며
+
+자동저장을 Main으로 옮기는 것만으로 저장 보장이 자동으로 강해지지는 않았다. memory update와 disk write와 device sync는 서로 다른 완료 지점이다.
+
+이번 설계에서 가장 중요한 태도는 "실시간"이라는 표현을 구현 방식으로 바로 번역하지 않는 것이었다. 먼저 어느 실패까지 막아야 하는지 정해야 한다. 다음 글에서는 이 구조를 기존 앱에 한 번에 갈아엎지 않고 옮기는 순서와 검증 기준을 정리한다.
+
+[다음 글: Part 6. Main SSOT로 점진적으로 이관하기](/posts/electron-main-process-migration)
+
+---
+
+## 참고
+
+**Node.js와 Electron 공식 문서**
 
 - [Node.js File System](https://nodejs.org/api/fs.html)
-
-</details>
-
-## 5. 저장 완료를 세 단계로 구분했다
-
-| 완료 지점                  | 의미                             | 남는 위험                                      |
-| -------------------------- | -------------------------------- | ---------------------------------------------- |
-| 메모리 반영                | Main이 변경을 확정했다.          | Main 비정상 종료 시 잃을 수 있다.              |
-| 파일 쓰기 완료             | 파일 API가 성공했다.             | 장치 동기화 전 전원 손실 가능성이 남는다.      |
-| 저장 장치 동기화 요청 완료 | 파일 descriptor의 sync가 끝났다. | 정확한 보장은 운영체제와 장치에 따라 달라진다. |
-
-기본안은 메모리에 즉시 반영하고 파일에는 짧은 지연 후 저장하는 방식이다. 더 강한 보장이 필요하다면 변경 요청에 응답하기 전에 복구 기록을 파일에 남기는 방식을 검토할 수 있다.
-
-<details>
-<summary>더 강한 저장 보장이 필요한 경우</summary>
-
-모든 변경을 디스크에서 복구해야 한다면 다음 구조를 검토한다.
-
-1. 직렬화 가능한 변경 요청을 복구 기록에 추가한다.
-2. 필요한 동기화 작업이 끝난 뒤 요청에 응답한다.
-3. 앱 시작 시 마지막 정상 프로젝트 위에 복구 기록을 다시 적용한다.
-4. 일정 시점에 최신 프로젝트 파일로 합치고 이전 기록을 정리한다.
-
-이 경우 요청 식별자와 재적용 규칙이 필요하다. 같은 기록을 두 번 읽어도 중복 변경이 발생하지 않도록 만들어야 한다.
-
-Node.js의 `writeFile` 완료와 `FileHandle.sync()` 완료는 다른 단계다. 사용할 수 있는 `flush` 옵션과 정확한 동작은 앱이 사용하는 Electron에 포함된 Node.js 버전을 기준으로 확인해야 한다.
-
-</details>
-
-## 6. 정상 파일을 지키면서 복구 가능성을 남긴다
-
-프로젝트 파일을 바로 덮어쓰지 않고 같은 폴더의 임시 파일을 사용한다.
-
-1. 확정된 프로젝트 상태를 임시 파일에 쓴다.
-2. 임시 파일의 JSON, 프로젝트 식별자, 문서 번호와 파일 형식을 검증한다.
-3. 선택한 보장 수준에 따라 임시 파일을 동기화한다.
-4. 정상 파일을 보존할 backup 정책을 적용한 뒤 임시 파일을 프로젝트 경로로 교체한다.
-5. 교체까지 성공한 뒤 마지막 저장 문서 번호를 갱신한다.
-6. 실패하면 dirty 상태를 유지하고 재시도할 수 있게 한다.
-
-이 방식은 쓰기 도중 기존 정상 파일까지 손상될 위험을 줄인다. 모든 운영체제와 파일 시스템에서 파일 교체의 완전한 원자성을 보장한다는 뜻은 아니다.
-
-<details>
-<summary>운영체제와 복구 시 확인할 항목</summary>
-
-- Windows와 macOS에서 기존 파일 교체 동작이 같은지
-- 파일 잠금, 권한 오류와 백신 프로그램 간섭을 어떻게 처리할지
-- temp file, backup과 정상 파일 중 어느 것이 최신이고 유효한지
-- JSON parse뿐 아니라 schema와 프로젝트 식별자가 올바른지
-- 같은 프로젝트를 여러 앱 인스턴스가 동시에 열 수 있는지
-- 외부 프로그램이 프로젝트 파일을 바꿨을 때 어떻게 감지할지
-
-파일의 문서 번호만 크다고 정상 복구 파일로 판단할 수는 없다. 파일 형식과 내용 검증을 함께 통과해야 한다.
-
-</details>
-
-<details>
-<summary>새 프로젝트와 종료 전 저장</summary>
-
-아직 정식 경로가 없는 새 프로젝트는 앱 전용 복구 폴더에 저장한다. 다른 이름으로 저장이 성공하면 정식 경로를 기록하고 복구 파일을 정리한다.
-
-정상 종료 요청에서는 debounce timer를 취소하고 대기 중인 최신 상태의 저장을 기다린다. Electron 종료 이벤트에서 비동기 저장을 기다리려면 종료를 한 번 보류하고, 저장 완료 뒤 다시 종료하는 제어가 필요하다.
-
-강제 종료나 전원 손실에는 이 흐름이 실행되지 않을 수 있으므로 복구 파일 정책을 별도로 둔다.
-
-</details>
-
-## 7. 마치며
-
-자동저장을 Main으로 옮긴다고 저장 보장이 저절로 강해지는 것은 아니다. 메모리 반영, 파일 쓰기와 저장 장치 동기화는 서로 다른 완료 지점이다.
-
-> “실시간”을 구현 방식으로 바로 바꾸기 전에, 어느 실패까지 복구해야 하는지 먼저 정해야 한다.
-
-다음 글에서는 이 설계가 해결해야 할 가설과 아직 측정하지 못한 비용을 분리한다.
-
-[다음 글: Part 5. Main SSOT 설계의 검증 계획과 선택 비용](/posts/electron-main-process-migration)
+- [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
+- [Electron Performance](https://www.electronjs.org/docs/latest/tutorial/performance)
