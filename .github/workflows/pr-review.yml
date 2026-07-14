@@ -91,3 +91,6 @@ jobs:
           # CI는 배포 산출물을 게시하지 않으므로 검증 전용 공개 URL을 사용한다.
           NEXT_PUBLIC_SITE_URL: https://example.com
         run: pnpm build
+
+      - name: Docker 이미지 빌드
+        run: docker build --build-arg NEXT_PUBLIC_SITE_URL=https://example.com --tag blog:pr .
