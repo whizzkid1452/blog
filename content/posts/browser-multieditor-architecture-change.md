@@ -123,7 +123,7 @@ Session이 Store를 구독하면 해결되지만, 그건 앞서 말한 `Store > 
 
 - [Part 1 아키텍처 설계](/posts/browser-multieditor-architecture-design)
 - [rAF 트림 기능 관련](/posts/audio-editor-zoom-raf-throttling)
-- [drop-daw GitHub](https://github.com/whizzkid1452/drop.ai)
+- [drop-ai GitHub](https://github.com/whizzkid1452/drop-ai)
 
 참고 개념/출처
 

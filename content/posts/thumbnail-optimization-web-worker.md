@@ -330,7 +330,7 @@ Web Worker는 abort 메시지를 받으면 해당 sourceId를 무시 목록에 �
 
 - [Web Worker를 사용한 이미지 로딩](https://blog.rhostem.com/posts/2021-01-03-image-load-by-web-worker)
 - [Web Worker](https://developer.mozilla.org/ko/docs/Web/API/Worker)
-- [Using web worker](https://developer.mozilla.org/ko/docs/Web/API/Web_Workers_API/Using_web_workers)
+- [Using Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)
 - [Web Workers API](https://developer.mozilla.org/ko/docs/Web/API/Web_Workers_API)
 - [ImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap)
 - [Transferable objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)
