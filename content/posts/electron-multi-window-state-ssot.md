@@ -11,14 +11,37 @@ draft: false
 <summary>이 글의 목차 펼쳐보기</summary>
 
 - [1. 들어가며](#1-들어가며)
+  - [시리즈 목표](#시리즈-목표)
+  - [핵심 주장](#핵심-주장)
+  - [시리즈 구성](#시리즈-구성)
+  - [전체 구조도](#전체-구조도)
 - [2. 관찰된 문제](#2-관찰된-문제)
+  - [2-1. 공유 대상](#2-1-공유-대상)
+  - [2-2. 확인한 증상](#2-2-확인한-증상)
 - [3. 기존 상태 구조](#3-기존-상태-구조)
 - [4. 원인 분리](#4-원인-분리)
 - [5. Electron의 프로세스 조건](#5-electron의-프로세스-조건)
+  - [5-1. 공식 문서에서 확인한 사실](#5-1-공식-문서에서-확인한-사실)
+  - [5-2. 여기서 내린 추론](#5-2-여기서-내린-추론)
 - [6. 요구사항 재정의](#6-요구사항-재정의)
+  - [6-1. 확정 요구사항](#6-1-확정-요구사항)
+  - [6-2. 아직 확정하지 못한 요구사항](#6-2-아직-확정하지-못한-요구사항)
 - [7. 설계 질문](#7-설계-질문)
 - [8. 첫 번째 결론](#8-첫-번째-결론)
 - [9. 마치며](#9-마치며)
+
+</details>
+
+<details>
+<summary>시리즈 전체 글 바로가기</summary>
+
+1. [Part 0. Main Process SSOT 시리즈를 시작하며](/posts/electron-main-process-ssot-series-guide)
+2. [Part 1. Electron 멀티 윈도우에서 저장 결과가 달라진 이유](/posts/electron-multi-window-state-ssot)
+3. [Part 2. Main Process에 ProjectDocument SSOT를 둔 이유](/posts/electron-main-process-project-ssot)
+4. [Part 3. Renderer가 Main의 확정 상태를 받는 방법](/posts/electron-main-process-renderer-sync)
+5. [Part 4. 흩어진 Undo/Redo를 Main History로 통합하기](/posts/electron-main-process-undo-redo)
+6. [Part 5. 자동저장의 책임과 디스크 저장 보장](/posts/electron-main-process-autosave)
+7. [Part 6. Main SSOT 설계를 검증하고 선택의 비용 정리하기](/posts/electron-main-process-migration)
 
 </details>
 
@@ -28,7 +51,7 @@ SRT Script Panel과 Editor를 함께 제공하는 Electron 앱을 만들었다. 
 
 하지만 실제 동작은 달랐다. 화면에서는 수정된 문장이 보였지만 저장 후 프로젝트를 다시 열면 이전 문장이 나타났다. Undo를 누른 창과 다른 창의 화면도 달라졌다. 처음에는 창 사이의 실시간 통신이 부족한 문제라고 생각했다. 코드를 따라가 보니 더 앞에 있는 문제가 보였다.
 
-결론부터 적으면, **프로젝트 문서의 변경 권한과 Undo/Redo 이력을 Main Process의 `ProjectSession` 한 곳에 모으기로 했다**. Renderer에는 화면을 그리기 위한 읽기 전용 복사본과 UI 상태만 둔다. 이 결론에 도달한 과정과 선택의 비용을 여섯 편으로 나누어 정리한다.
+결론부터 적으면, **프로젝트 문서의 변경 권한과 Undo/Redo 이력을 Main Process의 `ProjectSession` 한 곳에 모으기로 했다**. Renderer에는 화면을 그리기 위한 읽기 전용 복사본과 UI 상태만 둔다. Part 0에서 편집기와 문제 환경을 먼저 설명하고, 이후 여섯 편에서 설계 과정과 선택의 비용을 정리한다.
 
 ### 시리즈 목표
 
@@ -36,7 +59,7 @@ SRT Script Panel과 Editor를 함께 제공하는 Electron 앱을 만들었다. 
 
 1. 편집한 값과 저장된 값이 달라진 구조적 이유를 설명한다.
 2. Main Process를 프로젝트 문서의 단일 진실 공급원(Single Source of Truth, SSOT)으로 두는 설계를 검토한다.
-3. Renderer 동기화, Undo/Redo, 자동저장, 점진적 이관까지 하나의 흐름으로 연결한다.
+3. Renderer 동기화, Undo/Redo, 자동저장, 설계 검증까지 하나의 흐름으로 연결한다.
 
 ### 핵심 주장
 
@@ -46,18 +69,29 @@ SRT Script Panel과 Editor를 함께 제공하는 Electron 앱을 만들었다. 
 
 ### 시리즈 구성
 
-1. 현재 글: 문제와 원인 분리
-2. [Part 2. Main Process에 ProjectDocument SSOT를 둔 이유](/posts/electron-main-process-project-ssot)
-3. [Part 3. Renderer가 Main의 확정 상태를 받는 방법](/posts/electron-main-process-renderer-sync)
-4. [Part 4. 흩어진 Undo/Redo를 Main History로 통합하기](/posts/electron-main-process-undo-redo)
-5. [Part 5. 자동저장의 책임과 디스크 저장 보장](/posts/electron-main-process-autosave)
-6. [Part 6. Main SSOT로 점진적으로 이관하기](/posts/electron-main-process-migration)
+1. [Part 0. 편집기와 문제 환경](/posts/electron-main-process-ssot-series-guide)
+2. 현재 글: 문제와 원인 분리
+3. [Part 2. Main Process에 ProjectDocument SSOT를 둔 이유](/posts/electron-main-process-project-ssot)
+4. [Part 3. Renderer가 Main의 확정 상태를 받는 방법](/posts/electron-main-process-renderer-sync)
+5. [Part 4. 흩어진 Undo/Redo를 Main History로 통합하기](/posts/electron-main-process-undo-redo)
+6. [Part 5. 자동저장의 책임과 디스크 저장 보장](/posts/electron-main-process-autosave)
+7. [Part 6. Main SSOT 설계를 검증하고 선택의 비용 정리하기](/posts/electron-main-process-migration)
 
 <details>
 <summary>전체 시리즈 목차 펼쳐보기</summary>
 
+**Part 0. 시리즈 안내와 편집기 맥락**
+
+- [제작 중인 편집기](/posts/electron-main-process-ssot-series-guide#2-제작-중인-편집기)
+- [창과 탭의 조합](/posts/electron-main-process-ssot-series-guide#3-창과-탭의-조합)
+- [문제가 발생한 상태 구조](/posts/electron-main-process-ssot-series-guide#4-문제가-발생한-상태-구조)
+- [사용자가 겪은 문제](/posts/electron-main-process-ssot-series-guide#5-사용자가-겪은-문제)
+- [핵심 주장](/posts/electron-main-process-ssot-series-guide#7-핵심-주장)
+- [전체 구조도](/posts/electron-main-process-ssot-series-guide#8-전체-구조도)
+
 **Part 1. 문제와 원인**
 
+- [전체 구조도](#전체-구조도)
 - [관찰된 문제](#2-관찰된-문제)
 - [기존 상태 구조](#3-기존-상태-구조)
 - [원인 분리](#4-원인-분리)
@@ -81,16 +115,16 @@ SRT Script Panel과 Editor를 함께 제공하는 Electron 앱을 만들었다. 
 - [변경 요청과 확정 결과](/posts/electron-main-process-renderer-sync#4-변경-요청과-확정-결과)
 - [version 기반 동기화](/posts/electron-main-process-renderer-sync#5-version-기반-동기화)
 - [탭과 창 초기화](/posts/electron-main-process-renderer-sync#6-탭과-창-초기화)
-- [임시 상태와 미디어 파일](/posts/electron-main-process-renderer-sync#7-임시-상태와-미디어-파일)
+- [임시 상태와 고빈도 event](/posts/electron-main-process-renderer-sync#7-임시-상태와-고빈도-event)
 
 **Part 4. Undo/Redo 통합**
 
 - [기존 History의 한계](/posts/electron-main-process-undo-redo#2-기존-history의-한계)
 - [문서 상태와 실행 상태 분리](/posts/electron-main-process-undo-redo#3-문서-상태와-실행-상태-분리)
-- [ProjectHistoryEntry](/posts/electron-main-process-undo-redo#4-projecthistoryentry)
+- [History가 기억할 값](/posts/electron-main-process-undo-redo#4-history가-기억할-값)
 - [Undo와 Redo 흐름](/posts/electron-main-process-undo-redo#5-undo와-redo-흐름)
 - [Runtime 동기화](/posts/electron-main-process-undo-redo#6-runtime-동기화)
-- [점진적 History 이관](/posts/electron-main-process-undo-redo#8-점진적-history-이관)
+- [History와 asset 수명주기](/posts/electron-main-process-undo-redo#7-history와-asset-수명주기)
 
 **Part 5. 자동저장과 복구**
 
@@ -101,17 +135,47 @@ SRT Script Panel과 Editor를 함께 제공하는 Electron 앱을 만들었다. 
 - [충돌과 오래된 비동기 결과](/posts/electron-main-process-autosave#6-충돌과-오래된-비동기-결과)
 - [장애 복구](/posts/electron-main-process-autosave#7-장애-복구)
 
-**Part 6. 점진적 이관과 검증**
+**Part 6. 설계 검증과 선택의 비용**
 
-- [이관 원칙](/posts/electron-main-process-migration#2-이관-원칙)
-- [네 단계 이관](/posts/electron-main-process-migration#3-네-단계-이관)
-- [PR 분리](/posts/electron-main-process-migration#4-pr-분리)
-- [검증 계획](/posts/electron-main-process-migration#5-검증-계획)
-- [선택의 비용](/posts/electron-main-process-migration#6-선택의-비용)
-- [조건부 최적성](/posts/electron-main-process-migration#7-조건부-최적성)
-- [남은 결정](/posts/electron-main-process-migration#8-남은-결정)
+- [검증해야 할 가설](/posts/electron-main-process-migration#2-검증해야-할-가설)
+- [선택의 비용](/posts/electron-main-process-migration#3-선택의-비용)
+- [이 설계가 적합한 조건](/posts/electron-main-process-migration#4-이-설계가-적합한-조건)
+- [다시 검토할 조건](/posts/electron-main-process-migration#5-다시-검토할-조건)
+- [아직 결정하지 못한 부분](/posts/electron-main-process-migration#6-아직-결정하지-못한-부분)
+- [최종 구조](/posts/electron-main-process-migration#7-최종-구조)
 
 </details>
+
+### 전체 구조도
+
+시리즈 전체에서 제안하는 구조를 먼저 한 장으로 정리했다. 화살표는 프로젝트 변경 요청과 확정 결과가 이동하는 방향을 나타낸다.
+
+```mermaid
+flowchart TB
+  rendererRequest["Renderer: Editor / SRT Panel / Admin / 저장 UI"]
+  projectApi["Preload: 허용된 Project API"]
+  projectSession["Main: ProjectSession SSOT / document / version / History"]
+  rendererUpdate["Renderer: Query Cache / Runtime Sync / UI state"]
+  saveManager["Main: 자동저장 조정"]
+  projectFiles[("Local PC: project file / backup / recovery")]
+
+  rendererRequest -->|"ProjectAction / save 요청"| projectApi
+  projectApi -->|"invoke"| projectSession
+  projectSession -->|"ProjectUpdateResult broadcast"| rendererUpdate
+  projectSession -->|"확정 snapshot"| saveManager
+  saveManager -->|"debounced file write"| projectFiles
+```
+
+흐름은 네 단계다.
+
+1. Renderer는 전체 문서가 아니라 `ProjectAction`을 Main으로 보낸다.
+2. `ProjectSession`이 문서와 version과 Undo/Redo History를 확정한다.
+3. Main은 같은 `ProjectUpdateResult`를 열린 Renderer에 발행한다.
+4. Main의 자동저장은 확정된 snapshot을 local project file에 저장한다.
+
+연속 playhead나 drag preview처럼 저장하지 않는 고빈도 event는 이 구조도에서 제외했다. 해당 값은 Renderer local state를 우선 사용하고 측정 결과가 필요할 때만 MessagePort를 검토한다.
+
+SSOT의 범위와 Main과 Renderer의 책임은 [Part 2의 전체 구조](/posts/electron-main-process-project-ssot#7-전체-구조)에서 이어서 설명한다.
 
 ## 2. 관찰된 문제
 
@@ -174,11 +238,11 @@ Store가 여러 개라는 사실 자체는 문제가 아니다. UI 선택 상태
 
 문제를 증상과 직접 원인과 구조적 원인으로 나누었다.
 
-| 구분 | 확인한 내용 |
-| --- | --- |
-| 증상 | 편집 화면과 저장 파일의 값이 달랐다. |
-| 직접 원인 | 저장 시점에 읽은 Store가 사용자가 마지막으로 수정한 Store와 달랐다. |
-| 구조적 원인 | 같은 프로젝트 값의 변경 권한이 여러 Renderer에 분산되어 있었다. |
+| 구분        | 확인한 내용                                                         |
+| ----------- | ------------------------------------------------------------------- |
+| 증상        | 편집 화면과 저장 파일의 값이 달랐다.                                |
+| 직접 원인   | 저장 시점에 읽은 Store가 사용자가 마지막으로 수정한 Store와 달랐다. |
+| 구조적 원인 | 같은 프로젝트 값의 변경 권한이 여러 Renderer에 분산되어 있었다.     |
 
 Renderer Store 분산이 항상 불일치를 만든다고 말할 수는 없다. 모든 변경 순서와 충돌 규칙을 정확히 구현하면 맞출 수 있다. 다만 현재 구조에는 그 규칙이 없었고 저장과 Undo/Redo가 서로 다른 상태를 읽었다. 그래서 문제의 범위를 단순한 event 누락이 아니라 **프로젝트 문서의 최종 확정 위치 부재**로 좁혔다.
 
@@ -210,9 +274,6 @@ IPC 전송값에는 Structured Clone Algorithm이 적용되며 함수와 DOM 객
 
 ### 6-2. 아직 확정하지 못한 요구사항
 
-<details>
-<summary>미정 요구사항 펼쳐보기</summary>
-
 다음 항목은 제품 정책이 없어서 설계만으로 결정할 수 없었다.
 
 - "실시간 저장"이 허용하는 최대 데이터 손실 시간
@@ -221,8 +282,6 @@ IPC 전송값에는 Structured Clone Algorithm이 적용되며 함수와 DOM 객
 - 앱을 다시 실행한 뒤에도 Undo/Redo 이력을 복원할지 여부
 
 이 항목들은 이후 글에서도 **미정 조건**으로 표시한다.
-
-</details>
 
 ## 7. 설계 질문
 
@@ -246,7 +305,7 @@ flowchart TB
   Script["SRT Renderer"]
   Admin["Admin Renderer"]
   Session["Main ProjectSession\nProjectDocument SSOT"]
-  Save["Main ProjectSaveManager"]
+  Save["Main 자동저장"]
   File["Local project file"]
 
   Editor -->|"ProjectAction"| Session
