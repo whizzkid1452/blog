@@ -83,6 +83,9 @@ Electron 공식 문서에서 Main Process는 앱의 entry point이며 창과 앱
 
 ## 4. Class private field와 Vanilla Zustand 비교
 
+<details>
+<summary>상태 도구 선택 근거 펼쳐보기</summary>
+
 ### 4-1. 처음 고려한 구조
 
 처음에는 `ProjectSession` Class 안에 Vanilla Zustand Store를 넣으려 했다. Zustand의 `createStore`는 React Hook 없이 `getState`, `setState`, `subscribe`를 제공한다. [Zustand createStore](https://zustand.docs.pmnd.rs/apis/create-store)
@@ -119,6 +122,8 @@ Electron 공식 문서에서 Main Process는 앱의 entry point이며 창과 앱
 - Store middleware가 직접 구현보다 단순하다.
 - 상태 추적 도구가 필요하다.
 - 성능 측정에서 selector 단위 구독이 필요하다고 확인된다.
+
+</details>
 
 ## 5. 상태 분류
 
@@ -220,6 +225,9 @@ flowchart TB
 
 ## 8. 최소 구현
 
+<details>
+<summary>최소 구현 코드 펼쳐보기</summary>
+
 아래 예제는 SRT text 변경만 포함한 최소 TypeScript 코드다. reducer는 사이드이펙트가 없고 `ProjectSession`만 version과 event를 관리한다.
 
 ```ts
@@ -296,6 +304,8 @@ it('changes only the selected SRT row', () => {
 ```
 
 실제 구현에서는 전체 document 대신 type-safe patch를 결과로 보낸다. 이 부분은 다음 글에서 다룬다.
+
+</details>
 
 ## 9. 선택의 조건
 

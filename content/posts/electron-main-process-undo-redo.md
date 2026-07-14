@@ -172,6 +172,9 @@ flowchart LR
 
 ## 7. History와 asset 수명주기
 
+<details>
+<summary>asset 수명주기 정책 펼쳐보기</summary>
+
 Undo가 참조하는 asset을 현재 문서에서 사라졌다는 이유로 바로 지울 수 없다. Undo 후 다시 필요할 수 있기 때문이다.
 
 초기 정책은 다음과 같다.
@@ -185,7 +188,12 @@ Undo가 참조하는 asset을 현재 문서에서 사라졌다는 이유로 바�
 
 앱을 다시 실행한 뒤 History까지 복원할지는 아직 미정이다. 복원한다면 asset 보존 기간과 History 파일 포맷도 함께 정해야 한다.
 
+</details>
+
 ## 8. 점진적 History 이관
+
+<details>
+<summary>History 이관 절차 펼쳐보기</summary>
 
 Undo/Redo를 한 번에 바꾸지 않는다. 기능별로 다음 순서를 반복한다.
 
@@ -202,7 +210,12 @@ Undo/Redo를 한 번에 바꾸지 않는다. 기능별로 다음 순서를 반�
 
 이중 History는 한 번의 사용자 입력을 두 번 기록하거나 서로 다른 순서로 Undo할 수 있다.
 
+</details>
+
 ## 9. 최소 구현
+
+<details>
+<summary>최소 구현 코드 펼쳐보기</summary>
 
 아래 코드는 값 교체 patch만 포함한 최소 History다.
 
@@ -273,6 +286,8 @@ it('restores the previous text and can redo it', () => {
   expect(redone.text).toBe('after');
 });
 ```
+
+</details>
 
 ## 10. 마치며
 
