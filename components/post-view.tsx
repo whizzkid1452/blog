@@ -2,6 +2,7 @@ import type { Locale } from '@/lib/i18n';
 import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
 import type { Post, PostSummary } from '@/lib/posts';
 import Link from 'next/link';
+import { CommentsSection } from './comments-section';
 import { MarkdownContent } from './markdown-content';
 import styles from './post-view.module.css';
 
@@ -63,6 +64,7 @@ export function PostView({ locale = 'ko', post, relatedPosts, translationHref }:
           </ul>
         </section>
       ) : null}
+      <CommentsSection postSlug={post.slug} />
     </div>
   );
 }
