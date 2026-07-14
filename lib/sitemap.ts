@@ -45,6 +45,11 @@ export function createSitemap({
       priority: 0.7,
       alternates: createLanguageAlternates('/posts'),
     },
+    {
+      url: createAbsoluteUrl('/series'),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
   ];
 
   const postRoutes = posts.map(post => ({

@@ -14,7 +14,7 @@ draft: false
 
 ## 2. Frontmatter 규칙
 
-모든 게시글은 파일 맨 위에 YAML frontmatter를 작성한다. 현재 코드가 검증하는 필드는 `title`, `description`, `date`, `publishedAt`, `tags`, `draft`, `coverImage`, `coverAlt`다.
+모든 게시글은 파일 맨 위에 YAML frontmatter를 작성한다. 현재 코드가 검증하는 필드는 `title`, `description`, `date`, `publishedAt`, `tags`, `draft`, `coverImage`, `coverAlt`, `series`다.
 
 ```md
 ---
@@ -22,11 +22,14 @@ title: 'Store와 Facade를 분리한 이유'
 description: 'Store와 Facade를 분리해 상태 저장과 비즈니스 조합 책임을 나눈 과정을 정리합니다.'
 date: '2026-07-02'
 tags: ['architecture', 'store', 'facade']
+series:
+  name: '상태 관리 구조'
+  order: 1
 draft: false
 ---
 ```
 
-`title`은 비어 있지 않은 문자열이어야 한다. 시리즈 글은 `[Part N.] 제목` 형식을 사용한다. 공개 글은 `description`을 반드시 작성한다. 검색 결과와 공유 미리보기에서 글의 문제 상황과 결론이 드러나도록 한 문장으로 쓴다. `date`는 `YYYY-MM-DD` 형식의 유효한 날짜여야 한다. `publishedAt`은 선택 필드다. 작성하면 ISO 8601 date-time과 timezone을 함께 적는다. 예를 들어 `2026-07-02T15:40:23+09:00` 형식을 사용한다. `tags`는 하나 이상의 문자열을 담은 배열이어야 한다. 각 태그는 비어 있으면 안 되고 `/` 문자를 포함하면 안 된다. `draft`는 boolean 값이다. `true`이면 공개 글 목록과 상세 페이지에서 제외된다. `coverImage`는 선택 필드다. 작성할 경우 `/`로 시작하는 `public` 기준 경로를 사용한다. `coverImage`를 작성하면 `coverAlt`도 함께 작성한다.
+`title`은 비어 있지 않은 문자열이어야 한다. 시리즈 글은 `[Part N.] 제목` 형식을 사용한다. 공개 글은 `description`을 반드시 작성한다. 검색 결과와 공유 미리보기에서 글의 문제 상황과 결론이 드러나도록 한 문장으로 쓴다. `date`는 `YYYY-MM-DD` 형식의 유효한 날짜여야 한다. `publishedAt`은 선택 필드다. 작성하면 ISO 8601 date-time과 timezone을 함께 적는다. 예를 들어 `2026-07-02T15:40:23+09:00` 형식을 사용한다. `tags`는 하나 이상의 문자열을 담은 배열이어야 한다. 각 태그는 비어 있으면 안 되고 `/` 문자를 포함하면 안 된다. `draft`는 boolean 값이다. `true`이면 공개 글 목록과 상세 페이지에서 제외된다. `coverImage`는 선택 필드다. 작성할 경우 `/`로 시작하는 `public` 기준 경로를 사용한다. `coverImage`를 작성하면 `coverAlt`도 함께 작성한다. `series`는 선택 필드다. 시리즈 글에는 비어 있지 않은 `name`과 1 이상의 정수인 `order`를 함께 작성한다. 시리즈 페이지는 `order` 오름차순으로 글을 표시한다.
 
 ## 3. 본문 구조
 

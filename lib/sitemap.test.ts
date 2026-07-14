@@ -51,6 +51,13 @@ describe('createSitemap', () => {
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
+        url: 'https://example.com/series',
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
         url: 'https://example.com/tags/next%20js',
         changeFrequency: 'weekly',
         priority: 0.5,

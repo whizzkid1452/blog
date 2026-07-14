@@ -18,6 +18,11 @@ export function PostCard({ locale = 'ko', post }: PostCardProps) {
         <time className={styles.postDate} dateTime={post.date}>
           {post.date}
         </time>
+        {locale !== 'ko' || post.series == null ? null : (
+          <Link className={styles.seriesLink} href={`/series#${encodeURIComponent(post.series.name)}`}>
+            {post.series.name} {post.series.order}편
+          </Link>
+        )}
         <div className={styles.tagList} aria-label={messages.tagsLabel}>
           {post.tags.map(tag => (
             <Link

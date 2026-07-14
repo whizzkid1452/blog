@@ -4,6 +4,9 @@ description: '멀티미디어 에디터 타임라인 구현 과정에서 Facade,
 date: '2026-03-26'
 publishedAt: '2026-03-26T00:42:12+09:00'
 tags: ['architecture', 'session-layer', 'mvc', 'editor']
+series:
+  name: '웹브라우저 멀티에디터 만들기'
+  order: 2
 draft: false
 ---
 

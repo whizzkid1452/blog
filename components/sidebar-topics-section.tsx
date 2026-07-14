@@ -4,9 +4,8 @@ import type { Locale } from '@/lib/i18n';
 import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import Link from 'next/link';
-import { useState } from 'react';
 import styles from './site-layout.module.css';
-import { getCollapsedSidebarTopicTags, getExpandedSidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
+import { getExpandedSidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 
 interface SidebarTopicsSectionProps {
   locale?: Locale;
@@ -15,12 +14,10 @@ interface SidebarTopicsSectionProps {
 
 export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSectionProps) {
   const messages = getUiMessages(locale);
-  const [isOpen, setIsOpen] = useState(false);
-  const collapsedTags = getCollapsedSidebarTopicTags(tags);
   const expandedTags = getExpandedSidebarTopicTags(tags);
 
   return (
-    <Collapsible.Root asChild open={isOpen} onOpenChange={setIsOpen}>
+    <Collapsible.Root asChild defaultOpen={false}>
       <section className={styles.sidebarSection}>
         <div className={styles.sidebarSectionHeader}>
           <h2 className={styles.sidebarTitle}>{messages.topics}</h2>
@@ -30,8 +27,6 @@ export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSecti
             aria-label={`Toggle ${messages.topics}`}
           />
         </div>
-
-        {!isOpen && collapsedTags.length > 0 ? <TopicTagList locale={locale} tags={collapsedTags} /> : null}
 
         <Collapsible.Content className={styles.sidebarCollapsibleContent}>
           {expandedTags.length > 0 ? (

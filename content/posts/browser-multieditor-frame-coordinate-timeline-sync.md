@@ -1,9 +1,12 @@
 ---
-title: '[Part 2.] 웹브라우저 멀티에디터 만들기 - 프레임 좌표계를 이용한 멀티미디어 타임라인 동기화'
+title: '[Part 3.] 웹브라우저 멀티에디터 만들기 - 프레임 좌표계를 이용한 멀티미디어 타임라인 동기화'
 description: '프레임 좌표계를 기준으로 멀티미디어 타임라인과 도메인 상태를 동기화한 설계 과정을 정리합니다.'
 date: '2026-04-13'
 publishedAt: '2026-04-13T20:33:51+09:00'
 tags: ['architecture', 'timeline', 'multimedia', 'editor']
+series:
+  name: '웹브라우저 멀티에디터 만들기'
+  order: 3
 draft: false
 ---
 

@@ -4,6 +4,9 @@ description: '타임라인 리전 드래그 중 Canvas 리렌더를 피하기 �
 date: '2026-06-10'
 publishedAt: '2026-06-10T16:20:13+09:00'
 tags: ['react', 'performance', 'canvas', 'drag']
+series:
+  name: '드래그 최적화'
+  order: 3
 draft: false
 ---
 

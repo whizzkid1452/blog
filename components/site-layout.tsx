@@ -30,6 +30,13 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
   const primaryNavigationLinks: NavigationLink[] = [
     { href: createLocalizedPath(locale, '/'), label: messages.home },
     { href: createLocalizedPath(locale, '/posts'), label: messages.posts },
+    // 영문 Series와 Search 경로가 추가되기 전까지 존재하는 한국어 경로에서만 메뉴를 노출한다.
+    ...(locale === 'ko'
+      ? [
+          { href: '/series', label: 'Series' },
+          { href: '/search', label: 'Search' },
+        ]
+      : []),
   ];
   const visibleRecentPosts = getRecentPostsByPublishedDate(recentPosts);
 
