@@ -26,6 +26,12 @@ export function getPublicImageSize(src: string): PublicImageSize | null {
   return size;
 }
 
+export function hasPublicImage(src: string): boolean {
+  const imagePath = getPublicImagePath(src);
+
+  return imagePath != null && fs.existsSync(imagePath);
+}
+
 function readPublicImageSize(src: string): PublicImageSize | null {
   const imagePath = getPublicImagePath(src);
 

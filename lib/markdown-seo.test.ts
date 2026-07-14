@@ -24,6 +24,17 @@ describe('validateMarkdownSeo', () => {
     ).toThrow('image "/images/architecture.png" requires alt text');
   });
 
+  it('rejects local images that do not match a generated public asset', () => {
+    expect(() =>
+      validateMarkdownSeo({
+        fileName: 'missing-image.md',
+        content: '![Architecture diagram](/images/missing.png)',
+        internalRoutes: INTERNAL_ROUTES,
+        hasPublicImage: src => src !== '/images/missing.png',
+      })
+    ).toThrow('image "/images/missing.png" does not match a public asset');
+  });
+
   it('rejects internal links that do not match generated routes', () => {
     expect(() =>
       validateMarkdownSeo({
