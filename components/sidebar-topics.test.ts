@@ -1,15 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { getCollapsedSidebarTopicTags, getExpandedSidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
+import { getExpandedSidebarTopicTags, getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 
-describe('getCollapsedSidebarTopicTags', () => {
+describe('getPrimarySidebarTopicTags', () => {
   it('returns portfolio topic tags in configured order when available', () => {
-    expect(
-      getCollapsedSidebarTopicTags(['webcodecs', 'drag', 'react', 'nextjs', 'performance', 'architecture'])
-    ).toEqual(['react', 'architecture', 'nextjs', 'performance', 'webcodecs']);
+    expect(getPrimarySidebarTopicTags(['webcodecs', 'drag', 'react', 'nextjs', 'performance', 'architecture'])).toEqual(
+      ['react', 'architecture', 'nextjs', 'performance', 'webcodecs']
+    );
   });
 
   it('omits portfolio topic tags without a matching published tag', () => {
-    expect(getCollapsedSidebarTopicTags(['react', 'drag'])).toEqual(['react']);
+    expect(getPrimarySidebarTopicTags(['react', 'drag'])).toEqual(['react']);
   });
 });
 

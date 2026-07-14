@@ -1,3 +1,5 @@
+import type { Locale } from '@/lib/i18n';
+import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
 import type { Post, PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import { CommentsSection } from './comments-section';
@@ -5,11 +7,15 @@ import { MarkdownContent } from './markdown-content';
 import styles from './post-view.module.css';
 
 interface PostViewProps {
+  locale?: Locale;
   post: Post;
   relatedPosts: PostSummary[];
+  translationHref?: string;
 }
 
-export function PostView({ post, relatedPosts }: PostViewProps) {
+export function PostView({ locale = 'ko', post, relatedPosts, translationHref }: PostViewProps) {
+  const messages = getUiMessages(locale);
+
   return (
     <div className={styles.pageShell}>
       <article className={styles.article}>
@@ -19,9 +25,18 @@ export function PostView({ post, relatedPosts }: PostViewProps) {
           </time>
           <h1 className={styles.title}>{post.title}</h1>
           {post.description == null ? null : <p className={styles.description}>{post.description}</p>}
-          <div className={styles.tagList} aria-label="Tags">
+          {translationHref == null ? null : (
+            <Link className={styles.translationLink} href={translationHref} hrefLang={locale === 'ko' ? 'en' : 'ko'}>
+              {messages.languageLinkLabel}
+            </Link>
+          )}
+          <div className={styles.tagList} aria-label={messages.tagsLabel}>
             {post.tags.map(tag => (
-              <Link key={tag} className={styles.tagLink} href={`/tags/${encodeURIComponent(tag)}`}>
+              <Link
+                key={tag}
+                className={styles.tagLink}
+                href={createLocalizedPath(locale, `/tags/${encodeURIComponent(tag)}`)}
+              >
                 #{tag}
               </Link>
             ))}
@@ -32,12 +47,12 @@ export function PostView({ post, relatedPosts }: PostViewProps) {
       {relatedPosts.length > 0 ? (
         <section className={styles.relatedSection} aria-labelledby="related-posts-title">
           <h2 className={styles.relatedTitle} id="related-posts-title">
-            Related posts
+            {messages.relatedPosts}
           </h2>
           <ul className={styles.relatedList}>
             {relatedPosts.map(relatedPost => (
               <li className={styles.relatedItem} key={relatedPost.slug}>
-                <Link className={styles.relatedLink} href={`/posts/${relatedPost.slug}`}>
+                <Link className={styles.relatedLink} href={createLocalizedPath(locale, `/posts/${relatedPost.slug}`)}>
                   {relatedPost.title}
                 </Link>
                 <div className={styles.relatedMeta}>

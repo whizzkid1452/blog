@@ -4,6 +4,9 @@ description: '타임라인 썸네일 생성을 poster, visible tile, backfill로
 date: '2026-06-06'
 publishedAt: '2026-06-06T00:53:42+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'timeline']
+series:
+  name: '썸네일 생성 최적화'
+  order: 2
 draft: false
 ---
 
