@@ -125,6 +125,9 @@ version 10 저장이 끝났을 때 Main이 이미 version 13이면 saved 상태�
 
 ### 4-2. 더 강한 보장이 필요할 때
 
+<details>
+<summary>더 강한 저장 보장 방식 펼쳐보기</summary>
+
 모든 action 응답 전에 local disk 기록이 필요하다면 다음 대안을 검토한다.
 
 1. 직렬화 가능한 action을 복구용 변경 기록 파일에 추가한다.
@@ -135,6 +138,8 @@ version 10 저장이 끝났을 때 Main이 이미 version 13이면 saved 상태�
 이 경우 action의 queued sequential execution과 파일 flush 정책이 필요하다. Node.js 파일 API의 callback이나 Promise가 resolve되었다는 사실과 물리 장치까지 동기화되었다는 보장도 구분해야 한다. `fsPromises.writeFile`과 `filehandle.sync()`는 다른 단계다. [Node.js File System](https://nodejs.org/api/fs.html)
 
 어느 수준을 선택할지는 제품 정책과 측정값이 있어야 결정할 수 있다.
+
+</details>
 
 ## 5. 안전한 파일 교체
 
@@ -187,6 +192,9 @@ Main은 결과를 적용하기 직전에 현재 값과 비교한다. 일치하�
 
 ## 7. 장애 복구
 
+<details>
+<summary>장애 상황별 복구 정책 펼쳐보기</summary>
+
 | 상황 | 처리 |
 | --- | --- |
 | Renderer 종료 | Main session과 저장은 유지하고 해당 구독만 정리한다. |
@@ -196,6 +204,8 @@ Main은 결과를 적용하기 직전에 현재 값과 비교한다. 일치하�
 | Main 비정상 종료 | 마지막 정상 project file과 recovery file을 확인한다. |
 
 복구 파일을 자동으로 덮어쓸지 사용자에게 선택하게 할지는 데이터 중요도에 따라 정한다. 현재 설계에서는 더 최신인 recovery 후보가 있음을 알리고 선택하게 하는 쪽을 우선한다.
+
+</details>
 
 ## 8. 성능 확인
 
@@ -211,6 +221,9 @@ Main에 SSOT를 둔다고 무거운 작업까지 Main에서 실행하면 안 된
 CPU 사용이 큰 작업이 Main 응답성을 실제로 해친다고 확인되면 Worker나 Electron Utility Process로 분리한다. Electron은 Utility Process를 CPU 집약적이거나 장애 가능성이 큰 작업에 사용할 수 있다고 설명한다. [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model#the-utility-process)
 
 ## 9. 최소 구현
+
+<details>
+<summary>최소 구현 코드 펼쳐보기</summary>
 
 아래 예제는 파일 쓰기를 한 번에 하나만 실행하고 쓰는 동안 들어온 요청 중 최신 snapshot을 다음 대상으로 남긴다.
 
@@ -263,6 +276,8 @@ export class ProjectSaveManager {
 ```
 
 실제 구현은 쓰기 실패 시 pending snapshot을 보존하고 error 상태를 발행해야 한다. debounce는 `requestSave` 앞에 두고 `flush`는 timer를 건너뛰어 최신 snapshot을 바로 저장한다.
+
+</details>
 
 ## 10. 마치며
 

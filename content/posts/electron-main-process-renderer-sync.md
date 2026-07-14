@@ -185,6 +185,9 @@ Renderer별 route guard만으로는 다른 창의 현재 mode를 알 수 없다.
 
 ## 7. 임시 상태와 미디어 파일
 
+<details>
+<summary>임시 상태와 미디어 파일 처리 펼쳐보기</summary>
+
 ### 7-1. 일반 IPC와 MessagePort
 
 region click과 특정 SRT row highlight는 event 빈도가 낮다. 일반 IPC로 충분하다. 연속 playhead와 drag preview처럼 매우 자주 바뀌고 저장하지 않는 값은 먼저 Renderer local state로 처리한다.
@@ -205,6 +208,8 @@ Electron의 `webUtils.getPathForFile`은 Renderer의 `File` 객체에 대한 실
 
 Main이 파일 복사를 끝낸 뒤 `AssetRef`만 `ProjectDocument`에 추가한다. `AudioBuffer`는 Renderer runtime에서 만든다.
 
+</details>
+
 ## 8. 변경 순서 제어
 
 모든 action 앞에 전역 queue를 먼저 만들지는 않았다. `dispatch`, `undo`, `redo`가 Main에서 짧은 동기 state update로 끝나고 중간에 `await`가 없다면 한 callback 실행 중 다른 callback이 끼어들지 않는다. Node.js JavaScript callback은 event loop에서 실행된다. [Node.js Event Loop](https://nodejs.org/en/learn/asynchronous-work/event-loop-timers-and-nexttick)
@@ -218,6 +223,9 @@ Main이 파일 복사를 끝낸 뒤 `AssetRef`만 `ProjectDocument`에 추가한
 오래된 비동기 결과에는 `projectSessionKey`와 `baseItemVersion`을 넣고 state update 직전에 현재 값과 다시 비교한다. 이 방식은 전체 action을 줄 세우는 것이 아니라 오래된 결과를 거절하는 방식이다.
 
 ## 9. 최소 구현
+
+<details>
+<summary>최소 구현 코드 펼쳐보기</summary>
 
 아래 함수는 같은 update가 응답과 event로 두 번 들어와도 한 번만 적용하고 version gap은 snapshot 재조회로 복구한다.
 
@@ -267,6 +275,8 @@ export function applyProjectUpdate({ current, update }: ApplyUpdateInput): Apply
 ```
 
 실제 Adapter는 `applied` 결과를 `queryClient.setQueryData`에 넣고 `snapshotRequired`이면 Main snapshot을 다시 가져온다.
+
+</details>
 
 ## 10. 마치며
 

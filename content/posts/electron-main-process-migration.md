@@ -109,6 +109,9 @@ UI Zustand와 runtime cache까지 제거하지 않는다. 삭제 기준은 "Zust
 
 ## 4. PR 분리
 
+<details>
+<summary>PR 분리 절차 펼쳐보기</summary>
+
 PR은 라인 수가 아니라 한 가지 변경 목적을 기준으로 나눈다.
 
 ### 4-1. 기반 타입 PR
@@ -144,6 +147,8 @@ SRT와 Timeline은 검증 범위와 회귀 위험이 다르므로 별도 PR로 �
 - 임시 feature flag 삭제
 
 각 PR은 `test`, `typecheck`, `lint`, `build`가 통과해야 다음 PR의 base가 된다.
+
+</details>
 
 ## 5. 검증 계획
 
@@ -189,6 +194,9 @@ SRT와 Timeline은 검증 범위와 회귀 위험이 다르므로 별도 PR로 �
 
 ### 5-5. version 규칙 테스트
 
+<details>
+<summary>version 규칙 테스트 코드 펼쳐보기</summary>
+
 아래 테스트는 중복과 정상 다음 version과 gap을 분리한다.
 
 ```ts
@@ -217,6 +225,8 @@ describe('project update version', () => {
   });
 });
 ```
+
+</details>
 
 ## 6. 선택의 비용
 
@@ -258,6 +268,9 @@ SSOT를 Main으로 옮긴다고 복잡성이 사라지지는 않는다. 복잡�
 
 ## 8. 남은 결정
 
+<details>
+<summary>미정 정책 펼쳐보기</summary>
+
 현재 증거만으로 확정할 수 없는 항목이다.
 
 1. 자동저장이 허용하는 최대 데이터 손실 시간
@@ -268,6 +281,8 @@ SSOT를 Main으로 옮긴다고 복잡성이 사라지지는 않는다. 복잡�
 6. action latency와 Main event loop 지연의 허용값
 
 이 결정을 숨기고 구조를 완료된 답으로 표현하지 않는다. 제품 정책과 측정값이 생기면 문서를 갱신한다.
+
+</details>
 
 ## 9. 최종 구조
 

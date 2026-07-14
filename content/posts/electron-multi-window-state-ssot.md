@@ -210,6 +210,9 @@ IPC 전송값에는 Structured Clone Algorithm이 적용되며 함수와 DOM 객
 
 ### 6-2. 아직 확정하지 못한 요구사항
 
+<details>
+<summary>미정 요구사항 펼쳐보기</summary>
+
 다음 항목은 제품 정책이 없어서 설계만으로 결정할 수 없었다.
 
 - "실시간 저장"이 허용하는 최대 데이터 손실 시간
@@ -218,6 +221,8 @@ IPC 전송값에는 Structured Clone Algorithm이 적용되며 함수와 DOM 객
 - 앱을 다시 실행한 뒤에도 Undo/Redo 이력을 복원할지 여부
 
 이 항목들은 이후 글에서도 **미정 조건**으로 표시한다.
+
+</details>
 
 ## 7. 설계 질문
 
