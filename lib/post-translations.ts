@@ -43,7 +43,7 @@ export function getPostIndexForLocale(locale: Locale): PostIndex {
 }
 
 export function hasEnglishPostTranslation(slug: string): boolean {
-  return getEnglishPostIndex().getPostBySlug(slug) != null;
+  return getEnglishPostIndex().getPostBySlugForAuthenticatedViewer(slug) != null;
 }
 
 export function applyPostTranslation({ post, translation }: ApplyPostTranslationParams): Post {
@@ -69,7 +69,7 @@ function getEnglishPostIndex(): PostIndex {
   const koreanPostIndex = getPostIndex();
   const translationSources = readPostTranslationSources();
   const translatedPosts = translationSources.map(source => {
-    const koreanPost = koreanPostIndex.getPostBySlug(source.slug);
+    const koreanPost = koreanPostIndex.getPostBySlugForAuthenticatedViewer(source.slug);
 
     if (koreanPost == null) {
       throw new Error(`English translation has no published Korean post: ${source.fileName}`);
@@ -144,7 +144,7 @@ function createInternalRouteSet({
 }): Set<string> {
   const routes = new Set<string>(['/', '/posts', '/en', '/en/posts']);
 
-  koreanPostIndex.getPostSummaries().forEach(post => {
+  [...koreanPostIndex.getPostSummaries(), ...koreanPostIndex.getAuthenticatedPostSummaries()].forEach(post => {
     routes.add(`/posts/${post.slug}`);
     post.tags.forEach(tag => routes.add(`/tags/${encodeURIComponent(tag)}`));
   });

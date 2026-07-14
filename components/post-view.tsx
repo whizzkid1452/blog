@@ -64,7 +64,7 @@ export function PostView({ locale = 'ko', post, relatedPosts, translationHref }:
           </ul>
         </section>
       ) : null}
-      <CommentsSection postSlug={post.slug} />
+      {post.visibility === 'public' ? <CommentsSection postSlug={post.slug} /> : null}
     </div>
   );
 }

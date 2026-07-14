@@ -1,15 +1,10 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
-import { z } from 'zod';
+import { getSupabaseEnvironment } from '../supabase/environment';
 import type { BlogComment, CommentRepository, CreateCommentInput } from './comment-types';
 import type { Database } from './database-types';
 
 const COMMENT_SELECT_COLUMNS = 'id, post_slug, author_name, content, created_at';
 const COMMENT_LIST_LIMIT = 100;
-
-const supabaseEnvironmentSchema = z.object({
-  SUPABASE_URL: z.url(),
-  SUPABASE_PUBLISHABLE_KEY: z.string().trim().min(1),
-});
 
 type CommentRow = Database['public']['Tables']['comments']['Row'];
 
@@ -57,8 +52,8 @@ export function getSupabaseCommentRepository(): CommentRepository {
     return cachedCommentRepository;
   }
 
-  const environment = supabaseEnvironmentSchema.parse(process.env);
-  const supabaseClient = createClient<Database>(environment.SUPABASE_URL, environment.SUPABASE_PUBLISHABLE_KEY, {
+  const environment = getSupabaseEnvironment();
+  const supabaseClient = createClient<Database>(environment.url, environment.publishableKey, {
     auth: {
       autoRefreshToken: false,
       detectSessionInUrl: false,

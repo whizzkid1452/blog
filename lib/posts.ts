@@ -51,6 +51,8 @@ const publicPathSchema = z
     message: 'Expected a public-root path starting with /',
   });
 
+const postVisibilitySchema = z.enum(['public', 'authenticated']);
+
 const postFrontmatterSchema = z
   .object({
     title: z.string().trim().min(1),
@@ -59,6 +61,7 @@ const postFrontmatterSchema = z
     publishedAt: dateTimeSchema.optional(),
     tags: z.array(tagSchema).min(1),
     draft: z.boolean().default(false),
+    visibility: postVisibilitySchema.default('public'),
     coverImage: publicPathSchema.optional(),
     coverAlt: z.string().trim().min(1).optional(),
     series: z
@@ -114,7 +117,10 @@ export interface SeriesMetadata {
 export interface Post extends PostSummary {
   content: string;
   draft: boolean;
+  visibility: PostVisibility;
 }
+
+export type PostVisibility = z.infer<typeof postVisibilitySchema>;
 
 type PostFrontmatter = z.infer<typeof postFrontmatterSchema>;
 

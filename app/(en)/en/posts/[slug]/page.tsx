@@ -1,4 +1,5 @@
 import { PostView } from '@/components/post-view';
+import { getViewablePost } from '@/lib/auth/post-access';
 import { createLocalizedPath } from '@/lib/i18n';
 import { getPostIndexForLocale } from '@/lib/post-translations';
 import { createPostPageMetadata } from '@/lib/seo-metadata';
@@ -18,19 +19,35 @@ export function generateStaticParams() {
     .map(post => ({ slug: post.slug }));
 }
 
-export const dynamicParams = false;
+// 공개 글만 SSG로 생성하고 인증 글은 요청 시 서버에서 권한을 검사한다.
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: EnglishPostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostIndexForLocale('en').getPostBySlug(slug);
+  const post = await getViewablePost({
+    postIndex: getPostIndexForLocale('en'),
+    slug,
+    returnPath: `/en/posts/${slug}`,
+  });
 
-  return post == null ? {} : createPostPageMetadata(post, { locale: 'en', hasAlternateLocale: true });
+  if (post == null) {
+    return {};
+  }
+
+  if (post.visibility === 'authenticated') {
+    return {
+      title: post.title,
+      robots: { index: false, follow: false, noarchive: true },
+    };
+  }
+
+  return createPostPageMetadata(post, { locale: 'en', hasAlternateLocale: true });
 }
 
 export default async function EnglishPostPage({ params }: EnglishPostPageProps) {
   const { slug } = await params;
   const postIndex = getPostIndexForLocale('en');
-  const post = postIndex.getPostBySlug(slug);
+  const post = await getViewablePost({ postIndex, slug, returnPath: `/en/posts/${slug}` });
 
   if (post == null) {
     notFound();
