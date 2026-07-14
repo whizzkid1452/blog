@@ -1,5 +1,6 @@
 import type { Post, PostSummary } from '@/lib/posts';
 import Link from 'next/link';
+import { CommentsSection } from './comments-section';
 import { MarkdownContent } from './markdown-content';
 import styles from './post-view.module.css';
 
@@ -48,6 +49,7 @@ export function PostView({ post, relatedPosts }: PostViewProps) {
           </ul>
         </section>
       ) : null}
+      <CommentsSection postSlug={post.slug} />
     </div>
   );
 }
