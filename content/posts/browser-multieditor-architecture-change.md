@@ -4,6 +4,9 @@ description: '멀티미디어 에디터 타임라인 구현 과정에서 Facade,
 date: '2026-03-26'
 publishedAt: '2026-03-26T00:42:12+09:00'
 tags: ['architecture', 'session-layer', 'mvc', 'editor']
+series:
+  name: '웹브라우저 멀티에디터 만들기'
+  order: 2
 draft: false
 ---
 
@@ -123,7 +126,7 @@ Session이 Store를 구독하면 해결되지만, 그건 앞서 말한 `Store > 
 
 - [Part 1 아키텍처 설계](/posts/browser-multieditor-architecture-design)
 - [rAF 트림 기능 관련](/posts/audio-editor-zoom-raf-throttling)
-- [drop-daw GitHub](https://github.com/whizzkid1452/drop.ai)
+- [drop-ai GitHub](https://github.com/whizzkid1452/drop-ai)
 
 참고 개념/출처
 

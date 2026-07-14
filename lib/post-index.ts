@@ -2,6 +2,11 @@ import type { Post, PostSummary } from './posts';
 
 const RELATED_POSTS_LIMIT = 3;
 
+export interface PostSeries {
+  name: string;
+  posts: PostSummary[];
+}
+
 export class PostIndex {
   private readonly publishedPosts: Post[];
 
@@ -38,6 +43,26 @@ export class PostIndex {
     );
   }
 
+  getSeries(): PostSeries[] {
+    const postsBySeries = new Map<string, PostSummary[]>();
+
+    this.getPostSummaries().forEach(post => {
+      if (post.series == null) {
+        return;
+      }
+
+      const seriesPosts = postsBySeries.get(post.series.name) ?? [];
+      seriesPosts.push(post);
+      postsBySeries.set(post.series.name, seriesPosts);
+    });
+
+    return Array.from(postsBySeries, ([name, posts]) => ({
+      name,
+      // 발행일과 읽기 순서는 다를 수 있으므로 frontmatter의 order를 우선한다.
+      posts: posts.sort(compareSeriesPosts),
+    })).sort((leftSeries, rightSeries) => leftSeries.name.localeCompare(rightSeries.name));
+  }
+
   getPostBySlug(slug: string): Post | null {
     return this.publishedPosts.find(post => post.slug === slug) ?? null;
   }
@@ -57,7 +82,18 @@ function toPostSummary(post: Post): PostSummary {
     tags: post.tags,
     coverImage: post.coverImage,
     coverAlt: post.coverAlt,
+    series: post.series,
   };
+}
+
+function compareSeriesPosts(leftPost: PostSummary, rightPost: PostSummary): number {
+  const orderComparison = (leftPost.series?.order ?? 0) - (rightPost.series?.order ?? 0);
+
+  if (orderComparison !== 0) {
+    return orderComparison;
+  }
+
+  return leftPost.slug.localeCompare(rightPost.slug);
 }
 
 function comparePosts(leftPost: Post, rightPost: Post): number {

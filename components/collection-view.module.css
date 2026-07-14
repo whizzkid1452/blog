@@ -1,0 +1,148 @@
+.pageShell {
+  display: flex;
+  width: min(100%, 768px);
+  flex-direction: column;
+  gap: 48px;
+  margin: 0 auto;
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eyebrow,
+.resultCount,
+.seriesCount {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.title {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 48px;
+  font-weight: 650;
+  line-height: 1.08;
+}
+
+.description {
+  max-width: 640px;
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 18px;
+  line-height: 1.75;
+}
+
+.searchArea {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.searchLabel {
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.searchControl {
+  display: flex;
+  gap: 8px;
+}
+
+.searchInput {
+  min-width: 0;
+  flex: 1;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--background);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 16px;
+}
+
+.searchInput:focus-visible {
+  border-color: var(--color-link);
+  outline: 2px solid color-mix(in srgb, var(--color-link) 24%, transparent);
+  outline-offset: 1px;
+}
+
+.clearButton {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0 16px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.clearButton:hover,
+.clearButton:focus-visible {
+  border-color: var(--color-link);
+  color: var(--color-link);
+  outline: none;
+}
+
+.postList,
+.seriesList {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.seriesList {
+  gap: 48px;
+}
+
+.seriesSection {
+  display: flex;
+  scroll-margin-top: 88px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.seriesHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 12px;
+}
+
+.seriesTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 24px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.emptyMessage {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 16px;
+  line-height: 1.75;
+}
+
+@media (max-width: 640px) {
+  .pageShell {
+    gap: 40px;
+  }
+
+  .title {
+    font-size: 40px;
+  }
+
+  .searchControl {
+    align-items: stretch;
+  }
+}

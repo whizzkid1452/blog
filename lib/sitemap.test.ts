@@ -21,6 +21,17 @@ describe('createSitemap', () => {
         },
       ],
       tags: ['next js'],
+      englishPosts: [
+        {
+          slug: 'nextjs-static-output',
+          title: 'Next.js static output',
+          description: 'English post description',
+          date: '2026-07-06',
+          publishedAt: '2026-07-06T09:30:00.000Z',
+          tags: ['nextjs'],
+        },
+      ],
+      englishTags: ['nextjs'],
     });
 
     expect(routes).toContainEqual(
@@ -40,9 +51,27 @@ describe('createSitemap', () => {
     );
     expect(routes).toContainEqual(
       expect.objectContaining({
+        url: 'https://example.com/series',
+        changeFrequency: 'weekly',
+        priority: 0.7,
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
         url: 'https://example.com/tags/next%20js',
         changeFrequency: 'weekly',
         priority: 0.5,
+      })
+    );
+    expect(routes).toContainEqual(
+      expect.objectContaining({
+        url: 'https://example.com/en/posts/nextjs-static-output',
+        alternates: {
+          languages: {
+            'ko-KR': 'https://example.com/posts/nextjs-static-output',
+            'en-US': 'https://example.com/en/posts/nextjs-static-output',
+          },
+        },
       })
     );
   });

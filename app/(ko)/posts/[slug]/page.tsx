@@ -1,4 +1,6 @@
 import { PostView } from '@/components/post-view';
+import { createLocalizedPath } from '@/lib/i18n';
+import { hasEnglishPostTranslation } from '@/lib/post-translations';
 import { getPostIndex } from '@/lib/posts';
 import { createPostPageMetadata } from '@/lib/seo-metadata';
 import { createPostBreadcrumbJsonLd, createPostJsonLd } from '@/lib/structured-data';
@@ -29,7 +31,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     return {};
   }
 
-  return createPostPageMetadata(post);
+  return createPostPageMetadata(post, { locale: 'ko', hasAlternateLocale: hasEnglishPostTranslation(slug) });
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -42,12 +44,15 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const relatedPosts = postIndex.getRelatedPostSummaries(post);
+  const translationHref = hasEnglishPostTranslation(slug)
+    ? createLocalizedPath('en', `/posts/${post.slug}`)
+    : undefined;
 
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostJsonLd(post) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostBreadcrumbJsonLd(post) }} />
-      <PostView post={post} relatedPosts={relatedPosts} />
+      <PostView post={post} relatedPosts={relatedPosts} translationHref={translationHref} />
     </>
   );
 }

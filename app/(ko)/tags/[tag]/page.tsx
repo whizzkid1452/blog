@@ -1,4 +1,5 @@
 import { HomeView } from '@/components/home-view';
+import { getPostIndexForLocale } from '@/lib/post-translations';
 import { getPostIndex } from '@/lib/posts';
 import { createTagPageMetadata } from '@/lib/seo-metadata';
 import type { Metadata } from 'next';
@@ -28,7 +29,10 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     return {};
   }
 
-  return createTagPageMetadata(tag);
+  return createTagPageMetadata(tag, {
+    locale: 'ko',
+    hasAlternateLocale: getPostIndexForLocale('en').getTags().includes(tag),
+  });
 }
 
 export default async function TagPage({ params }: TagPageProps) {
