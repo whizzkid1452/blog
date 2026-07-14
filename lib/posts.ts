@@ -61,6 +61,12 @@ const postFrontmatterSchema = z
     draft: z.boolean().default(false),
     coverImage: publicPathSchema.optional(),
     coverAlt: z.string().trim().min(1).optional(),
+    series: z
+      .object({
+        name: z.string().trim().min(1),
+        order: z.number().int().positive(),
+      })
+      .optional(),
   })
   .superRefine((frontmatter, context) => {
     if (!frontmatter.draft && frontmatter.description == null) {
@@ -97,6 +103,12 @@ export interface PostSummary {
   tags: string[];
   coverImage?: string;
   coverAlt?: string;
+  series?: SeriesMetadata;
+}
+
+export interface SeriesMetadata {
+  name: string;
+  order: number;
 }
 
 export interface Post extends PostSummary {
@@ -210,7 +222,7 @@ function validatePublishedPostMarkdown(postSources: PostSource[]): void {
 }
 
 function createInternalRouteSet(posts: Post[]): Set<string> {
-  const routes = new Set<string>(['/', '/posts']);
+  const routes = new Set<string>(['/', '/posts', '/search', '/series']);
 
   posts.forEach(post => {
     routes.add(`/posts/${post.slug}`);

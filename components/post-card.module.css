@@ -32,6 +32,21 @@
   font-size: 14px;
 }
 
+.seriesLink {
+  position: relative;
+  z-index: 2;
+  color: var(--color-text-secondary);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.seriesLink:hover {
+  color: var(--color-link);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
 .tagList {
   display: flex;
   flex-wrap: wrap;

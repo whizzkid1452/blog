@@ -20,6 +20,8 @@ interface NavigationLink {
 const PRIMARY_NAVIGATION_LINKS: NavigationLink[] = [
   { href: '/', label: 'Home' },
   { href: '/posts', label: 'Posts' },
+  { href: '/series', label: 'Series' },
+  { href: '/search', label: 'Search' },
 ];
 
 const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';

@@ -4,6 +4,9 @@ description: '타임라인 드래그 성능 개선 과정을 다시 검토하며
 date: '2026-06-10'
 publishedAt: '2026-06-10T11:00:39+09:00'
 tags: ['react', 'performance', 'canvas', 'drag']
+series:
+  name: '드래그 최적화'
+  order: 2
 draft: false
 ---
 

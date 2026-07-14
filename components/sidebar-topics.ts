@@ -19,18 +19,18 @@ const SIDEBAR_TOPIC_LABELS: Partial<Record<string, string>> = {
   'state-management': '상태관리',
 };
 
-export function getCollapsedSidebarTopicTags(tags: string[]): string[] {
+export function getPrimarySidebarTopicTags(tags: string[]): string[] {
   const availableTagSet = new Set(tags);
 
   return PRIMARY_SIDEBAR_TOPIC_TAGS.filter(tag => availableTagSet.has(tag));
 }
 
 export function getExpandedSidebarTopicTags(tags: string[]): string[] {
-  const collapsedTopicTags = getCollapsedSidebarTopicTags(tags);
-  const collapsedTopicTagSet = new Set(collapsedTopicTags);
-  const remainingTags = tags.filter(tag => !collapsedTopicTagSet.has(tag));
+  const primaryTopicTags = getPrimarySidebarTopicTags(tags);
+  const primaryTopicTagSet = new Set(primaryTopicTags);
+  const remainingTags = tags.filter(tag => !primaryTopicTagSet.has(tag));
 
-  return [...collapsedTopicTags, ...remainingTags];
+  return [...primaryTopicTags, ...remainingTags];
 }
 
 export function getSidebarTopicLabel(tag: string): string {

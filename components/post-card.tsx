@@ -13,6 +13,11 @@ export function PostCard({ post }: PostCardProps) {
         <time className={styles.postDate} dateTime={post.date}>
           {post.date}
         </time>
+        {post.series == null ? null : (
+          <Link className={styles.seriesLink} href={`/series#${encodeURIComponent(post.series.name)}`}>
+            {post.series.name} {post.series.order}편
+          </Link>
+        )}
         <div className={styles.tagList} aria-label="Tags">
           {post.tags.map(tag => (
             <Link key={tag} className={styles.tagLink} href={`/tags/${encodeURIComponent(tag)}`}>

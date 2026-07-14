@@ -4,6 +4,9 @@ description: 'Web Worker 기반 썸네일 생성 전략을 다시 측정하며 �
 date: '2026-06-09'
 publishedAt: '2026-06-09T11:23:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'webcodecs']
+series:
+  name: '썸네일 생성 최적화'
+  order: 3
 draft: false
 ---
 

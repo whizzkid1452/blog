@@ -25,6 +25,7 @@ interface NavigationLink {
 interface MobileNavigationCollapsibleSectionProps {
   title: string;
   children: ReactNode;
+  defaultOpen?: boolean;
 }
 
 export function MobileNavigationDialog({
@@ -110,7 +111,7 @@ export function MobileNavigationDialog({
             )}
           </MobileNavigationCollapsibleSection>
 
-          <MobileNavigationCollapsibleSection title="Recent">
+          <MobileNavigationCollapsibleSection title="Recent" defaultOpen>
             {recentPosts.length > 0 ? (
               <ol className={styles.mobileRecentPostList}>
                 {recentPosts.map(post => (
@@ -136,9 +137,13 @@ export function MobileNavigationDialog({
   );
 }
 
-function MobileNavigationCollapsibleSection({ title, children }: MobileNavigationCollapsibleSectionProps) {
+function MobileNavigationCollapsibleSection({
+  title,
+  children,
+  defaultOpen = false,
+}: MobileNavigationCollapsibleSectionProps) {
   return (
-    <Collapsible.Root className={styles.mobileNavigationSection} defaultOpen>
+    <Collapsible.Root className={styles.mobileNavigationSection} defaultOpen={defaultOpen}>
       <div className={styles.mobileNavigationSectionHeader}>
         <h2 className={styles.mobileNavigationSectionTitle}>{title}</h2>
         <Collapsible.Trigger
