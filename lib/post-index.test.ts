@@ -38,6 +38,26 @@ describe('PostIndex', () => {
       index.getRelatedPostSummaries({ slug: 'current-post', tags: ['nextjs', 'seo'] }).map(post => post.slug)
     ).toEqual(['same-tags-newer', 'same-tags-older', 'one-tag-newer']);
   });
+
+  it('groups series alphabetically and orders each series by its explicit order', () => {
+    const index = new PostIndex([
+      createPost({ slug: 'series-b-second', series: { name: 'Series B', order: 2 } }),
+      createPost({ slug: 'standalone-post' }),
+      createPost({ slug: 'series-a-first', series: { name: 'Series A', order: 1 } }),
+      createPost({ slug: 'series-b-first', series: { name: 'Series B', order: 1 } }),
+      createPost({ slug: 'series-a-draft', draft: true, series: { name: 'Series A', order: 2 } }),
+    ]);
+
+    expect(
+      index.getSeries().map(series => ({
+        name: series.name,
+        postSlugs: series.posts.map(post => post.slug),
+      }))
+    ).toEqual([
+      { name: 'Series A', postSlugs: ['series-a-first'] },
+      { name: 'Series B', postSlugs: ['series-b-first', 'series-b-second'] },
+    ]);
+  });
 });
 
 describe('getPostPublishedDateTime', () => {

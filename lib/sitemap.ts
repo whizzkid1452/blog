@@ -20,6 +20,11 @@ export function createSitemap({ posts, tags }: CreateSitemapParams): MetadataRou
       changeFrequency: 'weekly',
       priority: 0.8,
     },
+    {
+      url: createAbsoluteUrl('/series'),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+    },
   ];
 
   const postRoutes = posts.map(post => ({

@@ -4,6 +4,9 @@ description: '웹브라우저 기반 멀티미디어 에디터에서 레이어�
 date: '2026-03-25'
 publishedAt: '2026-03-25T17:01:44+09:00'
 tags: ['architecture', 'ssot', 'frontend', 'editor']
+series:
+  name: '웹브라우저 멀티에디터 만들기'
+  order: 1
 draft: false
 ---
 
