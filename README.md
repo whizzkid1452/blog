@@ -2,9 +2,9 @@
 
 ## Goal
 
-Markdown 글을 Next.js App Router로 정적 생성해서 검색엔진이 초기 HTML에서 글 본문과 메타데이터를 읽을 수 있게 한다.
+Markdown 글은 Next.js App Router로 정적 생성하고, 배포 환경에서는 Next.js Node.js 서버가 페이지와 API를 제공한다.
 
-이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. **정적 호스팅**은 미리 생성한 파일을 별도의 Node.js 서버 없이 전달하는 배포 방식을 뜻한다. **SSR**은 요청 시점마다 서버에서 HTML을 생성하는 Server-Side Rendering을 뜻하며, 이 블로그의 공개 글 페이지 기본 전략은 SSR이 아니라 SSG다.
+이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. **서버 배포**는 Next.js standalone 산출물을 Node.js 프로세스로 실행하는 방식을 뜻한다. 서버를 사용해도 공개 글 페이지의 기본 렌더링 전략은 SSG로 유지된다.
 
 ## Prerequisites
 
@@ -53,7 +53,7 @@ tags:
 
 공개 글은 `description`과 최소 1개 이상의 `tags`가 필요하다. `draft: true`인 글은 공개 목록, sitemap, RSS에서 제외된다.
 
-### 4. 정적 생성 확인
+### 4. 정적 생성과 서버 산출물 확인
 
 ```bash
 pnpm build
@@ -68,21 +68,30 @@ pnpm build
 
 `/posts/[slug]`와 `/tags/[tag]`가 `SSG`로 표시되면 글 상세와 태그 페이지가 빌드 시점에 생성된 것이다.
 
-`out` 디렉터리에 정적 호스팅에 필요한 HTML, CSS, JavaScript, 이미지 파일이 생성된다.
+`.next/standalone`에 Node.js 서버 실행에 필요한 산출물이 생성된다.
 
-### 5. 정적 산출물 미리보기
+### 5. production 서버 실행
 
-빌드가 끝난 후 정적 파일 서버로 `out` 디렉터리를 확인한다.
+빌드가 끝난 후 production 서버를 실행한다.
 
 ```bash
-pnpm dlx serve@14.2.5 out
+pnpm start
 ```
 
-브라우저에서 `http://localhost:3000`을 열고 글 목록, 글 상세, 태그 페이지를 확인한다.
+브라우저에서 `http://localhost:3000`을 열고 글 목록, 글 상세, 태그 페이지를 확인한다. 프로세스 health check는 `GET /api/health`를 사용한다.
 
-### 6. AWS 배포
+### 6. Docker 이미지 생성
 
-`main` 브랜치를 AWS Amplify Hosting에 연결하면 저장소의 `amplify.yml`이 `out` 디렉터리를 빌드하고 배포한다. 자세한 절차는 [AWS 정적 호스팅 배포 가이드](./docs/aws-deployment-plan.md)를 따른다.
+```bash
+docker build --build-arg NEXT_PUBLIC_SITE_URL=https://example.com -t blog .
+docker run --rm -p 3000:3000 blog
+```
+
+Docker 이미지는 비 root 사용자인 `nextjs`로 standalone `server.js`를 실행한다.
+
+### 7. AWS 배포
+
+컨테이너 이미지를 Amazon ECR에 저장하고 ECS 서비스에서 실행할 수 있다. 구체적인 순서는 [AWS 서버 배포 가이드](./docs/aws-deployment-plan.md)를 따른다.
 
 ## SEO 구조
 
