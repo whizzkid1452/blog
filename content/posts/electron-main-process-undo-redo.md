@@ -12,14 +12,33 @@ draft: false
 
 - [1. 들어가며](#1-들어가며)
 - [2. 기존 History의 한계](#2-기존-history의-한계)
+  - [2-1. 기능별 History](#2-1-기능별-history)
+  - [2-2. live 객체 의존](#2-2-live-객체-의존)
 - [3. 문서 상태와 실행 상태 분리](#3-문서-상태와-실행-상태-분리)
-- [4. ProjectHistoryEntry](#4-projecthistoryentry)
+  - [3-1. Main이 복원하는 값](#3-1-main이-복원하는-값)
+  - [3-2. Renderer가 복원하는 값](#3-2-renderer가-복원하는-값)
+- [4. History가 기억할 값](#4-history가-기억할-값)
 - [5. Undo와 Redo 흐름](#5-undo와-redo-흐름)
+  - [5-1. 기본 규칙](#5-1-기본-규칙)
+  - [5-2. action group](#5-2-action-group)
 - [6. Runtime 동기화](#6-runtime-동기화)
+  - [6-1. 증분 반영](#6-1-증분-반영)
+  - [6-2. 실패 시 복구](#6-2-실패-시-복구)
 - [7. History와 asset 수명주기](#7-history와-asset-수명주기)
-- [8. 점진적 History 이관](#8-점진적-history-이관)
-- [9. 최소 구현](#9-최소-구현)
-- [10. 마치며](#10-마치며)
+- [8. 마치며](#8-마치며)
+
+</details>
+
+<details>
+<summary>시리즈 전체 글 바로가기</summary>
+
+1. [Part 0. Main Process SSOT 시리즈를 시작하며](/posts/electron-main-process-ssot-series-guide)
+2. [Part 1. Electron 멀티 윈도우에서 저장 결과가 달라진 이유](/posts/electron-multi-window-state-ssot)
+3. [Part 2. Main Process에 ProjectDocument SSOT를 둔 이유](/posts/electron-main-process-project-ssot)
+4. [Part 3. Renderer가 Main의 확정 상태를 받는 방법](/posts/electron-main-process-renderer-sync)
+5. [Part 4. 흩어진 Undo/Redo를 Main History로 통합하기](/posts/electron-main-process-undo-redo)
+6. [Part 5. 자동저장의 책임과 디스크 저장 보장](/posts/electron-main-process-autosave)
+7. [Part 6. Main SSOT 설계를 검증하고 선택의 비용 정리하기](/posts/electron-main-process-migration)
 
 </details>
 
@@ -29,7 +48,7 @@ draft: false
 
 프로젝트 문서의 SSOT를 Main에 둔다고 기존 Undo/Redo를 그대로 옮길 수는 없었다. 기존 action은 Renderer의 `Session`, Timeline `Region`, `AudioBuffer` 같은 실행 객체를 직접 가지고 있었다. 이 객체는 프로젝트 파일에 저장할 수 없고 Electron IPC로 그대로 보낼 수도 없다.
 
-결론부터 적으면, **Main History는 `ProjectDocument`의 forward patch와 inverse patch만 기억하고 Renderer의 `ProjectRuntimeSyncAdapter`가 같은 결과를 AudioEngine에 반영하도록 분리했다**.
+결론부터 적으면, **Main History는 `ProjectDocument`의 forward patch와 inverse patch만 기억하고 Renderer의 동기화 계층이 같은 결과를 AudioEngine에 반영하도록 분리했다**.
 
 ## 2. 기존 History의 한계
 
@@ -39,19 +58,7 @@ SRT와 Timeline과 Audio 편집 기능은 각각 별도의 History를 가지고 
 
 ### 2-2. live 객체 의존
 
-기존 action은 다음과 비슷했다.
-
-```ts
-class SplitRegionAction {
-  constructor(
-    private readonly session: EditorSession,
-    private readonly region: Region,
-    private readonly previousBuffer: AudioBuffer,
-  ) {}
-}
-```
-
-이 객체는 현재 Renderer memory의 인스턴스와 연결되어 있다. `AudioBuffer`와 함수와 사용자 정의 class instance를 Main에 보내서 같은 의미로 복원할 수 있다고 가정할 수 없다. Electron `ipcRenderer` 문서는 IPC 인자가 Structured Clone Algorithm으로 직렬화되며 함수와 DOM 객체 등 일부 값은 복제할 수 없다고 설명한다. [Electron ipcRenderer](https://www.electronjs.org/docs/latest/api/ipc-renderer)
+기존 action은 현재 Renderer memory의 `Session`, Timeline `Region`, `AudioBuffer` 인스턴스를 직접 참조했다. 이런 실행 객체를 Main에 보내서 같은 의미로 복원할 수 있다고 가정할 수 없다. Electron `ipcRenderer` 문서는 IPC 인자가 Structured Clone Algorithm으로 직렬화되며 함수와 DOM 객체 등 일부 값은 복제할 수 없다고 설명한다. [Electron ipcRenderer](https://www.electronjs.org/docs/latest/api/ipc-renderer)
 
 따라서 기존 action 객체를 Main에 전송하는 방식은 제외했다.
 
@@ -78,34 +85,15 @@ Undo/Redo가 복원할 값을 두 층으로 나누었다.
 
 문서 변경의 최종 기준은 Main이다. Renderer 실행 객체는 Main update를 받아 같은 결과가 되도록 갱신한다. selection처럼 프로젝트 결과에 포함되지 않는 UI state는 별도 정책으로 유지하거나 초기화한다.
 
-## 4. ProjectHistoryEntry
+## 4. History가 기억할 값
 
-Main History의 최소 단위는 다음과 같다.
+Main History의 한 항목은 다음 정보를 기억한다.
 
-```ts
-interface ProjectHistoryEntry {
-  actionId: string;
-  label: string;
-  forwardPatch: ProjectPatch[];
-  inversePatch: ProjectPatch[];
-}
-```
+- 어떤 사용자 동작인지 나타내는 이름
+- Redo 때 적용할 forward patch
+- Undo 때 적용할 inverse patch
 
-- `actionId`: 요청과 event 중복 확인에 사용하는 ID
-- `label`: Undo UI에 표시할 이름
-- `forwardPatch`: Redo 때 적용할 변경
-- `inversePatch`: Undo 때 적용할 반대 변경
-
-patch는 범용 문자열 path보다 프로젝트 타입에 맞춘 union으로 시작한다.
-
-```ts
-type ProjectPatch =
-  | { type: 'srtRowReplaced'; row: SrtRow }
-  | { type: 'timelineItemReplaced'; item: TimelineItem }
-  | { type: 'timelineItemRemoved'; itemId: string };
-```
-
-이 방식은 patch 종류가 늘어날 때 코드를 추가해야 한다. 대신 TypeScript가 누락된 case를 확인할 수 있고 잘못된 문자열 path를 줄일 수 있다.
+patch는 범용 문자열 path보다 프로젝트 변경 종류가 드러나는 형태로 구분한다. 변경 종류가 늘어날 때마다 정의를 추가해야 하지만, 어떤 값이 되돌아가는지 확인하기 쉽고 잘못된 path를 줄일 수 있다.
 
 ## 5. Undo와 Redo 흐름
 
@@ -144,12 +132,12 @@ Split처럼 여러 item을 함께 바꾸는 동작도 하나의 action group으�
 
 ## 6. Runtime 동기화
 
-`ProjectRuntimeSyncAdapter`는 Main patch를 Renderer의 AudioEngine에 반영한다.
+Renderer 동기화 계층은 Main patch를 AudioEngine에 반영한다.
 
 ```mermaid
 flowchart LR
   Update["Main ProjectUpdateResult"] --> Cache["ProjectSnapshot Cache"]
-  Update --> Adapter["ProjectRuntimeSyncAdapter"]
+  Update --> Adapter["Renderer runtime 동기화"]
   Adapter --> Region["Timeline Region"]
   Adapter --> Audio["AudioEngine"]
   Adapter --> Buffer["AssetRef로 AudioBuffer 읽기"]
@@ -172,9 +160,6 @@ flowchart LR
 
 ## 7. History와 asset 수명주기
 
-<details>
-<summary>asset 수명주기 정책 펼쳐보기</summary>
-
 Undo가 참조하는 asset을 현재 문서에서 사라졌다는 이유로 바로 지울 수 없다. Undo 후 다시 필요할 수 있기 때문이다.
 
 초기 정책은 다음과 같다.
@@ -188,108 +173,7 @@ Undo가 참조하는 asset을 현재 문서에서 사라졌다는 이유로 바�
 
 앱을 다시 실행한 뒤 History까지 복원할지는 아직 미정이다. 복원한다면 asset 보존 기간과 History 파일 포맷도 함께 정해야 한다.
 
-</details>
-
-## 8. 점진적 History 이관
-
-<details>
-<summary>History 이관 절차 펼쳐보기</summary>
-
-Undo/Redo를 한 번에 바꾸지 않는다. 기능별로 다음 순서를 반복한다.
-
-1. 해당 기능의 순수 reducer를 만든다.
-2. forward patch와 inverse patch 테스트를 작성한다.
-3. Renderer Runtime Sync Adapter를 만든다.
-4. reducer 결과와 runtime 결과가 같은 구조인지 검증한다.
-5. 해당 기능의 Main History를 켠다.
-6. 같은 기능의 기존 Renderer History를 끈다.
-
-첫 대상은 실행 객체 의존이 비교적 적은 SRT text 변경으로 정했다. 이후 Timeline 배치와 split으로 넓힌다.
-
-> 같은 기능에 Main History와 Renderer History를 동시에 활성화하지 않는다.
-
-이중 History는 한 번의 사용자 입력을 두 번 기록하거나 서로 다른 순서로 Undo할 수 있다.
-
-</details>
-
-## 9. 최소 구현
-
-<details>
-<summary>최소 구현 코드 펼쳐보기</summary>
-
-아래 코드는 값 교체 patch만 포함한 최소 History다.
-
-```ts
-// project-history.ts
-interface TextState {
-  text: string;
-}
-
-interface TextPatch {
-  text: string;
-}
-
-interface HistoryEntry {
-  forwardPatch: TextPatch;
-  inversePatch: TextPatch;
-}
-
-export class ProjectHistory {
-  #undoStack: HistoryEntry[] = [];
-  #redoStack: HistoryEntry[] = [];
-
-  record(entry: HistoryEntry): void {
-    this.#undoStack.push(entry);
-    this.#redoStack = [];
-  }
-
-  undo(current: TextState): TextState {
-    const entry = this.#undoStack.pop();
-    if (entry == null) {
-      return current;
-    }
-
-    this.#redoStack.push(entry);
-    return { ...current, ...entry.inversePatch };
-  }
-
-  redo(current: TextState): TextState {
-    const entry = this.#redoStack.pop();
-    if (entry == null) {
-      return current;
-    }
-
-    this.#undoStack.push(entry);
-    return { ...current, ...entry.forwardPatch };
-  }
-}
-```
-
-동작을 한 가지씩 검증한다.
-
-```ts
-// project-history.test.ts
-import { expect, it } from 'vitest';
-import { ProjectHistory } from './project-history';
-
-it('restores the previous text and can redo it', () => {
-  const history = new ProjectHistory();
-  history.record({
-    forwardPatch: { text: 'after' },
-    inversePatch: { text: 'before' },
-  });
-
-  const undone = history.undo({ text: 'after' });
-  const redone = history.redo(undone);
-
-  expect(undone.text).toBe('before');
-  expect(redone.text).toBe('after');
-});
-```
-
-</details>
-
-## 10. 마치며
+## 8. 마치며
 
 Undo/Redo 통합에서 가장 어려운 부분은 stack 자료구조가 아니었다. 프로젝트 파일에 들어갈 값과 현재 Renderer에서 실행 중인 객체를 구분하는 일이었다.
 
