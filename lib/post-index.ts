@@ -9,13 +9,19 @@ export interface PostSeries {
 
 export class PostIndex {
   private readonly publishedPosts: Post[];
+  private readonly publicPosts: Post[];
 
   constructor(posts: Post[]) {
     this.publishedPosts = posts.filter(post => !post.draft).sort(comparePosts);
+    this.publicPosts = this.publishedPosts.filter(post => post.visibility === 'public');
   }
 
   getPostSummaries(): PostSummary[] {
-    return this.publishedPosts.map(toPostSummary);
+    return this.publicPosts.map(toPostSummary);
+  }
+
+  getAuthenticatedPostSummaries(): PostSummary[] {
+    return this.publishedPosts.filter(post => post.visibility === 'authenticated').map(toPostSummary);
   }
 
   getPostSummariesByTag(tag: string): PostSummary[] {
@@ -64,6 +70,10 @@ export class PostIndex {
   }
 
   getPostBySlug(slug: string): Post | null {
+    return this.publicPosts.find(post => post.slug === slug) ?? null;
+  }
+
+  getPostBySlugForAuthenticatedViewer(slug: string): Post | null {
     return this.publishedPosts.find(post => post.slug === slug) ?? null;
   }
 }

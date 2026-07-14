@@ -37,6 +37,7 @@ function createPost(): Post {
     date: '2026-07-14',
     tags: ['nextjs'],
     draft: false,
+    visibility: 'public',
     content: '한국어 본문',
   };
 }

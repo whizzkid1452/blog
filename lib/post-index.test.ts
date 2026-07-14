@@ -24,6 +24,28 @@ describe('PostIndex', () => {
     expect(index.getTags()).toEqual(['nextjs']);
   });
 
+  it('does not expose authenticated posts through public lookups', () => {
+    const index = new PostIndex([
+      createPost({ slug: 'public-post' }),
+      createPost({ slug: 'authenticated-post', visibility: 'authenticated' }),
+    ]);
+
+    expect(index.getPostSummaries().map(post => post.slug)).toEqual(['public-post']);
+    expect(index.getPostBySlug('authenticated-post')).toBeNull();
+  });
+
+  it('returns authenticated posts only through authenticated lookups', () => {
+    const index = new PostIndex([
+      createPost({ slug: 'public-post' }),
+      createPost({ slug: 'authenticated-post', visibility: 'authenticated' }),
+      createPost({ slug: 'authenticated-draft', visibility: 'authenticated', draft: true }),
+    ]);
+
+    expect(index.getAuthenticatedPostSummaries().map(post => post.slug)).toEqual(['authenticated-post']);
+    expect(index.getPostBySlugForAuthenticatedViewer('authenticated-post')?.slug).toBe('authenticated-post');
+    expect(index.getPostBySlugForAuthenticatedViewer('authenticated-draft')).toBeNull();
+  });
+
   it('returns related posts by shared tag count, publish time, and slug', () => {
     const index = new PostIndex([
       createPost({ slug: 'current-post', date: '2026-07-05', tags: ['nextjs', 'seo'] }),
@@ -80,6 +102,7 @@ function createPost(overrides: Partial<Post> = {}): Post {
     date: '2026-07-01',
     tags: ['nextjs'],
     draft: false,
+    visibility: 'public',
     content: 'Post content',
     ...overrides,
   };

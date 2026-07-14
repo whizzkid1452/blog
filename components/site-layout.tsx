@@ -37,6 +37,7 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
           { href: '/search', label: 'Search' },
         ]
       : []),
+    { href: createLocalizedPath(locale, '/private-posts'), label: locale === 'ko' ? '비공개 글' : 'Private posts' },
   ];
   const visibleRecentPosts = getRecentPostsByPublishedDate(recentPosts);
 

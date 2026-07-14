@@ -1,5 +1,6 @@
 import type { Locale } from '@/lib/i18n';
 import type { PostSummary } from '@/lib/posts';
+import type { ReactNode } from 'react';
 import { PostCard } from './post-card';
 import styles from './home-view.module.css';
 
@@ -10,6 +11,7 @@ interface HomeViewProps {
   title?: string;
   description?: string;
   emptyMessage?: string;
+  headerActions?: ReactNode;
 }
 
 export function HomeView({
@@ -19,6 +21,7 @@ export function HomeView({
   title = 'Blog',
   description = 'Essays, engineering notes, and implementation logs.',
   emptyMessage = 'No posts published yet.',
+  headerActions,
 }: HomeViewProps) {
   return (
     <section className={styles.pageShell}>
@@ -26,6 +29,7 @@ export function HomeView({
         <p className={styles.eyebrow}>{eyebrow}</p>
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.description}>{description}</p>
+        {headerActions}
       </header>
 
       {posts.length > 0 ? (

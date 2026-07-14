@@ -161,6 +161,7 @@ function createPost(): Post {
     publishedAt: '2026-07-06T09:30:00.000Z',
     tags: ['nextjs', 'seo'],
     draft: false,
+    visibility: 'public',
     content: 'Post content',
   };
 }

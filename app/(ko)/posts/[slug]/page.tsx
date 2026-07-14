@@ -1,4 +1,5 @@
 import { PostView } from '@/components/post-view';
+import { getViewablePost } from '@/lib/auth/post-access';
 import { createLocalizedPath } from '@/lib/i18n';
 import { hasEnglishPostTranslation } from '@/lib/post-translations';
 import { getPostIndex } from '@/lib/posts';
@@ -21,14 +22,26 @@ export function generateStaticParams() {
     }));
 }
 
-export const dynamicParams = false;
+// 공개 글만 SSG로 생성하고 인증 글은 요청 시 서버에서 권한을 검사한다.
+export const dynamicParams = true;
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = getPostIndex().getPostBySlug(slug);
+  const post = await getViewablePost({
+    postIndex: getPostIndex(),
+    slug,
+    returnPath: `/posts/${slug}`,
+  });
 
   if (!post) {
     return {};
+  }
+
+  if (post.visibility === 'authenticated') {
+    return {
+      title: post.title,
+      robots: { index: false, follow: false, noarchive: true },
+    };
   }
 
   return createPostPageMetadata(post, { locale: 'ko', hasAlternateLocale: hasEnglishPostTranslation(slug) });
@@ -37,7 +50,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   const postIndex = getPostIndex();
-  const post = postIndex.getPostBySlug(slug);
+  const post = await getViewablePost({ postIndex, slug, returnPath: `/posts/${slug}` });
 
   if (!post) {
     notFound();

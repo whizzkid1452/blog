@@ -46,12 +46,15 @@ date: '2026-07-06'
 tags:
   - nextjs
   - seo
+visibility: public
 ---
 
 본문을 작성합니다.
 ```
 
 공개 글은 `description`과 최소 1개 이상의 `tags`가 필요하다. `draft: true`인 글은 공개 목록, sitemap, RSS에서 제외된다.
+Google 인증 사용자에게만 공개하려면 `visibility: authenticated`를 사용한다. 설정 방법은
+[Google OAuth 비공개 글 설정](./docs/google-oauth-private-posts-setup.md)을 참고한다.
 
 ### 4. 정적 생성과 서버 산출물 확인
 
