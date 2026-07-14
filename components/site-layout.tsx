@@ -1,3 +1,5 @@
+import type { Locale } from '@/lib/i18n';
+import { createLocalizedPath, getAlternateLocale, getUiMessages } from '@/lib/i18n';
 import { getPostPublishedDateTime, type PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
@@ -8,6 +10,7 @@ import styles from './site-layout.module.css';
 
 interface SiteLayoutProps {
   children: ReactNode;
+  locale: Locale;
   tags: string[];
   recentPosts: PostSummary[];
 }
@@ -17,27 +20,28 @@ interface NavigationLink {
   label: string;
 }
 
-const PRIMARY_NAVIGATION_LINKS: NavigationLink[] = [
-  { href: '/', label: 'Home' },
-  { href: '/posts', label: 'Posts' },
-];
-
 const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
 const RESUME_URL = 'https://elderly-mosquito-87f.notion.site/38073b56612a80efb6e1f5f7055e5c15?source=copy_link';
 const RECENT_POST_COUNT = 5;
 
-export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
+export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutProps) {
+  const messages = getUiMessages(locale);
+  const alternateLocale = getAlternateLocale(locale);
+  const primaryNavigationLinks: NavigationLink[] = [
+    { href: createLocalizedPath(locale, '/'), label: messages.home },
+    { href: createLocalizedPath(locale, '/posts'), label: messages.posts },
+  ];
   const visibleRecentPosts = getRecentPostsByPublishedDate(recentPosts);
 
   return (
     <div className={styles.siteShell}>
       <header className={styles.siteHeader}>
         <div className={styles.headerInner}>
-          <Link className={styles.brandLink} href="/">
+          <Link className={styles.brandLink} href={createLocalizedPath(locale, '/')}>
             Blog
           </Link>
-          <nav className={styles.primaryNavigation} aria-label="Primary navigation">
-            {PRIMARY_NAVIGATION_LINKS.map(link => (
+          <nav className={styles.primaryNavigation} aria-label={messages.primaryNavigationLabel}>
+            {primaryNavigationLinks.map(link => (
               <PrimaryNavigationLink key={link.href} href={link.href} label={link.label} />
             ))}
             <a
@@ -58,9 +62,17 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
             >
               About
             </a>
+            <Link
+              className={styles.externalNavigationAnchor}
+              href={createLocalizedPath(alternateLocale, '/')}
+              hrefLang={alternateLocale}
+            >
+              {messages.languageLinkLabel}
+            </Link>
           </nav>
           <MobileNavigationDialog
-            primaryNavigationLinks={PRIMARY_NAVIGATION_LINKS}
+            locale={locale}
+            primaryNavigationLinks={primaryNavigationLinks}
             githubProfileUrl={GITHUB_PROFILE_URL}
             resumeUrl={RESUME_URL}
             tags={tags}
@@ -70,16 +82,16 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
       </header>
 
       <div className={styles.bodyLayout}>
-        <aside className={styles.sidebar} aria-label="Blog navigation">
-          <SidebarTopicsSection tags={tags} />
+        <aside className={styles.sidebar} aria-label={messages.blogNavigationLabel}>
+          <SidebarTopicsSection locale={locale} tags={tags} />
 
           <section className={styles.sidebarSection}>
-            <h2 className={styles.sidebarTitle}>Recent</h2>
+            <h2 className={styles.sidebarTitle}>{messages.recent}</h2>
             {visibleRecentPosts.length > 0 ? (
               <ol className={styles.recentPostList}>
                 {visibleRecentPosts.map(post => (
                   <li className={styles.recentPostItem} key={post.slug}>
-                    <Link className={styles.recentPostLink} href={`/posts/${post.slug}`}>
+                    <Link className={styles.recentPostLink} href={createLocalizedPath(locale, `/posts/${post.slug}`)}>
                       {post.title}
                     </Link>
                     <time className={styles.recentPostDate} dateTime={post.date}>
@@ -89,7 +101,7 @@ export function SiteLayout({ children, tags, recentPosts }: SiteLayoutProps) {
                 ))}
               </ol>
             ) : (
-              <p className={styles.emptyText}>No posts yet.</p>
+              <p className={styles.emptyText}>{messages.noPosts}</p>
             )}
           </section>
         </aside>
