@@ -1,8 +1,10 @@
+import type { Locale } from '@/lib/i18n';
 import type { PostSummary } from '@/lib/posts';
 import { PostCard } from './post-card';
 import styles from './home-view.module.css';
 
 interface HomeViewProps {
+  locale?: Locale;
   posts: PostSummary[];
   eyebrow?: string;
   title?: string;
@@ -11,6 +13,7 @@ interface HomeViewProps {
 }
 
 export function HomeView({
+  locale = 'ko',
   posts,
   eyebrow = 'Personal notes',
   title = 'Blog',
@@ -28,7 +31,7 @@ export function HomeView({
       {posts.length > 0 ? (
         <section className={styles.postList} aria-label="Posts">
           {posts.map(post => (
-            <PostCard key={post.slug} post={post} />
+            <PostCard key={post.slug} locale={locale} post={post} />
           ))}
         </section>
       ) : (

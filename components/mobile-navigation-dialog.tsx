@@ -1,5 +1,7 @@
 'use client';
 
+import type { Locale } from '@/lib/i18n';
+import { createLocalizedPath, getAlternateLocale, getUiMessages } from '@/lib/i18n';
 import type { PostSummary } from '@/lib/posts';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import * as Dialog from '@radix-ui/react-dialog';
@@ -10,6 +12,7 @@ import { useState } from 'react';
 import styles from './site-layout.module.css';
 
 interface MobileNavigationDialogProps {
+  locale: Locale;
   primaryNavigationLinks: NavigationLink[];
   githubProfileUrl: string;
   resumeUrl: string;
@@ -29,6 +32,7 @@ interface MobileNavigationCollapsibleSectionProps {
 }
 
 export function MobileNavigationDialog({
+  locale,
   primaryNavigationLinks,
   githubProfileUrl,
   resumeUrl,
@@ -37,6 +41,8 @@ export function MobileNavigationDialog({
 }: MobileNavigationDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const messages = getUiMessages(locale);
+  const alternateLocale = getAlternateLocale(locale);
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
@@ -92,32 +98,44 @@ export function MobileNavigationDialog({
               >
                 About
               </a>
+              <Dialog.Close asChild>
+                <Link
+                  className={styles.mobileNavigationLink}
+                  href={createLocalizedPath(alternateLocale, '/')}
+                  hrefLang={alternateLocale}
+                >
+                  {messages.languageLinkLabel}
+                </Link>
+              </Dialog.Close>
             </div>
           </nav>
 
-          <MobileNavigationCollapsibleSection title="Topics">
+          <MobileNavigationCollapsibleSection title={messages.topics}>
             {tags.length > 0 ? (
               <div className={styles.mobileTagList}>
                 {tags.map(tag => (
                   <Dialog.Close key={tag} asChild>
-                    <Link className={styles.tagLink} href={`/tags/${encodeURIComponent(tag)}`}>
+                    <Link
+                      className={styles.tagLink}
+                      href={createLocalizedPath(locale, `/tags/${encodeURIComponent(tag)}`)}
+                    >
                       #{tag}
                     </Link>
                   </Dialog.Close>
                 ))}
               </div>
             ) : (
-              <p className={styles.emptyText}>No topics yet.</p>
+              <p className={styles.emptyText}>{messages.noTopics}</p>
             )}
           </MobileNavigationCollapsibleSection>
 
-          <MobileNavigationCollapsibleSection title="Recent" defaultOpen>
+          <MobileNavigationCollapsibleSection title={messages.recent} defaultOpen>
             {recentPosts.length > 0 ? (
               <ol className={styles.mobileRecentPostList}>
                 {recentPosts.map(post => (
                   <li className={styles.recentPostItem} key={post.slug}>
                     <Dialog.Close asChild>
-                      <Link className={styles.recentPostLink} href={`/posts/${post.slug}`}>
+                      <Link className={styles.recentPostLink} href={createLocalizedPath(locale, `/posts/${post.slug}`)}>
                         {post.title}
                       </Link>
                     </Dialog.Close>
@@ -128,7 +146,7 @@ export function MobileNavigationDialog({
                 ))}
               </ol>
             ) : (
-              <p className={styles.emptyText}>No posts yet.</p>
+              <p className={styles.emptyText}>{messages.noPosts}</p>
             )}
           </MobileNavigationCollapsibleSection>
         </Dialog.Content>
@@ -164,7 +182,7 @@ function isNavigationActive({ pathname, href }: { pathname: string | null; href:
     return false;
   }
 
-  if (href === '/') {
+  if (href === '/' || href === '/en') {
     return pathname === href;
   }
 

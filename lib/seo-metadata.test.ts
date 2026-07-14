@@ -40,6 +40,20 @@ describe('createPostPageMetadata', () => {
       },
     ]);
   });
+
+  it('creates English canonical and language alternate metadata', () => {
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://example.com');
+
+    const metadata = createPostPageMetadata(createPost(), { locale: 'en', hasAlternateLocale: true });
+
+    expect(metadata.alternates).toEqual({
+      canonical: 'https://example.com/en/posts/nextjs-static-output',
+      languages: {
+        'ko-KR': 'https://example.com/posts/nextjs-static-output',
+        'en-US': 'https://example.com/en/posts/nextjs-static-output',
+      },
+    });
+  });
 });
 
 function createPost(): Post {
