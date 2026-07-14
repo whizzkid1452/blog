@@ -4,6 +4,9 @@ description: '비디오 썸네일 생성 지연을 줄이기 위해 Web Worker �
 date: '2026-04-17'
 publishedAt: '2026-04-17T14:26:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'editor']
+series:
+  name: '썸네일 생성 최적화'
+  order: 1
 draft: false
 ---
 

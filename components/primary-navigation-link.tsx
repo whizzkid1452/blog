@@ -28,7 +28,7 @@ function isNavigationActive({ pathname, href }: { pathname: string | null; href:
     return false;
   }
 
-  if (href === '/') {
+  if (href === '/' || href === '/en') {
     return pathname === href;
   }
 

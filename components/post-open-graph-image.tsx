@@ -1,41 +1,17 @@
-import { getPostIndex } from '@/lib/posts';
+import type { Post } from '@/lib/posts';
 import { SITE_AUTHOR_NAME, SITE_NAME } from '@/lib/site-config';
 import { ImageResponse } from 'next/og';
 
-interface PostOpenGraphImageProps {
-  params: Promise<{
-    slug: string;
-  }>;
-}
+export const POST_OPEN_GRAPH_IMAGE_ALT = 'Blog post preview image';
+export const POST_OPEN_GRAPH_IMAGE_SIZE = {
+  width: 1200,
+  height: 630,
+};
+export const POST_OPEN_GRAPH_IMAGE_CONTENT_TYPE = 'image/png';
 
-const IMAGE_WIDTH = 1200;
-const IMAGE_HEIGHT = 630;
 const MAX_VISIBLE_TAG_COUNT = 4;
 
-export const alt = 'Blog post preview image';
-export const size = {
-  width: IMAGE_WIDTH,
-  height: IMAGE_HEIGHT,
-};
-export const contentType = 'image/png';
-export const dynamicParams = false;
-
-export function generateStaticParams() {
-  return getPostIndex()
-    .getPostSummaries()
-    .map(post => ({
-      slug: post.slug,
-    }));
-}
-
-export default async function PostOpenGraphImage({ params }: PostOpenGraphImageProps) {
-  const { slug } = await params;
-  const post = getPostIndex().getPostBySlug(slug);
-
-  if (post == null) {
-    return new Response('Not found', { status: 404 });
-  }
-
+export function createPostOpenGraphImage(post: Post): ImageResponse {
   return new ImageResponse(
     <div
       style={{
@@ -100,8 +76,6 @@ export default async function PostOpenGraphImage({ params }: PostOpenGraphImageP
         <div style={{ display: 'flex', color: '#52525b', fontSize: 24, fontWeight: 600 }}>{SITE_AUTHOR_NAME}</div>
       </div>
     </div>,
-    {
-      ...size,
-    }
+    POST_OPEN_GRAPH_IMAGE_SIZE
   );
 }

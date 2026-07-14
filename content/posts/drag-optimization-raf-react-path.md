@@ -4,6 +4,9 @@ description: '타임라인 드래그 중 React commit과 Canvas draw 비용을 �
 date: '2026-06-09'
 publishedAt: '2026-06-09T20:07:35+09:00'
 tags: ['react', 'performance', 'canvas', 'drag']
+series:
+  name: '드래그 최적화'
+  order: 1
 draft: false
 ---
 
