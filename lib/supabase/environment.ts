@@ -1,9 +1,5 @@
-import { z } from 'zod';
-
-const supabaseEnvironmentSchema = z.object({
-  SUPABASE_URL: z.url(),
-  SUPABASE_PUBLISHABLE_KEY: z.string().trim().min(1),
-});
+const SUPABASE_URL = 'https://vjftvegsxezhybbjtyvy.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_8kdNiIsPQ8a0AwxIbHoazA_JZQwvtO4';
 
 export interface SupabaseEnvironment {
   url: string;
@@ -11,10 +7,9 @@ export interface SupabaseEnvironment {
 }
 
 export function getSupabaseEnvironment(): SupabaseEnvironment {
-  const environment = supabaseEnvironmentSchema.parse(process.env);
-
+  // Publishable Key는 공개용 키이므로 배포 환경 설정 없이 동일한 Supabase 프로젝트를 사용하도록 고정한다.
   return {
-    url: environment.SUPABASE_URL,
-    publishableKey: environment.SUPABASE_PUBLISHABLE_KEY,
+    url: SUPABASE_URL,
+    publishableKey: SUPABASE_PUBLISHABLE_KEY,
   };
 }
