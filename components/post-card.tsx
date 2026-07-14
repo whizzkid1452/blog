@@ -1,6 +1,6 @@
+import type { PostSummary } from '@/lib/posts';
 import type { Locale } from '@/lib/i18n';
 import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
-import type { PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import styles from './post-card.module.css';
 
@@ -18,9 +18,12 @@ export function PostCard({ locale = 'ko', post }: PostCardProps) {
         <time className={styles.postDate} dateTime={post.date}>
           {post.date}
         </time>
-        {locale !== 'ko' || post.series == null ? null : (
-          <Link className={styles.seriesLink} href={`/series#${encodeURIComponent(post.series.name)}`}>
-            {post.series.name} {post.series.order}편
+        {post.series == null ? null : (
+          <Link
+            className={styles.seriesLink}
+            href={`${createLocalizedPath(locale, '/series')}#${encodeURIComponent(post.series.name)}`}
+          >
+            {post.series.name} {getSeriesOrderLabel(locale, post.series.order)}
           </Link>
         )}
         <div className={styles.tagList} aria-label={messages.tagsLabel}>
@@ -43,4 +46,8 @@ export function PostCard({ locale = 'ko', post }: PostCardProps) {
       {post.description == null ? null : <p className={styles.postDescription}>{post.description}</p>}
     </article>
   );
+}
+
+function getSeriesOrderLabel(locale: Locale, order: number): string {
+  return locale === 'ko' ? `${order}편` : `Part ${order}`;
 }

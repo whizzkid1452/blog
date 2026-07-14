@@ -7,19 +7,71 @@ import {
   commentListResponseSchema,
 } from '@/lib/comments/comment-schema';
 import type { BlogComment } from '@/lib/comments/comment-types';
+import type { Locale } from '@/lib/i18n';
 import { useEffect, useState, type FormEvent } from 'react';
 import styles from './comments-section.module.css';
 
-const COMMENT_DATE_FORMATTER = new Intl.DateTimeFormat('ko-KR', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
+interface CommentMessages {
+  authorLabel: string;
+  authorPlaceholder: string;
+  commentsTitle: string;
+  contentLabel: string;
+  contentPlaceholder: string;
+  empty: string;
+  loadError: string;
+  loading: string;
+  privacyNotice: string;
+  retry: string;
+  submit: string;
+  submitError: string;
+  submitting: string;
+}
+
+const COMMENT_MESSAGES: Record<Locale, CommentMessages> = {
+  ko: {
+    authorLabel: '닉네임',
+    authorPlaceholder: '닉네임',
+    commentsTitle: '댓글',
+    contentLabel: '댓글',
+    contentPlaceholder: '의견을 남겨 주세요.',
+    empty: '아직 댓글이 없습니다. 첫 댓글을 남겨 주세요.',
+    loadError: '댓글을 불러오지 못했습니다.',
+    loading: '댓글을 불러오는 중입니다…',
+    privacyNotice: '닉네임과 댓글은 공개됩니다.',
+    retry: '다시 시도',
+    submit: '댓글 등록',
+    submitError: '댓글을 저장하지 못했습니다.',
+    submitting: '등록 중…',
+  },
+  en: {
+    authorLabel: 'Name',
+    authorPlaceholder: 'Display name',
+    commentsTitle: 'Comments',
+    contentLabel: 'Comment',
+    contentPlaceholder: 'Share your thoughts.',
+    empty: 'No comments yet. Be the first to comment.',
+    loadError: 'Comments could not be loaded.',
+    loading: 'Loading comments…',
+    privacyNotice: 'Your display name and comment will be public.',
+    retry: 'Try again',
+    submit: 'Post comment',
+    submitError: 'Your comment could not be saved.',
+    submitting: 'Posting…',
+  },
+};
+
+const COMMENT_DATE_FORMATTERS: Record<Locale, Intl.DateTimeFormat> = {
+  ko: new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }),
+  en: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
+};
 
 interface CommentsSectionProps {
+  locale: Locale;
   postSlug: string;
 }
 
-export function CommentsSection({ postSlug }: CommentsSectionProps) {
+export function CommentsSection({ locale, postSlug }: CommentsSectionProps) {
+  const messages = COMMENT_MESSAGES[locale];
   const [comments, setComments] = useState<BlogComment[]>([]);
   const [authorName, setAuthorName] = useState('');
   const [content, setContent] = useState('');
@@ -41,13 +93,13 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
         const responseBody = await readResponseBody(response);
 
         if (!response.ok) {
-          throw new Error('댓글을 불러오지 못했습니다.');
+          throw new Error(messages.loadError);
         }
 
         const parsedResponse = commentListResponseSchema.safeParse(responseBody);
 
         if (!parsedResponse.success) {
-          throw new Error('댓글을 불러오지 못했습니다.');
+          throw new Error(messages.loadError);
         }
 
         setComments(parsedResponse.data.comments);
@@ -57,7 +109,7 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
           return;
         }
 
-        setLoadError(error instanceof Error ? error.message : '댓글을 불러오지 못했습니다.');
+        setLoadError(error instanceof Error ? error.message : messages.loadError);
       } finally {
         if (!abortController.signal.aborted) {
           setIsLoading(false);
@@ -70,7 +122,7 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
     return () => {
       abortController.abort();
     };
-  }, [loadRequest, postSlug]);
+  }, [loadRequest, messages.loadError, postSlug]);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -93,19 +145,19 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
       const responseBody = await readResponseBody(response);
 
       if (!response.ok) {
-        throw new Error('댓글을 저장하지 못했습니다.');
+        throw new Error(messages.submitError);
       }
 
       const parsedResponse = commentCreateResponseSchema.safeParse(responseBody);
 
       if (!parsedResponse.success) {
-        throw new Error('댓글을 저장하지 못했습니다.');
+        throw new Error(messages.submitError);
       }
 
       setComments(currentComments => [...currentComments, parsedResponse.data.comment]);
       setContent('');
     } catch (error) {
-      setSubmitError(error instanceof Error ? error.message : '댓글을 저장하지 못했습니다.');
+      setSubmitError(error instanceof Error ? error.message : messages.submitError);
     } finally {
       setIsSubmitting(false);
     }
@@ -120,33 +172,33 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
     <section className={styles.section} aria-labelledby="comments-title">
       <header className={styles.header}>
         <h2 className={styles.title} id="comments-title">
-          댓글 <span className={styles.count}>{comments.length}</span>
+          {messages.commentsTitle} <span className={styles.count}>{comments.length}</span>
         </h2>
-        <p className={styles.description}>닉네임과 댓글은 공개됩니다.</p>
+        <p className={styles.description}>{messages.privacyNotice}</p>
       </header>
 
       <form className={styles.form} onSubmit={handleSubmit}>
         <label className={styles.field}>
-          <span className={styles.label}>닉네임</span>
+          <span className={styles.label}>{messages.authorLabel}</span>
           <input
             className={styles.input}
             maxLength={COMMENT_AUTHOR_NAME_MAX_LENGTH}
             name="authorName"
             onChange={event => setAuthorName(event.target.value)}
-            placeholder="닉네임"
+            placeholder={messages.authorPlaceholder}
             required
             type="text"
             value={authorName}
           />
         </label>
         <label className={styles.field}>
-          <span className={styles.label}>댓글</span>
+          <span className={styles.label}>{messages.contentLabel}</span>
           <textarea
             className={styles.textarea}
             maxLength={COMMENT_CONTENT_MAX_LENGTH}
             name="content"
             onChange={event => setContent(event.target.value)}
-            placeholder="의견을 남겨 주세요."
+            placeholder={messages.contentPlaceholder}
             required
             rows={4}
             value={content}
@@ -157,7 +209,7 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
             {content.length}/{COMMENT_CONTENT_MAX_LENGTH}
           </span>
           <button className={styles.submitButton} disabled={isSubmitting} type="submit">
-            {isSubmitting ? '등록 중…' : '댓글 등록'}
+            {isSubmitting ? messages.submitting : messages.submit}
           </button>
         </div>
         {submitError == null ? null : (
@@ -170,19 +222,19 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
       <div className={styles.listArea}>
         {isLoading ? (
           <p className={styles.statusMessage} role="status">
-            댓글을 불러오는 중입니다…
+            {messages.loading}
           </p>
         ) : null}
         {!isLoading && loadError != null ? (
           <div className={styles.errorState} role="alert">
             <p className={styles.errorMessage}>{loadError}</p>
             <button className={styles.retryButton} onClick={handleRetry} type="button">
-              다시 시도
+              {messages.retry}
             </button>
           </div>
         ) : null}
         {!isLoading && loadError == null && comments.length === 0 ? (
-          <p className={styles.statusMessage}>아직 댓글이 없습니다. 첫 댓글을 남겨 주세요.</p>
+          <p className={styles.statusMessage}>{messages.empty}</p>
         ) : null}
         {!isLoading && loadError == null && comments.length > 0 ? (
           <ol className={styles.commentList}>
@@ -191,7 +243,7 @@ export function CommentsSection({ postSlug }: CommentsSectionProps) {
                 <div className={styles.commentMeta}>
                   <strong className={styles.authorName}>{comment.authorName}</strong>
                   <time className={styles.commentDate} dateTime={comment.createdAt}>
-                    {COMMENT_DATE_FORMATTER.format(new Date(comment.createdAt))}
+                    {COMMENT_DATE_FORMATTERS[locale].format(new Date(comment.createdAt))}
                   </time>
                 </div>
                 <p className={styles.commentContent}>{comment.content}</p>

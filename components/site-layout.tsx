@@ -1,6 +1,6 @@
+import type { PostSummary } from '@/lib/posts';
 import type { Locale } from '@/lib/i18n';
 import { createLocalizedPath, getAlternateLocale, getUiMessages } from '@/lib/i18n';
-import { getPostPublishedDateTime, type PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { MobileNavigationDialog } from './mobile-navigation-dialog';
@@ -30,16 +30,11 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
   const primaryNavigationLinks: NavigationLink[] = [
     { href: createLocalizedPath(locale, '/'), label: messages.home },
     { href: createLocalizedPath(locale, '/posts'), label: messages.posts },
-    // 영문 Series와 Search 경로가 추가되기 전까지 존재하는 한국어 경로에서만 메뉴를 노출한다.
-    ...(locale === 'ko'
-      ? [
-          { href: '/series', label: 'Series' },
-          { href: '/search', label: 'Search' },
-        ]
-      : []),
+    { href: createLocalizedPath(locale, '/series'), label: 'Series' },
+    { href: createLocalizedPath(locale, '/search'), label: 'Search' },
     { href: createLocalizedPath(locale, '/private-posts'), label: locale === 'ko' ? '비공개 글' : 'Private posts' },
   ];
-  const visibleRecentPosts = getRecentPostsByPublishedDate(recentPosts);
+  const visibleRecentPosts = recentPosts.slice(0, RECENT_POST_COUNT);
 
   return (
     <div className={styles.siteShell}>
@@ -118,22 +113,4 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
       </div>
     </div>
   );
-}
-
-function getRecentPostsByPublishedDate(posts: PostSummary[]): PostSummary[] {
-  return posts.slice().sort(comparePostSummariesByPublishedDate).slice(0, RECENT_POST_COUNT);
-}
-
-function comparePostSummariesByPublishedDate(leftPost: PostSummary, rightPost: PostSummary): number {
-  const publishedDateComparison = getPostSummaryPublishTime(rightPost) - getPostSummaryPublishTime(leftPost);
-
-  if (publishedDateComparison !== 0) {
-    return publishedDateComparison;
-  }
-
-  return leftPost.slug.localeCompare(rightPost.slug);
-}
-
-function getPostSummaryPublishTime(post: PostSummary): number {
-  return new Date(getPostPublishedDateTime(post)).getTime();
 }

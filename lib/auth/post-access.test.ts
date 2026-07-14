@@ -1,7 +1,7 @@
-import { describe, expect, it, vi } from 'vitest';
 import { PostIndex } from '../post-index';
 import type { Post } from '../posts';
 import { createPostAccess } from './post-access';
+import { describe, expect, it, vi } from 'vitest';
 
 describe('post access', () => {
   it('returns a public post without requiring authentication', async () => {

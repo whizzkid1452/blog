@@ -1,131 +1,179 @@
 ---
-title: 'Electron에서 여러 창의 상태를 하나의 진실로 맞추기'
-description: 'Electron 멀티 윈도우 환경에서 분산된 프로젝트 상태를 SSOT 기준으로 정리한 설계 과정을 설명합니다.'
-date: '2026-06-13'
-publishedAt: '2026-06-13T19:49:37+09:00'
-tags: ['electron', 'state-management', 'zustand']
+title: '[Part 1.] Electron 멀티 윈도우에서 저장 결과가 달라진 이유'
+description: '여러 창이 같은 프로젝트를 수정할 때 화면과 저장 파일이 달라진 원인을 추적하고 상태의 최종 결정권을 다시 정의합니다.'
+date: '2026-07-14'
+publishedAt: '2026-07-14T09:00:00+09:00'
+tags: ['electron', 'state-management', 'ssot', 'architecture']
 draft: false
 ---
 
-## 1. 분리된 창이 같은 상태를 공유하지 못하는 문제
+<details>
+<summary>목차 펼쳐보기</summary>
 
-이번에 실시간 변경 가능한 srt script panel을 바탕으로 TTS를 생성하여 바로 스튜디오에 연동하여 편집할 수 있는 멀티미디어 에디터를 제작하는 프로젝트를 하면서 일렉트론을 처음 사용해보았다. 그러던 중, 분리된 창에서 수정한 내용이 다른 창에 반영이 되지 않는 버그를 만났다. 일렉트론 앱의 특성과 여러 분리된 창들이 같은 상태를 공유하기 위해 SSOT를 어디에 둘 지 설계하였던 과정들을 공유해보려고 한다. Electron 앱에서 프로젝트 저장, SRT script panel, editor 페이지, admin 페이지가 같은 프로젝트 데이터를 다루고 있었다. 문제는 이 데이터들이 하나의 단일 진실 공급원, 즉 **SSOT(Single Source of Truth)** 를 기준으로 움직이지 않았다는 점이다. 각 컴포넌트나 페이지가 서로 다른 store를 바라보면, 사용자가 편집한 내용과 실제로 저장되는 내용이 달라질 수 있다. 이 경우 문제의 직접 증상은 “편집한 값과 저장된 값의 불일치”이고, 원인은 “같은 도메인 데이터를 여러 상태 저장소가 독립적으로 보관한 구조”로 볼 수 있다. 여기서 중요한 점은 단순히 “state가 많아서” 문제가 생긴 것이 아니라는 것이다. state가 여러 개일 수는 있다. 문제는 **같은 데이터를 나타내는 상태가 여러곳에 분산되어있었다는 점**이다.
+- [1. 화면에서는 바뀌었는데 파일에는 남지 않았다](#1-화면에서는-바뀌었는데-파일에는-남지-않았다)
+- [2. 처음에는 창 사이 통신을 의심했다](#2-처음에는-창-사이-통신을-의심했다)
+- [3. 저장 흐름에서 확인한 문제](#3-저장-흐름에서-확인한-문제)
+- [4. 증상과 원인을 분리했다](#4-증상과-원인을-분리했다)
+- [5. 상태 관리보다 먼저 정한 규칙](#5-상태-관리보다-먼저-정한-규칙)
+- [6. 하나의 상태 결정권으로 모으기](#6-하나의-상태-결정권으로-모으기)
+- [7. 마치며](#7-마치며)
 
-## 2. 공유되어야 하는 데이터
+</details>
 
-같은 프로젝트 데이터를 공유하는 기능은 크게 네 가지였다.
+<details>
+<summary>5편으로 줄인 시리즈 구성</summary>
 
-1. 프로젝트 저장
-2. SRT script panel
-3. editor 페이지
-4. admin 페이지
+1. 현재 글: 저장 결과가 달라진 원인
+2. [Main이 프로젝트 상태를 정하고 각 창에 전달하는 방법](/posts/electron-main-process-project-ssot)
+3. [Undo/Redo를 하나의 문서 이력으로 통합하기](/posts/electron-main-process-undo-redo)
+4. [자동저장의 완료 지점과 복구 전략](/posts/electron-main-process-autosave)
+5. [Main SSOT 설계의 검증 계획과 선택 비용](/posts/electron-main-process-migration)
 
-특히 SRT script panel은 실시간으로 row data가 변경된다. 또 창 분리가 가능하기 때문에, editor 또는 admin 페이지와 동시에 열릴 수 있다. 따라서 SRT panel에서 변경한 내용은 현재 열려 있는 관련 탭과 실시간으로 맞아야 한다. 반면 editor와 studio 페이지는 동시에 접근할 수 없다는 규칙이 있었다. 이 제약은 동시 편집 충돌 가능성을 줄여주지만, 모든 동기화 문제를 제거하지는 않는다. SRT panel처럼 분리 가능한 창이 있기 때문이다. 또 하나의 중요한 규칙은, 변경되는 모든 내용이 실시간으로 사용자의 local PC에 저장되어야 한다는 점이었다.
+</details>
 
-## 3. Electron 구조가 상태 설계에 주는 제약
+## 1. 화면에서는 바뀌었는데 파일에는 남지 않았다
 
-Electron은 main process와 renderer process로 나뉜다. 공식 문서 기준으로 main process는 앱의 entry point이고 Node.js 환경에서 실행된다. 따라서 로컬 파일 시스템 접근이나 프로젝트 저장 같은 작업은 main process에서 처리하는 것이 자연스럽다. renderer process는 각 `BrowserWindow`마다 별도로 생성되며, Chromium 기반의 웹 페이지처럼 동작한다. [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model) 이 구조에서는 여러 renderer process가 같은 JavaScript 메모리나 같은 React store를 직접 공유하지 않는다. 즉, editor 창의 Zustand store와 SRT panel 창의 Zustand store는 같은 이름을 쓰더라도 같은 store 인스턴스가 아니다.
+Electron 기반 편집기에서 여러 창이 같은 프로젝트를 사용했다. 한 창에서 자막을 수정하면 다른 창과 저장 파일에도 같은 결과가 반영되어야 했다.
 
-renderer 간 데이터를 주고받으려면 main process를 경유하는 IPC를 사용하거나, 더 지속적인 양방향 메시지 흐름이 필요할 때 `MessageChannelMain` / `MessagePortMain` 기반 channel을 열 수 있다. [Electron IPC](https://www.electronjs.org/docs/latest/tutorial/ipc), [MessageChannelMain](https://www.electronjs.org/docs/latest/api/message-channel-main)
+실제 동작은 달랐다.
 
-## 4. 단일 진실 공급원은 어디에 두어야 하나
+1. 보조 패널에서 문장을 수정했다.
+2. 화면에는 수정한 문장이 보였다.
+3. 프로젝트를 저장하고 다시 열면 이전 문장이 나타났다.
 
-결정해야 할 핵심은 하나였다.
+다른 창에서 Undo를 실행했을 때도 비슷했다. 문서는 되돌아갔지만 일부 창의 화면은 이전 상태를 계속 보여주었다.
 
-> 프로젝트의 단일 진실 공급원을 어디에 둘 것인가?
+<details>
+<summary>편집기와 창 구성</summary>
 
-프로젝트 저장은 어차피 main process를 거쳐야 한다. 여러 renderer 창이 공유해야 하는 실시간 변경 데이터도 최종적으로 프로젝트 파일에 저장되어야 한다. 따라서 이 데이터 역시 main process를 지나야 한다. 그래서 결론은 main process에 프로젝트의 단일 진실 공급원을 두는 것이다. 이 결정은 “main process가 항상 모든 상태를 가져야 한다”는 일반 규칙이 아니다. 여기서는 다음 조건들이 동시에 있었기 때문에 main process가 적절했다.
+편집기는 SRT, TTS, Timeline과 로컬 프로젝트 파일을 함께 다룬다.
 
-1. 데이터가 로컬 프로젝트 파일에 저장되어야 한다.
-2. 여러 renderer process가 같은 데이터를 공유해야 한다.
-3. renderer process 간 메모리 store 공유가 불가능하다.
-4. 저장 직전의 최신 snapshot과 화면에 표시되는 snapshot이 일치해야 한다.
+- Editor와 Studio는 동시에 열 수 없다.
+- SRT Script Panel은 별도 창으로 분리할 수 있다.
+- Admin 화면도 같은 프로젝트 값을 읽는다.
 
-이 관계를 흐름으로 정리하면 다음과 같다.
+Editor와 Studio를 동시에 막는 것만으로는 충분하지 않았다. 보조 패널과 Admin은 다른 창에서 같은 프로젝트를 계속 사용할 수 있기 때문이다.
+
+</details>
+
+## 2. 처음에는 창 사이 통신을 의심했다
+
+처음에는 IPC 이벤트가 부족해서 생긴 문제라고 생각했다. 수정 이벤트를 다른 창에 더 자주 보내면 화면이 맞을 것처럼 보였다.
+
+하지만 이 방법은 저장 문제를 설명하지 못했다. 화면끼리 값을 전달해도 저장기가 어느 값을 최종값으로 읽어야 하는지는 그대로 남았다.
+
+그래서 이벤트 개수보다 먼저 다음 질문을 확인했다.
+
+> 같은 프로젝트 값이 여러 곳에 있을 때, 어느 값이 최종값인가?
+
+## 3. 저장 흐름에서 확인한 문제
+
+각 창은 자체 상태 저장소를 가지고 있었다. 저장 코드는 여러 저장소를 읽어 하나의 프로젝트 파일을 다시 만들었다. Undo/Redo도 기능별 저장소와 화면의 실행 객체를 직접 바꾸었다.
+
+```mermaid
+flowchart TB
+  editor["편집 창의 프로젝트 상태"]
+  panel["보조 패널의 프로젝트 상태"]
+  admin["관리 화면의 프로젝트 상태"]
+  save["저장 코드가 여러 상태를 조립"]
+  file["프로젝트 파일"]
+
+  editor --> save
+  panel --> save
+  admin --> save
+  save --> file
+```
+
+코드를 따라가며 확인한 실행 경로는 단순했다. 사용자가 마지막으로 수정한 상태와 저장 코드가 읽은 상태가 달라질 수 있었다. 저장 코드는 값이 가장 최신인지 판별할 문서 번호도 가지고 있지 않았다.
+
+Store가 여러 개라는 사실 자체가 문제는 아니다. 화면 선택값이나 재생 상태처럼 창마다 달라도 되는 값은 분리해도 된다. 문제가 된 조건은 **같은 프로젝트 값을 여러 위치가 수정하면서 최종값을 정하는 규칙이 없었다는 것**이다.
+
+<details>
+<summary>기존 내부 구현 이름</summary>
+
+기존 Renderer에는 프로젝트 정보 Store, SRT Store, Timeline Store가 따로 있었다. Renderer의 SaveController가 이 값을 모아 프로젝트 문서를 만들었다.
+
+이 글에서는 내부 Class와 Store 이름보다 역할을 중심으로 설명한다. 구체적인 이름은 구조를 이해하는 데 필요한 경우에만 사용한다.
+
+</details>
+
+## 4. 증상과 원인을 분리했다
+
+| 구분                      | 확인한 내용                                                           |
+| ------------------------- | --------------------------------------------------------------------- |
+| 관찰한 증상               | 화면의 문장과 다시 연 프로젝트 파일의 문장이 달랐다.                  |
+| 코드에서 확인한 실행 경로 | 저장 코드가 마지막 편집이 반영되지 않은 상태를 읽을 수 있었다.        |
+| 구조적 조건               | 같은 프로젝트 값의 변경 권한과 문서 번호가 여러 위치에 흩어져 있었다. |
+
+Renderer가 여러 개라는 사실만으로 불일치가 생기는 것은 아니다. 변경 순서, 충돌 처리, 저장 기준을 일관되게 구현하면 여러 상태도 맞출 수 있다. 당시 구조에는 그 규칙이 없었다.
+
+따라서 원인의 범위를 “IPC 이벤트 누락”이 아니라 “프로젝트의 최종 상태를 정하는 위치가 없음”으로 좁혔다.
+
+<details>
+<summary>Electron의 프로세스 조건</summary>
+
+Electron 앱에는 하나의 Main Process가 있고, 각 BrowserWindow의 웹 콘텐츠는 Renderer Process에서 실행된다. 서로 다른 Renderer는 같은 JavaScript Store 인스턴스를 직접 공유하지 않는다.
+
+Renderer와 Main은 IPC로 값을 주고받는다. IPC 값에는 Structured Clone Algorithm이 적용되므로 함수, DOM 객체, 일부 실행 객체는 그대로 전송할 수 없다.
+
+- [Electron Process Model](https://www.electronjs.org/docs/latest/tutorial/process-model)
+- [Electron IPC](https://www.electronjs.org/docs/latest/tutorial/ipc)
+- [Electron ipcRenderer](https://www.electronjs.org/docs/latest/api/ipc-renderer)
+
+이 조건은 Main SSOT를 강제하지 않는다. 여러 창의 수명주기와 로컬 파일 저장을 함께 관리해야 했기 때문에 Main이 유력한 후보가 되었다.
+
+</details>
+
+## 5. 상태 관리보다 먼저 정한 규칙
+
+상태 관리 라이브러리를 고르기 전에 필요한 동작부터 정리했다.
+
+1. 어느 창에서 수정해도 모든 관련 창이 같은 확정 결과를 본다.
+2. 새 창은 다른 창이 아니라 최신 프로젝트 상태에서 시작한다.
+3. 저장과 Undo/Redo는 같은 프로젝트 상태를 기준으로 동작한다.
+4. 창이 닫혀도 프로젝트 상태와 진행 중인 저장은 유지된다.
+
+<details>
+<summary>제품 정책이 더 필요한 항목</summary>
+
+다음 항목은 기술 구조만으로 결정할 수 없다.
+
+- 자동저장이 허용할 수 있는 최대 데이터 손실 시간
+- 변경 응답 전에 디스크 기록까지 끝내야 하는지
+- 두 창이 같은 자막을 수정할 때 나중 요청을 덮어쓸지 거절할지
+- 앱을 다시 실행한 뒤에도 Undo/Redo 이력을 복원할지
+
+이 시리즈에서는 확정된 설계와 제품 결정이 필요한 항목을 구분한다.
+
+</details>
+
+## 6. 하나의 상태 결정권으로 모으기
+
+선택한 방향은 저장 가능한 프로젝트 상태의 변경 권한을 Main 한 곳에 두는 것이었다.
 
 ```mermaid
 flowchart LR
-  ScriptPanel["SRT script panel renderer"]
-  Editor["Editor renderer"]
-  Admin["Admin renderer"]
-  ProjectSession["ProjectSession main process SSOT"]
-  LocalFile["Local project file"]
+  windows["여러 창\n화면용 복사본과 UI 상태"]
+  main["Main\n프로젝트 최종 상태와 문서 번호"]
+  file["로컬 프로젝트 파일"]
 
-  ScriptPanel -->|IPC: script row 변경| ProjectSession
-  Editor -->|IPC: editor 변경| ProjectSession
-  ProjectSession -->|snapshot broadcast| ScriptPanel
-  ProjectSession -->|snapshot broadcast| Editor
-  ProjectSession -->|탭 진입 시 snapshot 재검증| Admin
-  ProjectSession -->|실시간 저장| LocalFile
+  windows -->|"변경 요청"| main
+  main -->|"확정된 결과"| windows
+  main -->|"최신 상태 저장"| file
 ```
 
-## 5. main process 내부 상태는 어떻게 관리할까
+모든 상태를 Main으로 옮기는 것은 아니다.
 
-main process에는 React가 없다. 따라서 React `state`나 `context`는 사용할 수 없다. renderer UI 상태를 위한 Zustand hook도 그대로 쓸 수 없다. 대신 선택지는 세 가지 정도였다.
+- Main은 저장되는 프로젝트 값과 변경 이력을 정한다.
+- 각 창은 화면용 복사본과 선택, 모달, 드래그 같은 UI 상태를 가진다.
+- 오디오 재생 객체처럼 저장할 수 없는 실행 상태는 해당 창에 남긴다.
 
-1. plain object
-2. class
-3. vanilla Zustand
+이 구조가 실제로 충분한지는 동기화, Undo/Redo, 자동저장과 복구를 각각 검증해야 한다. 다음 글에서는 Main이 상태를 정한 뒤 각 창에 같은 결과를 전달하는 흐름을 설명한다.
 
-plain object도 가능하지만, 단독으로 쓰면 상태 변경 감지, 외부 변경 차단, 저장 요청, broadcast 같은 동작을 체계적으로 묶기 어렵다. vanilla Zustand는 React 없이도 `getState`, `setState`, `subscribe`를 제공한다. 현재 project snapshot을 보관하고 변경을 감지하기에 적합하다. class는 프로젝트 변경 규칙과 외부 공개 API를 캡슐화하기에 적합하다. 예를 들어 저장 요청, renderer broadcast, private field를 통한 외부 직접 변경 방지 같은 책임을 class 안에 둘 수 있다. 그래서 구조는 `ProjectSession` class 안에 vanilla Zustand store를 두는 방식이 적절했다.
+## 7. 마치며
 
-```ts
-class ProjectSession {
-  private readonly store = createStore<ProjectSnapshot>(() => initialProjectSnapshot);
+처음에는 창 사이의 이벤트가 부족한 문제라고 생각했다. 코드를 따라가 보니 더 앞에 있는 문제가 보였다.
 
-  getSnapshot() {
-    return this.store.getState();
-  }
+> 이벤트를 늘리기 전에, 같은 값을 누가 최종적으로 정하는지부터 정해야 했다.
 
-  updateScriptRows(rows: SrtRow[]) {
-    this.store.setState({ scriptRows: rows });
-  }
-
-  subscribe() {
-    return this.store.subscribe(snapshot => {
-      this.saveProject(snapshot);
-      this.broadcastProjectChanged(snapshot);
-    });
-  }
-
-  private saveProject(snapshot: ProjectSnapshot) {
-    // local PC에 프로젝트 저장
-  }
-
-  private broadcastProjectChanged(snapshot: ProjectSnapshot) {
-    // 열려 있는 renderer process에 변경 알림
-  }
-}
-```
-
-이 구조에서 역할은 분리된다. `ProjectSession`은 프로젝트 변경 규칙, 저장 요청, renderer broadcast를 관리한다. vanilla Zustand는 현재 프로젝트 snapshot을 보관하고 `getState`, `setState`, `subscribe`를 제공한다. 즉, Zustand를 “앱 전체 아키텍처”로 쓰는 것이 아니라, main process 내부의 snapshot store로 제한해서 사용하는 방식이다. (각 상태를 분리한 기준과 어떤 상태저장소를 써야할 지 선택하게 된 기준은 다음 글을 참고: [상태 관리 도구 선택 기준과 Store 분리의 중요성](/posts/react-context-rerender-state-boundary))
-
-## 6. renderer 화면은 어떻게 갱신할까
-
-main process의 snapshot이 바뀌면 renderer 화면도 리렌더링되어야 한다. renderer 입장에서는 main에서 변경 이벤트를 listener로 받고, 그 값을 UI 상태에 반영해야 한다. 여기서 `useSyncExternalStore`를 직접 사용할 수도 있고, renderer 쪽 Zustand store에 반영할 수도 있다. 이 경우 여러 컴포넌트가 같은 데이터를 공유하고, 변경 범위가 일부일 때 해당 데이터만 사용하는 컴포넌트만 리렌더링되는 것이 중요했다. 따라서 renderer에서는 Zustand selector를 사용하는 편이 적합하다. main process에서 받은 snapshot 또는 patch를 renderer store에 반영하고, 각 컴포넌트는 필요한 slice만 selector로 구독한다.
-
-```
-const scriptRows = useProjectRendererStore(state => state.scriptRows);
-```
-
-이 방식은 “main process가 단일 진실 공급원을 가진다”는 규칙과 “renderer는 화면 렌더링에 필요한 state를 가진다”는 규칙을 분리한다.
-
-## 7. admin 탭 진입 시에는 다시 불러오기
-
-editor에서 변경한 SRT panel 내용이 admin 탭으로 이동했을 때도 맞아야 했다. 모든 탭을 항상 실시간 동기화할 수도 있다. 하지만 열려 있지 않거나 활성화되지 않은 화면까지 계속 sync하는 것은 비용 대비 이점이 작다. 또 main이 local project에 저장하기 전 admin 탭이 진입하면, admin이 오래된 renderer state를 기준으로 화면을 그릴 위험이 있다. 그래서 admin 탭 진입 시점에는 renderer의 기존 state를 신뢰하지 않고, main process의 project snapshot 또는 저장된 project document를 다시 불러오는 방식이 더 안전하다. 정확히 말하면 이것은 “실시간 동기화”가 아니라 **탭 활성화 시점의 snapshot 재검증**에 가깝다.
-
-## 8. 예외적으로 저장하지 않는 동기화
-
-모든 변경이 프로젝트에 저장되어야 하는 것은 아니다. 예를 들어 리전을 클릭했을 때 해당 SRT panel script row를 하이라이트하고 그 위치로 스크롤하는 기능은 사용자의 편집 데이터가 아니다. 이는 저장되어야 하는 프로젝트 상태가 아니라, 현재 상호작용을 위한 임시 UI 이벤트다. 이런 고빈도 임시 동기화는 main process의 project snapshot에 넣지 않는 편이 낫다. 대신 `MessagePort` 기반 channel을 열어 실시간 이벤트 stream처럼 전달할 수 있다. 여기서 구분이 중요하다.
-
-- 프로젝트에 저장되어야 하는 데이터: `ProjectSession`의 snapshot으로 관리
-- 저장할 필요 없는 고빈도 UI 이벤트: message port로 전달
-- renderer 화면 렌더링 상태: renderer store에서 selector로 구독
-
-## 9. 결론
-
-이번 구조의 핵심은 “상태를 하나로 합친다”가 아니다. 정확히는 **프로젝트 데이터의 단일 진실 공급원을 main process에 두고, renderer process는 그 snapshot을 화면 렌더링에 필요한 형태로 구독한다**는 결정이다.
-
-> 저장되어야 하는 데이터와 화면에서만 필요한 임시 이벤트를 분리해야, 동기화 구조가 단순해진다.
-
-Electron에서는 여러 창이 각각 다른 renderer process로 동작한다. 그래서 renderer store를 전역 store처럼 생각하면 편집 내용과 저장 내용이 어긋날 수 있다. 프로젝트 저장, 실시간 변경 반영, 창 간 공유가 모두 필요한 데이터라면 main process에 `ProjectSession`을 두고 그 안에서 snapshot, 저장, broadcast 규칙을 함께 관리하는 편이 더 명확하다.
+[다음 글: Part 2. Main이 프로젝트 상태를 정하고 각 창에 전달하는 방법](/posts/electron-main-process-project-ssot)

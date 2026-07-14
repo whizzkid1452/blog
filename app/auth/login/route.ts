@@ -9,7 +9,7 @@ export async function GET(request: Request): Promise<Response> {
   const callbackUrl = new URL('/auth/callback', getSiteUrl());
   callbackUrl.searchParams.set('next', returnPath);
 
-  const supabaseClient = await createSupabaseServerClient({ canWriteCookies: true });
+  const supabaseClient = await createSupabaseServerClient();
   const { data, error } = await supabaseClient.auth.signInWithOAuth({
     provider: 'google',
     options: {

@@ -107,7 +107,6 @@ async function readJsonBody(request: Request): Promise<unknown> {
 }
 
 function isCrossOriginRequest(request: Request): boolean {
-  // 이 검사는 브라우저의 교차 출처 요청만 거르며 Origin 없는 요청의 인증을 보장하지 않는다.
   const requestOrigin = request.headers.get('origin');
 
   return requestOrigin != null && requestOrigin !== new URL(request.url).origin;

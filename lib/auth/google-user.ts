@@ -23,8 +23,6 @@ export function getGoogleUserFromClaims(claims: unknown): GoogleUser | null {
 
 export async function getAuthenticatedGoogleUser(supabaseClient?: SupabaseClient): Promise<GoogleUser | null> {
   const client = supabaseClient ?? (await createSupabaseServerClient());
-
-  // 쿠키의 세션 객체를 신뢰하지 않고 서명이 검증된 JWT claim으로 권한을 판정한다.
   const { data, error } = await client.auth.getClaims();
 
   if (error != null) {

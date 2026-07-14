@@ -65,6 +65,10 @@ export function getAlternateLocale(locale: Locale): Locale {
   return locale === 'ko' ? 'en' : 'ko';
 }
 
+export function getHtmlLanguage(locale: Locale): string {
+  return locale === 'ko' ? 'ko' : 'en';
+}
+
 export function getContentLanguage(locale: Locale): string {
   return locale === 'ko' ? 'ko-KR' : 'en-US';
 }

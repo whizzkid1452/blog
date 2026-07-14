@@ -124,8 +124,8 @@ Session이 Store를 구독하면 해결되지만, 그건 앞서 말한 `Store > 
 
 본인 글 (시리즈 내부)
 
-- [Part 1 아키텍처 설계](/posts/browser-multieditor-architecture-design)
-- [rAF 트림 기능 관련](/posts/audio-editor-zoom-raf-throttling)
+- [Part 1 아키텍처 설계](https://insight74278.tistory.com/19)
+- [rAF 트림 기능 관련](https://insight74278.tistory.com/1)
 - [drop-ai GitHub](https://github.com/whizzkid1452/drop-ai)
 
 참고 개념/출처

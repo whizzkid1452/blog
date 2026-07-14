@@ -8,7 +8,6 @@ import { validateMarkdownSeo } from './markdown-seo';
 import { PostIndex } from './post-index';
 import type { Post } from './posts';
 import { getPostIndex } from './posts';
-import { hasPublicImage } from './public-image';
 
 const ENGLISH_TRANSLATIONS_DIRECTORY = path.join(process.cwd(), 'content', 'post-translations', 'en');
 const MARKDOWN_FILE_EXTENSION = '.md';
@@ -17,6 +16,7 @@ const postTranslationFrontmatterSchema = z.object({
   title: z.string().trim().min(1),
   description: z.string().trim().min(1),
   coverAlt: z.string().trim().min(1).optional(),
+  seriesName: z.string().trim().min(1).optional(),
 });
 
 export interface PostTranslation {
@@ -24,6 +24,7 @@ export interface PostTranslation {
   description: string;
   content: string;
   coverAlt?: string;
+  seriesName?: string;
 }
 
 interface ApplyPostTranslationParams {
@@ -47,13 +48,21 @@ export function hasEnglishPostTranslation(slug: string): boolean {
 }
 
 export function applyPostTranslation({ post, translation }: ApplyPostTranslationParams): Post {
-  // 게시일·태그·slug는 한국어 원문에서 상속해 언어별 URL과 발행 메타데이터의 대응을 유지한다.
+  const translatedSeries =
+    post.series == null
+      ? undefined
+      : {
+          ...post.series,
+          name: translation.seriesName ?? post.series.name,
+        };
+
   return {
     ...post,
     title: translation.title,
     description: translation.description,
     content: translation.content,
     coverAlt: translation.coverAlt ?? post.coverAlt,
+    series: translatedSeries,
   };
 }
 
@@ -130,7 +139,6 @@ function validateEnglishPostMarkdown({
       fileName: path.join('en', source.fileName),
       content: source.content,
       internalRoutes,
-      hasPublicImage,
     })
   );
 }

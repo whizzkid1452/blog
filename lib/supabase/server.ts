@@ -2,11 +2,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { getSupabaseEnvironment } from './environment';
 
-interface CreateSupabaseServerClientOptions {
-  canWriteCookies?: boolean;
-}
-
-export async function createSupabaseServerClient({ canWriteCookies = false }: CreateSupabaseServerClientOptions = {}) {
+export async function createSupabaseServerClient() {
   const cookieStore = await cookies();
   const environment = getSupabaseEnvironment();
 
@@ -14,12 +10,11 @@ export async function createSupabaseServerClient({ canWriteCookies = false }: Cr
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: cookiesToSet => {
-        if (!canWriteCookies) {
+        try {
+          cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
+        } catch {
           // Server Component의 세션 갱신 쿠키는 proxy가 응답에 기록한다.
-          return;
         }
-
-        cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options));
       },
     },
   });

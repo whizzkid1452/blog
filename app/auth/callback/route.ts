@@ -12,7 +12,7 @@ export async function GET(request: Request): Promise<Response> {
     return new Response('OAuth 인증 코드가 없습니다.', { status: 400 });
   }
 
-  const supabaseClient = await createSupabaseServerClient({ canWriteCookies: true });
+  const supabaseClient = await createSupabaseServerClient();
   const { error } = await supabaseClient.auth.exchangeCodeForSession(code);
 
   if (error != null) {

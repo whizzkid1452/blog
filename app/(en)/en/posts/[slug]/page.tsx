@@ -19,7 +19,6 @@ export function generateStaticParams() {
     .map(post => ({ slug: post.slug }));
 }
 
-// 공개 글만 SSG로 생성하고 인증 글은 요청 시 서버에서 권한을 검사한다.
 export const dynamicParams = true;
 
 export async function generateMetadata({ params }: EnglishPostPageProps): Promise<Metadata> {

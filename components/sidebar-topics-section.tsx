@@ -5,7 +5,6 @@ import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import Link from 'next/link';
 import styles from './site-layout.module.css';
-import { getExpandedSidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 
 interface SidebarTopicsSectionProps {
   locale?: Locale;
@@ -14,7 +13,6 @@ interface SidebarTopicsSectionProps {
 
 export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSectionProps) {
   const messages = getUiMessages(locale);
-  const expandedTags = getExpandedSidebarTopicTags(tags);
 
   return (
     <Collapsible.Root asChild defaultOpen={false}>
@@ -29,8 +27,8 @@ export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSecti
         </div>
 
         <Collapsible.Content className={styles.sidebarCollapsibleContent}>
-          {expandedTags.length > 0 ? (
-            <TopicTagList locale={locale} tags={expandedTags} />
+          {tags.length > 0 ? (
+            <TopicTagList locale={locale} tags={tags} />
           ) : (
             <p className={styles.emptyText}>{messages.noTopics}</p>
           )}
@@ -49,7 +47,7 @@ function TopicTagList({ locale, tags }: { locale: Locale; tags: string[] }) {
           className={styles.tagLink}
           href={createLocalizedPath(locale, `/tags/${encodeURIComponent(tag)}`)}
         >
-          #{getSidebarTopicLabel(tag)}
+          #{tag}
         </Link>
       ))}
     </div>

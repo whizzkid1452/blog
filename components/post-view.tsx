@@ -1,6 +1,6 @@
+import type { Post, PostSummary } from '@/lib/posts';
 import type { Locale } from '@/lib/i18n';
 import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
-import type { Post, PostSummary } from '@/lib/posts';
 import Link from 'next/link';
 import { CommentsSection } from './comments-section';
 import { MarkdownContent } from './markdown-content';
@@ -64,7 +64,7 @@ export function PostView({ locale = 'ko', post, relatedPosts, translationHref }:
           </ul>
         </section>
       ) : null}
-      {post.visibility === 'public' ? <CommentsSection postSlug={post.slug} /> : null}
+      {post.visibility === 'public' ? <CommentsSection locale={locale} postSlug={post.slug} /> : null}
     </div>
   );
 }

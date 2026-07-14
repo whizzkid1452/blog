@@ -1,6 +1,6 @@
 import { HomeView } from '@/components/home-view';
-import { getPostIndexForLocale } from '@/lib/post-translations';
 import { getPostIndex } from '@/lib/posts';
+import { getPostIndexForLocale } from '@/lib/post-translations';
 import { createTagPageMetadata } from '@/lib/seo-metadata';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';

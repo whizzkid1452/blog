@@ -34,6 +34,12 @@ export function createSitemap({
       alternates: createLanguageAlternates('/posts'),
     },
     {
+      url: createAbsoluteUrl('/series'),
+      changeFrequency: 'weekly',
+      priority: 0.7,
+      alternates: createLanguageAlternates('/series'),
+    },
+    {
       url: createAbsoluteUrl('/en'),
       changeFrequency: 'weekly',
       priority: 0.8,
@@ -46,9 +52,10 @@ export function createSitemap({
       alternates: createLanguageAlternates('/posts'),
     },
     {
-      url: createAbsoluteUrl('/series'),
+      url: createAbsoluteUrl('/en/series'),
       changeFrequency: 'weekly',
-      priority: 0.7,
+      priority: 0.6,
+      alternates: createLanguageAlternates('/series'),
     },
   ];
 
