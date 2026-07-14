@@ -61,4 +61,12 @@ describe('ECS deployment configuration', () => {
     expect(infrastructureTemplate).toContain('HealthCheckPath: /api/health');
     expect(infrastructureTemplate).toContain('ContainerPort: 3000');
   });
+
+  it('uses only EC2-supported ASCII characters in security group descriptions', () => {
+    const infrastructureTemplate = readDeploymentFile(infrastructureTemplatePath);
+    const groupDescriptions = infrastructureTemplate.match(/^\s+GroupDescription: (.+)$/gm) ?? [];
+
+    expect(groupDescriptions.length).toBeGreaterThan(0);
+    expect(groupDescriptions.every(description => /^[\x20-\x7E]+$/.test(description))).toBe(true);
+  });
 });

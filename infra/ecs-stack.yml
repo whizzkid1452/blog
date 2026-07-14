@@ -152,7 +152,7 @@ Resources:
   LoadBalancerSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: 인터넷에서 Application Load Balancer로 들어오는 HTTP와 HTTPS 허용
+      GroupDescription: Allow public HTTP and HTTPS traffic to the Application Load Balancer
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
@@ -167,7 +167,7 @@ Resources:
   ApplicationSecurityGroup:
     Type: AWS::EC2::SecurityGroup
     Properties:
-      GroupDescription: Application Load Balancer에서 Next.js 컨테이너로 들어오는 요청만 허용
+      GroupDescription: Allow Application Load Balancer traffic to the Next.js container
       VpcId: !Ref VpcId
       SecurityGroupIngress:
         - IpProtocol: tcp
