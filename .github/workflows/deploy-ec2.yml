@@ -1,6 +1,8 @@
-name: EC2 수동 검증 배포
+name: EC2 프로덕션 배포
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
 
 permissions:
@@ -8,7 +10,7 @@ permissions:
   id-token: write
 
 concurrency:
-  group: production-ec2-validation
+  group: production-ec2
   cancel-in-progress: false
 
 env:
@@ -19,7 +21,7 @@ env:
 
 jobs:
   deploy:
-    name: ARM64 이미지 빌드 및 EC2 검증 배포
+    name: ARM64 이미지 빌드 및 EC2 배포
     runs-on: ubuntu-latest
     timeout-minutes: 30
 
@@ -31,7 +33,7 @@ jobs:
         uses: aws-actions/configure-aws-credentials@v6
         with:
           role-to-assume: ${{ env.AWS_ROLE_ARN }}
-          role-session-name: blog-ec2-validation
+          role-session-name: blog-main-deployment
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Amazon ECR 로그인
