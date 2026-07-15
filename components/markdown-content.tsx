@@ -8,6 +8,7 @@ import { MarkdownAsync } from 'react-markdown';
 import type { Components } from 'react-markdown';
 import rehypePrettyCode from 'rehype-pretty-code';
 import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code';
+import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
@@ -28,17 +29,17 @@ export async function MarkdownContent({ content, title }: MarkdownContentProps) 
   const renderedContent = await MarkdownAsync({
     children: preparedContent.content,
     components: createMarkdownComponents({ tableOfContentsItems: preparedContent.tableOfContentsItems }),
-    rehypePlugins: [[rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
+    rehypePlugins: [rehypeRaw, [rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
     remarkPlugins: [remarkGfm],
   });
 
   return (
     <MarkdownCodeBlockProvider>
-      <div className={styles.content}>
+      <div className={styles.markdownLayout}>
         {preparedContent.tableOfContentsItems.length > 0 ? (
           <MarkdownTableOfContents items={preparedContent.tableOfContentsItems} />
         ) : null}
-        {renderedContent}
+        <div className={styles.content}>{renderedContent}</div>
       </div>
     </MarkdownCodeBlockProvider>
   );
@@ -81,35 +82,43 @@ interface MarkdownAstNodeProps {
 }
 
 type MarkdownAnchorProps = ComponentPropsWithoutRef<'a'> & MarkdownAstNodeProps;
+type MarkdownDetailsProps = ComponentPropsWithoutRef<'details'> & MarkdownAstNodeProps;
 type MarkdownImageProps = ComponentPropsWithoutRef<'img'> & MarkdownAstNodeProps;
 type MarkdownPreProps = ComponentPropsWithoutRef<'pre'> & MarkdownAstNodeProps;
+type MarkdownSummaryProps = ComponentPropsWithoutRef<'summary'> & MarkdownAstNodeProps;
 
 function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownComponentsParams): Components {
   const headingIdResolver = createMarkdownHeadingIdResolver({ tableOfContentsItems });
 
   return {
     a: MarkdownAnchor,
+    details: MarkdownDetails,
     h2: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={2} />,
     h3: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={3} />,
     img: MarkdownImage,
     pre: MarkdownPre,
+    summary: MarkdownSummary,
   };
 }
 
 function MarkdownTableOfContents({ items }: MarkdownTableOfContentsProps) {
   return (
-    <details className={styles.tableOfContents}>
-      <summary className={styles.tableOfContentsSummary}>목차</summary>
-      <ol className={styles.tableOfContentsList}>
-        {items.map(item => (
-          <li className={styles.tableOfContentsListItem} key={item.id}>
-            <a className={styles.tableOfContentsLink} href={`#${item.id}`}>
-              {item.title}
-            </a>
-          </li>
-        ))}
-      </ol>
-    </details>
+    <aside className={styles.tableOfContentsSidebar}>
+      <nav aria-labelledby="markdown-table-of-contents-title">
+        <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">
+          목차
+        </p>
+        <ol className={styles.tableOfContentsList}>
+          {items.map(item => (
+            <li className={styles.tableOfContentsListItem} data-level={item.level} key={item.id}>
+              <a className={styles.tableOfContentsLink} href={`#${item.id}`}>
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </aside>
   );
 }
 
@@ -143,6 +152,20 @@ function MarkdownAnchor({ href, ...anchorPropsWithNode }: MarkdownAnchorProps) {
   }
 
   return <a {...anchorProps} href={href} />;
+}
+
+function MarkdownDetails(detailsPropsWithNode: MarkdownDetailsProps) {
+  const detailsProps = omitMarkdownAstNodeProp(detailsPropsWithNode);
+  const className = [styles.tableOfContents, detailsProps.className].filter(Boolean).join(' ');
+
+  return <details {...detailsProps} className={className} />;
+}
+
+function MarkdownSummary(summaryPropsWithNode: MarkdownSummaryProps) {
+  const summaryProps = omitMarkdownAstNodeProp(summaryPropsWithNode);
+  const className = [styles.tableOfContentsSummary, summaryProps.className].filter(Boolean).join(' ');
+
+  return <summary {...summaryProps} className={className} />;
 }
 
 function MarkdownImage({ src, alt, title }: MarkdownImageProps) {

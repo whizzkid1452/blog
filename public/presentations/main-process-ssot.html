@@ -1,0 +1,1113 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Main Process SSOT 구조 개편</title>
+    <style>
+      :root {
+        --canvas: #07111f;
+        --surface: #0d1b2c;
+        --surface-strong: #13263d;
+        --line: #2c4562;
+        --text: #f7fbff;
+        --muted: #a9bdd3;
+        --accent: #55e6c1;
+        --accent-2: #73b7ff;
+        --warning: #ffcb6b;
+        --danger: #ff7f87;
+        --shadow: 0 24px 80px rgb(0 0 0 / 36%);
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        overflow: hidden;
+        background: #020710;
+        color: var(--text);
+        font-family: Pretendard, 'Noto Sans KR', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+      }
+
+      body {
+        display: grid;
+        place-items: center;
+      }
+
+      button,
+      a {
+        font: inherit;
+      }
+
+      #deck {
+        position: relative;
+        width: min(100vw, calc(100vh * 16 / 9));
+        height: min(100vh, calc(100vw * 9 / 16));
+        overflow: hidden;
+        background:
+          radial-gradient(circle at 90% 12%, rgb(85 230 193 / 10%), transparent 28%),
+          radial-gradient(circle at 8% 82%, rgb(115 183 255 / 9%), transparent 30%), var(--canvas);
+        box-shadow: var(--shadow);
+      }
+
+      .slide {
+        position: absolute;
+        inset: 0;
+        display: none;
+        padding: clamp(42px, 5.1vw, 78px) clamp(48px, 6vw, 92px);
+        overflow: hidden;
+      }
+
+      .slide.active {
+        display: flex;
+        animation: enter 240ms ease-out;
+      }
+
+      .slide-inner {
+        display: flex;
+        flex: 1;
+        min-width: 0;
+        flex-direction: column;
+      }
+
+      @keyframes enter {
+        from {
+          opacity: 0;
+          transform: translateX(12px);
+        }
+        to {
+          opacity: 1;
+          transform: translateX(0);
+        }
+      }
+
+      h1,
+      h2,
+      h3,
+      p,
+      ul,
+      ol,
+      blockquote {
+        margin-top: 0;
+      }
+
+      h1 {
+        max-width: 1120px;
+        margin-bottom: 28px;
+        font-size: clamp(50px, 5.2vw, 78px);
+        line-height: 1.12;
+        letter-spacing: -0.045em;
+      }
+
+      h2 {
+        max-width: 1180px;
+        margin-bottom: clamp(24px, 3vw, 42px);
+        font-size: clamp(36px, 3.7vw, 56px);
+        line-height: 1.18;
+        letter-spacing: -0.035em;
+      }
+
+      h3 {
+        margin-bottom: 12px;
+        font-size: clamp(21px, 2vw, 30px);
+        line-height: 1.3;
+      }
+
+      p,
+      li {
+        font-size: clamp(17px, 1.55vw, 24px);
+        line-height: 1.55;
+      }
+
+      p {
+        margin-bottom: 18px;
+      }
+
+      ul,
+      ol {
+        margin-bottom: 0;
+        padding-left: 1.35em;
+      }
+
+      li + li {
+        margin-top: 10px;
+      }
+
+      strong {
+        color: #ffffff;
+      }
+
+      code {
+        padding: 0.08em 0.3em;
+        border: 1px solid rgb(115 183 255 / 24%);
+        border-radius: 5px;
+        background: rgb(115 183 255 / 10%);
+        color: #b9dcff;
+        font-size: 0.9em;
+      }
+
+      .eyebrow {
+        margin-bottom: 18px;
+        color: var(--accent);
+        font-size: clamp(15px, 1.35vw, 20px);
+        font-weight: 750;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .lead {
+        max-width: 1000px;
+        color: var(--muted);
+        font-size: clamp(22px, 2.2vw, 32px);
+        line-height: 1.5;
+      }
+
+      .accent {
+        color: var(--accent);
+      }
+
+      .blue {
+        color: var(--accent-2);
+      }
+
+      .warning {
+        color: var(--warning);
+      }
+
+      .danger {
+        color: var(--danger);
+      }
+
+      .muted {
+        color: var(--muted);
+      }
+
+      .spacer {
+        flex: 1;
+      }
+
+      .quote {
+        max-width: 1100px;
+        margin: auto 0;
+        padding-left: clamp(24px, 3vw, 46px);
+        border-left: 8px solid var(--danger);
+        font-size: clamp(36px, 4.1vw, 62px);
+        font-weight: 760;
+        line-height: 1.3;
+        letter-spacing: -0.035em;
+      }
+
+      .quote-note {
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: clamp(17px, 1.5vw, 23px);
+      }
+
+      .grid-2 {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: clamp(22px, 2.4vw, 38px);
+        min-height: 0;
+      }
+
+      .grid-3 {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: clamp(16px, 2vw, 30px);
+        min-height: 0;
+      }
+
+      .card {
+        min-width: 0;
+        padding: clamp(20px, 2.3vw, 34px);
+        border: 1px solid var(--line);
+        border-radius: 18px;
+        background: linear-gradient(145deg, rgb(19 38 61 / 90%), rgb(13 27 44 / 78%));
+      }
+
+      .card.compact {
+        padding: clamp(16px, 1.7vw, 24px);
+      }
+
+      .card p:last-child,
+      .card ul:last-child {
+        margin-bottom: 0;
+      }
+
+      .card-label {
+        margin-bottom: 10px;
+        color: var(--muted);
+        font-size: clamp(14px, 1.2vw, 18px);
+        font-weight: 700;
+        letter-spacing: 0.06em;
+      }
+
+      .selected {
+        border-color: var(--accent);
+        background: linear-gradient(145deg, rgb(27 75 74 / 78%), rgb(13 36 47 / 90%));
+      }
+
+      .comparison {
+        display: grid;
+        grid-template-columns: 0.75fr 1.25fr;
+        gap: 18px 30px;
+        align-items: start;
+      }
+
+      .comparison > div {
+        padding: 13px 0;
+        border-bottom: 1px solid rgb(44 69 98 / 66%);
+        font-size: clamp(17px, 1.55vw, 23px);
+        line-height: 1.45;
+      }
+
+      .comparison .term {
+        color: var(--muted);
+        font-weight: 750;
+      }
+
+      .timeline {
+        display: grid;
+        grid-template-columns: repeat(5, minmax(0, 1fr));
+        align-items: center;
+        margin: auto 0;
+      }
+
+      .timeline-step {
+        position: relative;
+        padding: 18px 12px;
+        text-align: center;
+      }
+
+      .timeline-step:not(:last-child)::after {
+        position: absolute;
+        top: 34px;
+        right: -16%;
+        width: 32%;
+        height: 3px;
+        background: var(--line);
+        content: '';
+      }
+
+      .timeline-dot {
+        display: grid;
+        width: 34px;
+        height: 34px;
+        margin: 0 auto 14px;
+        place-items: center;
+        border: 2px solid var(--accent-2);
+        border-radius: 50%;
+        background: var(--canvas);
+        color: var(--accent-2);
+        font-size: 15px;
+        font-weight: 800;
+      }
+
+      .timeline-step.alert .timeline-dot {
+        border-color: var(--danger);
+        color: var(--danger);
+      }
+
+      .timeline-step p {
+        margin: 0;
+        font-size: clamp(15px, 1.3vw, 20px);
+        line-height: 1.4;
+      }
+
+      .flow {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) auto minmax(0, 0.9fr) auto minmax(0, 0.7fr);
+        gap: clamp(12px, 1.5vw, 22px);
+        align-items: center;
+        margin: auto 0;
+      }
+
+      .stack {
+        display: grid;
+        gap: 12px;
+      }
+
+      .node {
+        padding: clamp(16px, 1.7vw, 24px);
+        border: 1px solid var(--line);
+        border-radius: 14px;
+        background: var(--surface-strong);
+        text-align: center;
+      }
+
+      .node strong {
+        display: block;
+        font-size: clamp(18px, 1.65vw, 25px);
+      }
+
+      .node span {
+        display: block;
+        margin-top: 6px;
+        color: var(--muted);
+        font-size: clamp(13px, 1.1vw, 17px);
+        line-height: 1.35;
+      }
+
+      .node.primary {
+        border-color: var(--accent);
+        background: rgb(25 73 72 / 75%);
+      }
+
+      .node.danger-node {
+        border-color: var(--danger);
+        background: rgb(87 31 43 / 55%);
+      }
+
+      .arrow {
+        color: var(--accent-2);
+        font-size: clamp(28px, 3.2vw, 48px);
+        font-weight: 800;
+        text-align: center;
+      }
+
+      .architecture {
+        display: grid;
+        grid-template-columns: minmax(0, 1.05fr) auto minmax(0, 1.1fr) auto minmax(0, 0.7fr);
+        gap: clamp(10px, 1.3vw, 20px);
+        align-items: center;
+        margin: auto 0;
+      }
+
+      .architecture .stack {
+        gap: 9px;
+      }
+
+      .architecture .node {
+        padding: clamp(12px, 1.3vw, 18px);
+      }
+
+      .architecture .arrow-label {
+        max-width: 110px;
+        color: var(--muted);
+        font-size: clamp(12px, 1vw, 15px);
+        line-height: 1.35;
+        text-align: center;
+      }
+
+      .architecture .arrow-label b {
+        display: block;
+        color: var(--accent-2);
+        font-size: clamp(25px, 2.6vw, 38px);
+      }
+
+      .role-list {
+        display: grid;
+        grid-template-columns: 0.85fr 1.15fr;
+        gap: 0 26px;
+      }
+
+      .role-list > div {
+        padding: 14px 0;
+        border-bottom: 1px solid rgb(44 69 98 / 65%);
+        font-size: clamp(16px, 1.42vw, 21px);
+        line-height: 1.4;
+      }
+
+      .role-name {
+        color: var(--accent);
+        font-weight: 800;
+      }
+
+      .callout {
+        margin-top: 24px;
+        padding: 18px 22px;
+        border-left: 5px solid var(--accent);
+        background: rgb(85 230 193 / 8%);
+        font-size: clamp(17px, 1.5vw, 23px);
+        line-height: 1.5;
+      }
+
+      .source {
+        margin-top: auto;
+        padding-top: 18px;
+        color: var(--muted);
+        font-size: clamp(12px, 1vw, 15px);
+        line-height: 1.35;
+      }
+
+      .source a {
+        color: #b6d8ff;
+        text-decoration: none;
+      }
+
+      .source a:hover {
+        text-decoration: underline;
+      }
+
+      .takeaway {
+        max-width: 1120px;
+        margin: auto 0;
+        font-size: clamp(38px, 4.1vw, 62px);
+        font-weight: 780;
+        line-height: 1.28;
+        letter-spacing: -0.035em;
+      }
+
+      .takeaway small {
+        display: block;
+        margin-top: 28px;
+        color: var(--muted);
+        font-size: clamp(19px, 1.8vw, 27px);
+        font-weight: 500;
+        line-height: 1.5;
+        letter-spacing: -0.015em;
+      }
+
+      .footer {
+        position: absolute;
+        right: clamp(24px, 3vw, 46px);
+        bottom: clamp(18px, 2vw, 30px);
+        left: clamp(24px, 3vw, 46px);
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        color: rgb(169 189 211 / 72%);
+        font-size: clamp(11px, 0.9vw, 14px);
+        pointer-events: none;
+      }
+
+      .progress-track {
+        position: absolute;
+        right: 0;
+        bottom: 0;
+        left: 0;
+        height: 5px;
+        background: rgb(255 255 255 / 6%);
+      }
+
+      #progress {
+        width: 0;
+        height: 100%;
+        background: linear-gradient(90deg, var(--accent-2), var(--accent));
+        transition: width 180ms ease;
+      }
+
+      .controls {
+        position: absolute;
+        right: 22px;
+        top: 20px;
+        z-index: 10;
+        display: flex;
+        gap: 8px;
+        opacity: 0.18;
+        transition: opacity 160ms ease;
+      }
+
+      .controls:hover,
+      .controls:focus-within {
+        opacity: 1;
+      }
+
+      .controls button {
+        display: grid;
+        width: 38px;
+        height: 38px;
+        padding: 0;
+        place-items: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: rgb(7 17 31 / 78%);
+        color: var(--text);
+        cursor: pointer;
+      }
+
+      .controls button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      @media (max-aspect-ratio: 4/3) {
+        .slide {
+          padding: 40px 48px;
+        }
+      }
+
+      @media print {
+        @page {
+          size: 13.333in 7.5in;
+          margin: 0;
+        }
+
+        html,
+        body {
+          overflow: visible;
+          background: #ffffff;
+          print-color-adjust: exact;
+          -webkit-print-color-adjust: exact;
+        }
+
+        #deck {
+          width: auto;
+          height: auto;
+          overflow: visible;
+          box-shadow: none;
+        }
+
+        .slide,
+        .slide.active {
+          position: relative;
+          display: flex;
+          width: 13.333in;
+          height: 7.5in;
+          break-after: page;
+          animation: none;
+        }
+
+        .controls,
+        .progress-track {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main id="deck" aria-label="Main Process SSOT 구조 개편 발표 자료">
+      <section class="slide active" data-title="표지">
+        <div class="slide-inner">
+          <div class="eyebrow">Electron 멀티 윈도우 편집기</div>
+          <h1>Main Process에<br /><span class="accent">프로젝트 상태의 SSOT</span>를 둔다</h1>
+          <p class="lead">수정한 스크립트가 자동저장 뒤 사라진 문제에서 시작한 상태 구조 개편</p>
+          <div class="spacer"></div>
+          <p class="muted">팀 공유용 아키텍처 설명 자료</p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="문제 상황">
+        <div class="slide-inner">
+          <div class="eyebrow">문제는 사용자에게 먼저 보였다</div>
+          <blockquote class="quote">
+            “스크립트 수정하고,<br />점심을 먹고 오면<br /><span class="danger">수정 내용이 사라져 있어요!</span>”
+          </blockquote>
+          <p class="quote-note">실무진이 보고한 실제 작업 중 문제</p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="문제 분해">
+        <div class="slide-inner">
+          <h2>점심시간이 원인이 아니라<br /><span class="danger">이전 snapshot을 저장한 것</span>이 원인이었다</h2>
+          <div class="comparison">
+            <div class="term">관찰된 증상</div>
+            <div>시간이 지난 뒤 수정한 스크립트가 수정 전 내용으로 돌아갔다.</div>
+            <div class="term">자동저장 trigger</div>
+            <div>사용자가 자리를 비운 사이 자동저장이 실행되었다.</div>
+            <div class="term">직접 원인</div>
+            <div>자동저장이 최신 편집값이 아닌 이전 값을 저장했다.</div>
+            <div class="term">구조적 조건</div>
+            <div>최종값을 정하는 변경 권한과 공통 version 규칙이 없었다.</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="기존 구조">
+        <div class="slide-inner">
+          <h2>여러 Store가 같은 프로젝트의<br /><span class="warning">최종값처럼 동작하고 있었다</span></h2>
+          <div class="flow">
+            <div class="stack">
+              <div class="node"><strong>Editor Store</strong><span>Timeline·프로젝트 일부</span></div>
+              <div class="node primary"><strong>SRT Store</strong><span>사용자가 수정한 최신 script</span></div>
+              <div class="node"><strong>Admin Store</strong><span>같은 프로젝트의 다른 복사본</span></div>
+            </div>
+            <div class="arrow">→</div>
+            <div class="node danger-node">
+              <strong>SaveController</strong><span>여러 Store에서 문서를 다시 조립</span>
+            </div>
+            <div class="arrow">→</div>
+            <div class="node danger-node">
+              <strong>project file</strong><span>수정 전 값이 최신값을 덮을 수 있음</span>
+            </div>
+          </div>
+          <div class="callout">
+            Store가 여러 개인 것 자체보다, <strong>어느 Store가 최종값인지 정하는 규칙이 없었던 것</strong>이 문제였다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Electron 제약">
+        <div class="slide-inner">
+          <h2>Electron의 창은 같은 React 앱처럼<br />하나의 Store를 자동으로 공유하지 않는다</h2>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-label">RENDERER</div>
+              <h3>각 BrowserWindow</h3>
+              <p>별도 Renderer Process에서 실행된다.</p>
+            </div>
+            <div class="card">
+              <div class="card-label">MAIN</div>
+              <h3>로컬 파일 접근</h3>
+              <p>프로젝트 파일 저장은 Main의 Node.js 환경을 거친다.</p>
+            </div>
+            <div class="card">
+              <div class="card-label">IPC</div>
+              <h3>프로세스 간 통신</h3>
+              <p>Renderer 간 공유는 Main 중계 또는 MessagePort가 필요하다.</p>
+            </div>
+          </div>
+          <p class="source">
+            출처:
+            <a href="https://www.electronjs.org/docs/latest/tutorial/process-model">Electron Process Model</a>,
+            <a href="https://www.electronjs.org/docs/latest/tutorial/ipc">Electron IPC</a>
+          </p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="선택지 비교">
+        <div class="slide-inner">
+          <h2>세 가지 위치를 비교했고,<br /><span class="accent">Main ProjectSession</span>을 선택했다</h2>
+          <div class="grid-3">
+            <div class="card">
+              <div class="card-label">선택지 1</div>
+              <h3>Renderer별 Store 유지</h3>
+              <p class="muted">기존 변경량은 작지만 최종값 선택과 저장 전 조립이 계속 필요하다.</p>
+            </div>
+            <div class="card">
+              <div class="card-label">선택지 2</div>
+              <h3>기준 Renderer 지정</h3>
+              <p class="muted">기준 창이 닫히면 project lifetime과 Admin 흐름이 복잡해진다.</p>
+            </div>
+            <div class="card selected">
+              <div class="card-label">선택지 3 · 채택</div>
+              <h3>Main ProjectSession</h3>
+              <p>창과 독립된 상태 수명주기와 파일 저장 기준을 같은 snapshot으로 묶는다.</p>
+            </div>
+          </div>
+          <div class="callout">
+            선택 이유는 “Main이 더 강력해서”가 아니라
+            <strong>최종값 확정과 파일 저장이 같은 snapshot을 볼 수 있어서</strong>다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="상태 경계">
+        <div class="slide-inner">
+          <h2>모든 state를 Main으로 옮기지 않는다</h2>
+          <div class="grid-3">
+            <div class="card selected">
+              <div class="card-label">MAIN · 최종 변경 권한</div>
+              <h3>ProjectDocument</h3>
+              <ul>
+                <li>SRT·Timeline·asset 참조</li>
+                <li>project version</li>
+                <li>Undo/Redo History</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-label">RENDERER · 읽기 전용</div>
+              <h3>ProjectSnapshot</h3>
+              <ul>
+                <li>TanStack Query Cache</li>
+                <li>Main 확정 결과만 반영</li>
+                <li>화면 렌더링용 복사본</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-label">RENDERER · 화면과 실행</div>
+              <h3>UI·runtime state</h3>
+              <ul>
+                <li>selection·modal·drag preview</li>
+                <li>AudioEngine·AudioBuffer</li>
+                <li>Zustand 또는 React state</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>SSOT는 복사본이 하나라는 뜻이 아니다.</strong> 최종 변경 권한이 한 곳에 있다는 뜻이다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="전체 구조">
+        <div class="slide-inner">
+          <h2>Renderer는 변경을 요청하고,<br />Main은 결과를 확정한다</h2>
+          <div class="architecture">
+            <div class="stack">
+              <div class="node"><strong>Editor</strong><span>Snapshot cache + UI state</span></div>
+              <div class="node"><strong>SRT Panel</strong><span>Snapshot cache + UI state</span></div>
+              <div class="node"><strong>Admin</strong><span>Snapshot cache</span></div>
+            </div>
+            <div class="arrow-label"><b>⇄</b>변경 요청<br />확정 결과</div>
+            <div class="stack">
+              <div class="node primary"><strong>ProjectSession</strong><span>Document · version · History</span></div>
+              <div class="node"><strong>Event Publisher</strong><span>열린 Renderer에 결과 발행</span></div>
+              <div class="node"><strong>Autosave</strong><span>pending snapshot · diskSavedVersion</span></div>
+            </div>
+            <div class="arrow-label"><b>→</b>최신<br />snapshot</div>
+            <div class="stack">
+              <div class="node"><strong>Repository</strong><span>temp · backup · file 교체</span></div>
+              <div class="node primary"><strong>project file</strong><span>마지막 저장 완료 version</span></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="변경 흐름">
+        <div class="slide-inner">
+          <h2>변경은 요청이 아니라<br /><span class="accent">Main의 확정 결과</span>부터 공유된다</h2>
+          <div class="timeline">
+            <div class="timeline-step">
+              <div class="timeline-dot">1</div>
+              <p>Renderer가<br /><strong>ProjectAction</strong> 전송</p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">2</div>
+              <p>Main이 검증하고<br /><strong>document update</strong></p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">3</div>
+              <p><strong>version 증가</strong><br />History 기록</p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">4</div>
+              <p>요청 응답과<br /><strong>모든 창 event</strong></p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">5</div>
+              <p>Renderer cache와<br /><strong>runtime 반영</strong></p>
+            </div>
+          </div>
+          <div class="callout">
+            <code>version ≤ current</code>는 무시하고, <code>version &gt; current + 1</code>이면 전체 snapshot으로
+            복구한다.
+          </div>
+          <p class="source">
+            출처:
+            <a href="https://www.electronjs.org/docs/latest/tutorial/ipc"
+              >Electron IPC 요청·응답 및 Main-to-Renderer pattern</a
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Renderer 도구 역할">
+        <div class="slide-inner">
+          <h2>Renderer에는 Store가 남지만<br /><span class="blue">프로젝트 원본은 남지 않는다</span></h2>
+          <div class="role-list">
+            <div class="role-name">TanStack Query</div>
+            <div>Main에서 받은 읽기 전용 <code>ProjectSnapshot</code> cache</div>
+            <div class="role-name">Zustand / React state</div>
+            <div>selection, modal, drag preview, AudioEngine 같은 UI·runtime state</div>
+            <div class="role-name">useSyncExternalStore</div>
+            <div>외부 Store와 React render를 연결하는 Hook. 저장 공간 자체는 아님</div>
+          </div>
+          <div class="callout">
+            TanStack Query는 <strong>IPC 통신을 대신하지 않는다.</strong> IPC로 도착한 확정 결과를 Renderer에 cache한다.
+          </div>
+          <p class="source">
+            출처:
+            <a href="https://react.dev/reference/react/useSyncExternalStore">React useSyncExternalStore</a>,
+            <a href="https://tanstack.com/query/v5/docs/framework/react/guides/updates-from-mutation-responses"
+              >TanStack Query Cache Update</a
+            >
+          </p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="Undo Redo">
+        <div class="slide-inner">
+          <h2>Undo/Redo도 Main에서<br /><span class="accent">새 project version</span>으로 확정한다</h2>
+          <div class="grid-2">
+            <div class="card selected">
+              <div class="card-label">MAIN HISTORY</div>
+              <h3>문서 변경을 기억한다</h3>
+              <ul>
+                <li>Redo용 forward patch</li>
+                <li>Undo용 inverse patch</li>
+                <li>drag·split 단위 action group</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-label">RENDERER RUNTIME</div>
+              <h3>확정 결과에 맞춘다</h3>
+              <ul>
+                <li>Timeline Region 증분 갱신</li>
+                <li>AudioEngine·AudioBuffer 재구성</li>
+                <li>실패 시 전체 snapshot 복구</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">
+            Undo를 실행한 창만 바꾸지 않는다. <strong>모든 열린 Renderer와 자동저장이 같은 새 version</strong>을 받는다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="자동저장 책임">
+        <div class="slide-inner">
+          <h2>Renderer는 저장 UI를 맡고,<br /><span class="accent">Main이 저장할 snapshot을 결정한다</span></h2>
+          <div class="grid-2">
+            <div class="card">
+              <div class="card-label">RENDERER SAVECONTROLLER</div>
+              <h3>사용자와 상호작용</h3>
+              <ul>
+                <li>저장·Save As 버튼</li>
+                <li>saving·saved·error 표시</li>
+                <li>재시도와 종료 전 flush 요청</li>
+              </ul>
+            </div>
+            <div class="card selected">
+              <div class="card-label">MAIN AUTOSAVE</div>
+              <h3>저장 순서와 version 관리</h3>
+              <ul>
+                <li>debounce와 최신 pending snapshot</li>
+                <li>한 번에 하나의 file write</li>
+                <li>diskSavedVersion과 recovery</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">
+            Renderer SaveController는 더 이상 여러 Store를 읽어 <strong>ProjectDocument를 다시 조립하지 않는다.</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="자동저장 순서">
+        <div class="slide-inner">
+          <h2>
+            저장 중 새 변경이 오면<br />중간 파일이 아니라 <span class="accent">최신 snapshot</span>을 다음에 쓴다
+          </h2>
+          <div class="timeline">
+            <div class="timeline-step">
+              <div class="timeline-dot">10</div>
+              <p>version 10<br /><strong>file write 시작</strong></p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">11</div>
+              <p>version 11<br />pending</p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">12</div>
+              <p>version 12<br />pending 교체</p>
+            </div>
+            <div class="timeline-step">
+              <div class="timeline-dot">13</div>
+              <p>version 13<br /><strong>최신값 유지</strong></p>
+            </div>
+            <div class="timeline-step alert">
+              <div class="timeline-dot">✓</div>
+              <p>10 완료 후<br /><strong>13 저장</strong></p>
+            </div>
+          </div>
+          <div class="callout">
+            이 queue는 모든 action이 아니라 <strong>같은 project file의 비동기 쓰기</strong>에만 적용한다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="IPC와 MessagePort">
+        <div class="slide-inner">
+          <h2>저장할 state와 임시 event는<br />같은 통신 경로를 강제하지 않는다</h2>
+          <div class="grid-2">
+            <div class="card selected">
+              <div class="card-label">일반 IPC</div>
+              <h3>확정이 필요한 변경</h3>
+              <ul>
+                <li>SRT text·Timeline item 변경</li>
+                <li>Undo/Redo·저장 요청</li>
+                <li>region click·row highlight</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-label">LOCAL STATE / MESSAGEPORT</div>
+              <h3>고빈도 임시 변화</h3>
+              <ul>
+                <li>playhead·drag preview</li>
+                <li>먼저 Renderer local state 사용</li>
+                <li>실제 병목 측정 후 MessagePort 검토</li>
+              </ul>
+            </div>
+          </div>
+          <p class="source">
+            출처:
+            <a href="https://www.electronjs.org/docs/latest/api/message-channel-main">Electron MessageChannelMain</a>
+          </p>
+        </div>
+      </section>
+
+      <section class="slide" data-title="트레이드오프">
+        <div class="slide-inner">
+          <h2>Main SSOT는 복잡성을 없애지 않고<br /><span class="warning">관찰 가능한 위치로 옮긴다</span></h2>
+          <div class="grid-2">
+            <div class="card selected">
+              <div class="card-label">줄이려는 위험</div>
+              <ul>
+                <li>편집값과 저장값 불일치</li>
+                <li>창마다 다른 Undo/Redo 결과</li>
+                <li>새 창이 이전 version으로 시작</li>
+                <li>Renderer 종료와 함께 저장 책임 소멸</li>
+              </ul>
+            </div>
+            <div class="card">
+              <div class="card-label">새로 생기는 비용</div>
+              <ul>
+                <li>모든 저장 가능한 변경의 IPC 왕복</li>
+                <li>version 중복·누락·초기 구독 처리</li>
+                <li>document와 runtime 동기화 계층</li>
+                <li>저장 완료 지점과 recovery 정책</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">
+            측정 전에는 “최적”이나 “성능 개선”이라고 말하지 않는다. <strong>적용 조건을 검증한 후보</strong>로 다룬다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="검증 계획">
+        <div class="slide-inner">
+          <h2>
+            원래 문제를 그대로 재현해<br /><span class="accent">Main·Renderer·file의 version</span>을 함께 확인한다
+          </h2>
+          <div class="grid-2">
+            <div class="card">
+              <h3>상태와 복구</h3>
+              <ul>
+                <li>수정 → 자동저장 → 장시간 대기 → 다시 열기</li>
+                <li>응답과 event 중복 적용 방지</li>
+                <li>version gap 뒤 전체 snapshot 복구</li>
+                <li>파일 쓰기 실패와 비정상 종료 recovery</li>
+              </ul>
+            </div>
+            <div class="card">
+              <h3>응답성과 비용</h3>
+              <ul>
+                <li>입력부터 화면 반영까지의 시간</li>
+                <li>Main event loop 지연</li>
+                <li>patch·snapshot payload 크기</li>
+                <li>cache update 뒤 리렌더 범위</li>
+              </ul>
+            </div>
+          </div>
+          <div class="callout">
+            <strong>재발 방지의 완료 조건:</strong> 실무진이 자리를 비운 뒤에도 수정한 version이 화면과 project file에
+            그대로 남아 있어야 한다.
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="팀 결정 사항">
+        <div class="slide-inner">
+          <h2>구조와 별도로<br />팀이 정해야 할 제품 정책이 남아 있다</h2>
+          <div class="comparison">
+            <div class="term">자동저장</div>
+            <div>허용할 최대 데이터 손실 시간은 얼마인가?</div>
+            <div class="term">충돌</div>
+            <div>같은 SRT row의 동시 수정을 거절할 것인가, 마지막 입력을 적용할 것인가?</div>
+            <div class="term">History</div>
+            <div>앱 재시작 뒤 Undo/Redo를 복원할 것인가?</div>
+            <div class="term">성능</div>
+            <div>입력 응답 시간과 Main event loop 지연의 허용 기준은 무엇인가?</div>
+          </div>
+        </div>
+      </section>
+
+      <section class="slide" data-title="마무리">
+        <div class="slide-inner">
+          <div class="eyebrow">핵심 원칙</div>
+          <div class="takeaway">
+            복사본이 존재하는 것이 문제가 아니다.<br /><span class="accent">최종 변경 권한이 여러 곳에 있는 것</span>이
+            문제다.
+            <small
+              >Main은 ProjectDocument를 확정하고, Renderer는 ProjectSnapshot을 표시한다. Undo/Redo와 자동저장도 같은
+              version을 따른다.</small
+            >
+          </div>
+        </div>
+      </section>
+
+      <nav class="controls" aria-label="슬라이드 이동">
+        <button id="previous" type="button" aria-label="이전 슬라이드">←</button>
+        <button id="next" type="button" aria-label="다음 슬라이드">→</button>
+        <button id="fullscreen" type="button" aria-label="전체 화면">⛶</button>
+      </nav>
+
+      <div class="footer" aria-hidden="true">
+        <span>Main Process SSOT 구조 개편</span>
+        <span id="counter">1 / 18</span>
+      </div>
+      <div class="progress-track" aria-hidden="true"><div id="progress"></div></div>
+    </main>
+
+    <script>
+      (() => {
+        const slides = Array.from(document.querySelectorAll('.slide'));
+        const counter = document.getElementById('counter');
+        const progress = document.getElementById('progress');
+        const previousButton = document.getElementById('previous');
+        const nextButton = document.getElementById('next');
+        const fullscreenButton = document.getElementById('fullscreen');
+        let currentIndex = 0;
+
+        const normalizeIndex = index => Math.max(0, Math.min(index, slides.length - 1));
+
+        const render = nextIndex => {
+          currentIndex = normalizeIndex(nextIndex);
+          slides.forEach((slide, index) => {
+            slide.classList.toggle('active', index === currentIndex);
+            slide.setAttribute('aria-hidden', index === currentIndex ? 'false' : 'true');
+          });
+          counter.textContent = `${currentIndex + 1} / ${slides.length}`;
+          progress.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+          document.title = `${slides[currentIndex].dataset.title} · Main Process SSOT`;
+          history.replaceState(null, '', `#slide-${currentIndex + 1}`);
+        };
+
+        const move = offset => render(currentIndex + offset);
+
+        previousButton.addEventListener('click', () => move(-1));
+        nextButton.addEventListener('click', () => move(1));
+        fullscreenButton.addEventListener('click', async () => {
+          if (document.fullscreenElement) {
+            await document.exitFullscreen();
+          } else {
+            await document.getElementById('deck').requestFullscreen();
+          }
+        });
+
+        document.addEventListener('keydown', event => {
+          if (['ArrowRight', 'PageDown', ' '].includes(event.key)) {
+            event.preventDefault();
+            move(1);
+          }
+          if (['ArrowLeft', 'PageUp'].includes(event.key)) {
+            event.preventDefault();
+            move(-1);
+          }
+          if (event.key === 'Home') {
+            event.preventDefault();
+            render(0);
+          }
+          if (event.key === 'End') {
+            event.preventDefault();
+            render(slides.length - 1);
+          }
+          if (event.key.toLowerCase() === 'f') {
+            fullscreenButton.click();
+          }
+        });
+
+        let touchStartX = null;
+        document.addEventListener('touchstart', event => {
+          touchStartX = event.changedTouches[0]?.clientX ?? null;
+        });
+        document.addEventListener('touchend', event => {
+          if (touchStartX == null) return;
+          const distance = (event.changedTouches[0]?.clientX ?? touchStartX) - touchStartX;
+          if (Math.abs(distance) > 60) move(distance < 0 ? 1 : -1);
+          touchStartX = null;
+        });
+
+        const requestedSlide = Number.parseInt(location.hash.replace('#slide-', ''), 10);
+        render(Number.isFinite(requestedSlide) ? requestedSlide - 1 : 0);
+      })();
+    </script>
+  </body>
+</html>

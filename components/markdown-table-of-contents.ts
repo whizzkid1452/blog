@@ -1,5 +1,11 @@
 export interface MarkdownTableOfContentsItem {
   id: string;
+  level: 2 | 3;
+  title: string;
+}
+
+interface MarkdownHeading {
+  level: 2 | 3;
   title: string;
 }
 
@@ -28,10 +34,15 @@ interface CreateUniqueIdParams {
 
 const TABLE_OF_CONTENTS_HEADING = '## 목차';
 const ORDERED_LIST_ITEM_PATTERN = /^\d+\.\s+(.+?)\s*$/;
+const MARKDOWN_HEADING_PATTERN = /^(#{2,3})\s+(.+?)\s*$/;
 const LEADING_SECTION_NUMBER_PATTERN = /^\d+(?:-\d+)*\.\s*/;
 const NON_SLUG_CHARACTER_PATTERN = /[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]+/g;
 const SLUG_SEPARATOR_PATTERN = /^-+|-+$/g;
 const EMPTY_SECTION_ID = 'section';
+
+export function hasMarkdownTableOfContents(content: string): boolean {
+  return content.split('\n').some(line => line.trim() === TABLE_OF_CONTENTS_HEADING);
+}
 
 export function prepareMarkdownContent({ content, title }: PrepareMarkdownContentParams): PreparedMarkdownContent {
   const contentWithoutDuplicateTitle = removeDuplicateTitle({ content, title });
@@ -84,23 +95,32 @@ function extractTableOfContents(content: string): PreparedMarkdownContent {
   const listStartIndex = findNextContentLineIndex({ lines, startIndex: headingIndex + 1 });
 
   if (listStartIndex == null) {
-    return { content, tableOfContentsItems: [] };
+    return {
+      content: removeTableOfContentsSource({ endIndex: headingIndex + 1, headingIndex, lines }),
+      tableOfContentsItems: [],
+    };
   }
 
   const collectedList = collectOrderedListItems({ lines, startIndex: listStartIndex });
-
-  if (collectedList.titles.length === 0) {
-    return { content, tableOfContentsItems: [] };
-  }
-
-  const contentWithoutTableOfContents = [...lines.slice(0, headingIndex), ...lines.slice(collectedList.endIndex)]
-    .join('\n')
-    .trimStart();
+  const sourceEndIndex = collectedList.titles.length > 0 ? collectedList.endIndex : headingIndex + 1;
+  const headings = collectMarkdownHeadings(lines.slice(collectedList.endIndex));
 
   return {
-    content: contentWithoutTableOfContents,
-    tableOfContentsItems: createTableOfContentsItems(collectedList.titles),
+    content: removeTableOfContentsSource({ endIndex: sourceEndIndex, headingIndex, lines }),
+    tableOfContentsItems: createTableOfContentsItems({ headings, titles: collectedList.titles }),
   };
+}
+
+function removeTableOfContentsSource({
+  endIndex,
+  headingIndex,
+  lines,
+}: {
+  endIndex: number;
+  headingIndex: number;
+  lines: string[];
+}): string {
+  return [...lines.slice(0, headingIndex), ...lines.slice(endIndex)].join('\n').trimStart();
 }
 
 function findNextContentLineIndex({ lines, startIndex }: { lines: string[]; startIndex: number }): number | null {
@@ -138,18 +158,57 @@ function collectOrderedListItems({ lines, startIndex }: { lines: string[]; start
   };
 }
 
-function createTableOfContentsItems(titles: string[]): MarkdownTableOfContentsItem[] {
-  const usedIdCounts = new Map<string, number>();
+function collectMarkdownHeadings(lines: string[]): MarkdownHeading[] {
+  return lines.flatMap(line => {
+    const headingMatch = MARKDOWN_HEADING_PATTERN.exec(line.trim());
 
-  return titles.map((title, index) => {
+    if (headingMatch == null) {
+      return [];
+    }
+
+    return [
+      {
+        level: headingMatch[1].length as MarkdownHeading['level'],
+        title: headingMatch[2],
+      },
+    ];
+  });
+}
+
+function createTableOfContentsItems({
+  headings,
+  titles,
+}: {
+  headings: MarkdownHeading[];
+  titles: string[];
+}): MarkdownTableOfContentsItem[] {
+  const usedIdCounts = new Map<string, number>();
+  const selectedHeadings =
+    titles.length > 0 ? titles.map(title => ({ level: findHeadingLevel({ headings, title }), title })) : headings;
+
+  return selectedHeadings.map(({ level, title }, index) => {
     const fallbackId = `${EMPTY_SECTION_ID}-${index + 1}`;
-    const baseId = createSlug(title) ?? fallbackId;
+    const baseId = createSlug(normalizeHeadingTitle(title)) ?? fallbackId;
 
     return {
       id: createUniqueId({ baseId, usedIdCounts }),
+      level,
       title,
     };
   });
+}
+
+function findHeadingLevel({
+  headings,
+  title,
+}: {
+  headings: MarkdownHeading[];
+  title: string;
+}): MarkdownHeading['level'] {
+  const comparableTitle = normalizeHeadingTitle(title);
+  const matchingHeading = headings.find(heading => normalizeHeadingTitle(heading.title) === comparableTitle);
+
+  return matchingHeading?.level ?? 2;
 }
 
 function normalizeHeadingTitle(headingText: string): string {
