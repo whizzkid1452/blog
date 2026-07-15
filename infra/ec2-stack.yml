@@ -1,0 +1,255 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Next.js standalone 서버를 EC2 t4g.small에서 실행하는 검증 인프라
+
+Parameters:
+  VpcId:
+    Type: AWS::EC2::VPC::Id
+    Description: EC2 인스턴스를 배치할 VPC
+  PublicSubnetId:
+    Type: AWS::EC2::Subnet::Id
+    Description: 인터넷 게이트웨이 경로가 있는 퍼블릭 서브넷
+  InstanceType:
+    Type: String
+    Default: t4g.small
+    AllowedValues:
+      - t4g.small
+    Description: T4g 무료 평가판을 적용할 ARM 기반 인스턴스 유형
+  ArmAmiId:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/ami-amazon-linux-latest/al2023-ami-kernel-default-arm64
+    Description: 최신 Amazon Linux 2023 ARM64 AMI
+  GitHubOidcProviderArn:
+    Type: String
+    Default: arn:aws:iam::424503481518:oidc-provider/token.actions.githubusercontent.com
+    Description: 기존 ECS 스택에서 관리하는 GitHub OIDC 공급자 ARN
+  EcrRepositoryArn:
+    Type: String
+    Default: arn:aws:ecr:us-east-1:424503481518:repository/blog
+    Description: 기존 ECS 스택에서 관리하는 ECR 저장소 ARN
+
+Resources:
+  ApplicationSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow public HTTP and HTTPS traffic to the blog EC2 instance
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: blog-ec2
+        - Key: Application
+          Value: blog
+
+  ApplicationNetworkInterface:
+    Type: AWS::EC2::NetworkInterface
+    Properties:
+      Description: Primary network interface for the blog EC2 instance
+      GroupSet:
+        - !Ref ApplicationSecurityGroup
+      SubnetId: !Ref PublicSubnetId
+      Tags:
+        - Key: Name
+          Value: blog-ec2
+        - Key: Application
+          Value: blog
+
+  ApplicationElasticIp:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: vpc
+      Tags:
+        - Key: Name
+          Value: blog-ec2
+        - Key: Application
+          Value: blog
+
+  ApplicationElasticIpAssociation:
+    Type: AWS::EC2::EIPAssociation
+    Properties:
+      AllocationId: !GetAtt ApplicationElasticIp.AllocationId
+      NetworkInterfaceId: !Ref ApplicationNetworkInterface
+
+  InstanceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: blog-ec2-instance-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      Policies:
+        - PolicyName: blog-ecr-image-pull
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: EcrAuthorization
+                Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: EcrImagePull
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:GetDownloadUrlForLayer
+                Resource: !Ref EcrRepositoryArn
+
+  InstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      InstanceProfileName: blog-ec2-instance-profile
+      Roles:
+        - !Ref InstanceRole
+
+  DeploymentRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: blog-ec2-deploy-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Federated: !Ref GitHubOidcProviderArn
+            Action:
+              - sts:AssumeRoleWithWebIdentity
+            Condition:
+              StringEquals:
+                token.actions.githubusercontent.com:aud: sts.amazonaws.com
+                token.actions.githubusercontent.com:sub: repo:whizzkid1452/blog:ref:refs/heads/main
+      Policies:
+        - PolicyName: blog-ec2-deployment
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Sid: EcrAuthorization
+                Effect: Allow
+                Action:
+                  - ecr:GetAuthorizationToken
+                Resource: '*'
+              - Sid: EcrImagePush
+                Effect: Allow
+                Action:
+                  - ecr:BatchCheckLayerAvailability
+                  - ecr:BatchGetImage
+                  - ecr:CompleteLayerUpload
+                  - ecr:GetDownloadUrlForLayer
+                  - ecr:InitiateLayerUpload
+                  - ecr:PutImage
+                  - ecr:UploadLayerPart
+                Resource: !Ref EcrRepositoryArn
+              - Sid: DescribeApplicationInstance
+                Effect: Allow
+                Action:
+                  - ec2:DescribeInstances
+                Resource: '*'
+              - Sid: SendDeploymentDocument
+                Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ssm:${AWS::Region}::document/AWS-RunShellScript
+              - Sid: SendDeploymentToApplicationInstance
+                Effect: Allow
+                Action:
+                  - ssm:SendCommand
+                Resource: !Sub arn:${AWS::Partition}:ec2:${AWS::Region}:${AWS::AccountId}:instance/*
+                Condition:
+                  StringEquals:
+                    ssm:resourceTag/Application: blog
+              - Sid: ReadDeploymentResult
+                Effect: Allow
+                Action:
+                  - ssm:GetCommandInvocation
+                  - ssm:ListCommandInvocations
+                Resource: '*'
+
+  ApplicationInstance:
+    Type: AWS::EC2::Instance
+    DependsOn:
+      - ApplicationElasticIpAssociation
+    Properties:
+      ImageId: !Ref ArmAmiId
+      InstanceType: !Ref InstanceType
+      IamInstanceProfile: !Ref InstanceProfile
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          NetworkInterfaceId: !Ref ApplicationNetworkInterface
+      BlockDeviceMappings:
+        - DeviceName: /dev/xvda
+          Ebs:
+            DeleteOnTermination: true
+            Encrypted: true
+            VolumeSize: 20
+            VolumeType: gp3
+      MetadataOptions:
+        HttpEndpoint: enabled
+        HttpTokens: required
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -euxo pipefail
+
+          for attempt in $(seq 1 20); do
+            if dnf install -y docker; then
+              break
+            fi
+            sleep 10
+          done
+
+          systemctl enable --now docker
+          mkdir -p /opt/blog
+          docker network inspect blog-network >/dev/null 2>&1 || docker network create blog-network
+
+          # TLS 인증서는 DNS 전환 후 Caddy가 자동으로 발급하고 갱신한다.
+          tee /opt/blog/Caddyfile >/dev/null <<'EOF'
+          devlog.dropai.site {
+            reverse_proxy blog-next:3000
+          }
+          EOF
+
+          for attempt in $(seq 1 20); do
+            if docker pull caddy:2.10-alpine; then
+              break
+            fi
+            sleep 10
+          done
+
+          docker run --detach \
+            --name blog-caddy \
+            --restart unless-stopped \
+            --network blog-network \
+            --publish 80:80 \
+            --publish 443:443 \
+            --volume /opt/blog/Caddyfile:/etc/caddy/Caddyfile:ro \
+            --volume caddy-data:/data \
+            --volume caddy-config:/config \
+            caddy:2.10-alpine
+      Tags:
+        - Key: Name
+          Value: blog-ec2
+        - Key: Application
+          Value: blog
+
+Outputs:
+  InstanceId:
+    Value: !Ref ApplicationInstance
+  ElasticIpAddress:
+    Value: !Ref ApplicationElasticIp
+  DeploymentRoleArn:
+    Value: !GetAtt DeploymentRole.Arn
