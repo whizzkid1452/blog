@@ -3,6 +3,8 @@ import path from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 const deploymentWorkflowPath = path.join(process.cwd(), '.github', 'workflows', 'deploy-ec2.yml');
+const legacyDeploymentWorkflowPath = path.join(process.cwd(), '.github', 'workflows', 'deploy-ecs.yml');
+const pullRequestWorkflowPath = path.join(process.cwd(), '.github', 'workflows', 'pr-review.yml');
 const infrastructureTemplatePath = path.join(process.cwd(), 'infra', 'ec2-stack.yml');
 const deploymentScriptPath = path.join(process.cwd(), 'infra', 'deploy-ec2.sh');
 
@@ -10,14 +12,20 @@ function readDeploymentFile(filePath: string): string {
   return fs.readFileSync(filePath, 'utf8');
 }
 
-describe('EC2 deployment foundation', () => {
-  it('keeps the EC2 deployment manual until the production cutover', () => {
+describe('EC2 deployment configuration', () => {
+  it('deploys to EC2 when main is updated and keeps manual recovery available', () => {
     const workflow = readDeploymentFile(deploymentWorkflowPath);
 
     expect(workflow).toContain('workflow_dispatch:');
-    expect(workflow).not.toContain('push:');
+    expect(workflow).toContain('push:');
+    expect(workflow).toContain('branches: [main]');
+    expect(workflow).toContain('group: production-ec2');
     expect(workflow).toContain('id-token: write');
     expect(workflow).not.toContain('AWS_ACCESS_KEY_ID');
+  });
+
+  it('removes the previous ECS automatic deployment workflow', () => {
+    expect(fs.existsSync(legacyDeploymentWorkflowPath)).toBe(false);
   });
 
   it('builds an immutable ARM64 image for the Graviton instance', () => {
@@ -34,6 +42,14 @@ describe('EC2 deployment foundation', () => {
 
     expect(workflow).toContain('aws ecr batch-get-image');
     expect(workflow).toContain('ECR 이미지가 이미 존재하므로 빌드를 생략합니다.');
+  });
+
+  it('builds an ARM64 Docker image before a pull request can merge', () => {
+    const pullRequestWorkflow = readDeploymentFile(pullRequestWorkflowPath);
+
+    expect(pullRequestWorkflow).toContain('docker/setup-qemu-action@v3');
+    expect(pullRequestWorkflow).toContain('docker/setup-buildx-action@v3');
+    expect(pullRequestWorkflow).toContain('--platform linux/arm64');
   });
 
   it('deploys through Systems Manager without an SSH key', () => {
