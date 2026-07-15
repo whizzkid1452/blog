@@ -21,11 +21,11 @@ Parameters:
   GitHubOidcProviderArn:
     Type: String
     Default: arn:aws:iam::424503481518:oidc-provider/token.actions.githubusercontent.com
-    Description: 기존 ECS 스택에서 관리하는 GitHub OIDC 공급자 ARN
+    Description: 공유 스택에서 관리하는 GitHub OIDC 공급자 ARN
   EcrRepositoryArn:
     Type: String
     Default: arn:aws:ecr:us-east-1:424503481518:repository/blog
-    Description: 기존 ECS 스택에서 관리하는 ECR 저장소 ARN
+    Description: 공유 스택에서 관리하는 ECR 저장소 ARN
 
 Resources:
   ApplicationSecurityGroup:
