@@ -94,7 +94,7 @@ Docker 이미지는 비 root 사용자인 `nextjs`로 standalone `server.js`를 
 
 ### 7. AWS 배포
 
-`main`이 갱신되면 Docker 이미지를 Amazon ECR에 저장하고 ECS Fargate 서비스를 자동 배포한다. 최초 인프라 생성과 도메인 전환 순서는 [AWS 서버 배포 가이드](./docs/aws-deployment-plan.md)를 따른다.
+`main`이 갱신되면 ARM64 Docker 이미지를 Amazon ECR에 저장하고 EC2 `t4g.small`에 자동 배포한다. 최초 인프라 생성과 도메인 전환 순서는 [AWS 서버 배포 가이드](./docs/aws-deployment-plan.md)를 따른다.
 
 ## SEO 구조
 
