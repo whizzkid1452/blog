@@ -25,8 +25,15 @@ describe('EC2 deployment foundation', () => {
 
     expect(workflow).toContain('docker/setup-qemu-action@v3');
     expect(workflow).toContain('docker/setup-buildx-action@v3');
-    expect(workflow).toContain('IMAGE_TAG: ${{ github.sha }}');
+    expect(workflow).toContain('IMAGE_TAG: ${{ github.sha }}-arm64');
     expect(workflow).toContain('--platform linux/arm64');
+  });
+
+  it('reuses an existing immutable ARM64 image when a deployment is retried', () => {
+    const workflow = readDeploymentFile(deploymentWorkflowPath);
+
+    expect(workflow).toContain('aws ecr batch-get-image');
+    expect(workflow).toContain('ECR 이미지가 이미 존재하므로 빌드를 생략합니다.');
   });
 
   it('deploys through Systems Manager without an SSH key', () => {
