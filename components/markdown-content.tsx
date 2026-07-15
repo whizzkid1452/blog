@@ -8,6 +8,7 @@ import { MarkdownAsync } from 'react-markdown';
 import type { Components } from 'react-markdown';
 import rehypePrettyCode from 'rehype-pretty-code';
 import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code';
+import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
@@ -28,7 +29,7 @@ export async function MarkdownContent({ content, title }: MarkdownContentProps) 
   const renderedContent = await MarkdownAsync({
     children: preparedContent.content,
     components: createMarkdownComponents({ tableOfContentsItems: preparedContent.tableOfContentsItems }),
-    rehypePlugins: [[rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
+    rehypePlugins: [rehypeRaw, [rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
     remarkPlugins: [remarkGfm],
   });
 
@@ -81,18 +82,22 @@ interface MarkdownAstNodeProps {
 }
 
 type MarkdownAnchorProps = ComponentPropsWithoutRef<'a'> & MarkdownAstNodeProps;
+type MarkdownDetailsProps = ComponentPropsWithoutRef<'details'> & MarkdownAstNodeProps;
 type MarkdownImageProps = ComponentPropsWithoutRef<'img'> & MarkdownAstNodeProps;
 type MarkdownPreProps = ComponentPropsWithoutRef<'pre'> & MarkdownAstNodeProps;
+type MarkdownSummaryProps = ComponentPropsWithoutRef<'summary'> & MarkdownAstNodeProps;
 
 function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownComponentsParams): Components {
   const headingIdResolver = createMarkdownHeadingIdResolver({ tableOfContentsItems });
 
   return {
     a: MarkdownAnchor,
+    details: MarkdownDetails,
     h2: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={2} />,
     h3: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={3} />,
     img: MarkdownImage,
     pre: MarkdownPre,
+    summary: MarkdownSummary,
   };
 }
 
@@ -143,6 +148,20 @@ function MarkdownAnchor({ href, ...anchorPropsWithNode }: MarkdownAnchorProps) {
   }
 
   return <a {...anchorProps} href={href} />;
+}
+
+function MarkdownDetails(detailsPropsWithNode: MarkdownDetailsProps) {
+  const detailsProps = omitMarkdownAstNodeProp(detailsPropsWithNode);
+  const className = [styles.tableOfContents, detailsProps.className].filter(Boolean).join(' ');
+
+  return <details {...detailsProps} className={className} />;
+}
+
+function MarkdownSummary(summaryPropsWithNode: MarkdownSummaryProps) {
+  const summaryProps = omitMarkdownAstNodeProp(summaryPropsWithNode);
+  const className = [styles.tableOfContentsSummary, summaryProps.className].filter(Boolean).join(' ');
+
+  return <summary {...summaryProps} className={className} />;
 }
 
 function MarkdownImage({ src, alt, title }: MarkdownImageProps) {

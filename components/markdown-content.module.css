@@ -182,6 +182,19 @@
   padding: 0 20px 18px 42px;
 }
 
+.content .tableOfContents > ul,
+.content .tableOfContents > ol {
+  margin: 0;
+  padding: 0 20px 18px 42px;
+}
+
+.content .tableOfContents > ul ul,
+.content .tableOfContents > ul ol,
+.content .tableOfContents > ol ul,
+.content .tableOfContents > ol ol {
+  margin-bottom: 0;
+}
+
 .content .tableOfContentsListItem {
   margin: 4px 0;
   padding-left: 2px;
@@ -346,6 +359,17 @@
 }
 
 @media (prefers-color-scheme: dark) {
+  .content,
+  .tableOfContentsLink,
+  .content .tableOfContents a {
+    color: var(--color-text-primary);
+  }
+
+  .content .tableOfContents a:hover,
+  .content .tableOfContents a:focus-visible {
+    color: var(--color-link);
+  }
+
   .content code[data-theme*=' '],
   .content code[data-theme*=' '] span {
     color: var(--shiki-dark);
