@@ -35,11 +35,11 @@ export async function MarkdownContent({ content, title }: MarkdownContentProps) 
 
   return (
     <MarkdownCodeBlockProvider>
-      <div className={styles.content}>
+      <div className={styles.markdownLayout}>
         {preparedContent.tableOfContentsItems.length > 0 ? (
           <MarkdownTableOfContents items={preparedContent.tableOfContentsItems} />
         ) : null}
-        {renderedContent}
+        <div className={styles.content}>{renderedContent}</div>
       </div>
     </MarkdownCodeBlockProvider>
   );
@@ -103,18 +103,22 @@ function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownCompon
 
 function MarkdownTableOfContents({ items }: MarkdownTableOfContentsProps) {
   return (
-    <details className={styles.tableOfContents}>
-      <summary className={styles.tableOfContentsSummary}>목차</summary>
-      <ol className={styles.tableOfContentsList}>
-        {items.map(item => (
-          <li className={styles.tableOfContentsListItem} key={item.id}>
-            <a className={styles.tableOfContentsLink} href={`#${item.id}`}>
-              {item.title}
-            </a>
-          </li>
-        ))}
-      </ol>
-    </details>
+    <aside className={styles.tableOfContentsSidebar}>
+      <nav aria-labelledby="markdown-table-of-contents-title">
+        <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">
+          목차
+        </p>
+        <ol className={styles.tableOfContentsList}>
+          {items.map(item => (
+            <li className={styles.tableOfContentsListItem} data-level={item.level} key={item.id}>
+              <a className={styles.tableOfContentsLink} href={`#${item.id}`}>
+                {item.title}
+              </a>
+            </li>
+          ))}
+        </ol>
+      </nav>
+    </aside>
   );
 }
 

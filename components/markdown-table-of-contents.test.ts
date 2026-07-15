@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { createMarkdownHeadingIdResolver, prepareMarkdownContent } from './markdown-table-of-contents';
+import {
+  createMarkdownHeadingIdResolver,
+  hasMarkdownTableOfContents,
+  prepareMarkdownContent,
+} from './markdown-table-of-contents';
 
 describe('prepareMarkdownContent', () => {
   it('extracts an ordered table of contents and removes it from markdown content', () => {
@@ -19,10 +23,12 @@ describe('prepareMarkdownContent', () => {
     expect(preparedContent.tableOfContentsItems).toEqual([
       {
         id: '디자인-시스템이란-무엇인가',
+        level: 2,
         title: '디자인 시스템이란 무엇인가?',
       },
       {
         id: 'next-js-vite-다른-라이브러리-빌드-도구를-어떻게-비교했는가',
+        level: 2,
         title: 'Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가',
       },
     ]);
@@ -39,9 +45,29 @@ describe('prepareMarkdownContent', () => {
     expect(preparedContent.tableOfContentsItems).toEqual([
       {
         id: '본문-제목',
+        level: 2,
         title: '본문 제목',
       },
     ]);
+  });
+
+  it('creates a table of contents from headings after a standalone marker', () => {
+    const preparedContent = prepareMarkdownContent({
+      content: ['## 부제목', '', '## 목차', '', '## 개요', '', '### 세부 조건', '', '본문'].join('\n'),
+    });
+
+    expect(preparedContent.tableOfContentsItems).toEqual([
+      { id: '개요', level: 2, title: '개요' },
+      { id: '세부-조건', level: 3, title: '세부 조건' },
+    ]);
+    expect(preparedContent.content).toBe('## 부제목\n\n\n## 개요\n\n### 세부 조건\n\n본문');
+  });
+});
+
+describe('hasMarkdownTableOfContents', () => {
+  it('returns true only when the markdown contains a table of contents heading', () => {
+    expect(hasMarkdownTableOfContents('## 개요\n\n## 목차\n\n## 본문')).toBe(true);
+    expect(hasMarkdownTableOfContents('## 개요\n\n목차를 설명하는 문장')).toBe(false);
   });
 });
 

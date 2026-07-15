@@ -4,6 +4,7 @@ import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
 import Link from 'next/link';
 import { CommentsSection } from './comments-section';
 import { MarkdownContent } from './markdown-content';
+import { hasMarkdownTableOfContents } from './markdown-table-of-contents';
 import styles from './post-view.module.css';
 
 interface PostViewProps {
@@ -15,9 +16,10 @@ interface PostViewProps {
 
 export function PostView({ locale = 'ko', post, relatedPosts, translationHref }: PostViewProps) {
   const messages = getUiMessages(locale);
+  const hasTableOfContents = hasMarkdownTableOfContents(post.content);
 
   return (
-    <div className={styles.pageShell}>
+    <div className={styles.pageShell} data-has-table-of-contents={hasTableOfContents || undefined}>
       <article className={styles.article}>
         <header className={styles.header}>
           <time className={styles.postDate} dateTime={post.date}>
