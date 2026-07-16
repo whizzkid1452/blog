@@ -10,6 +10,7 @@ const posts: PostSummary[] = [
     description: '렌더링 경로를 최적화합니다.',
     date: '2026-07-10',
     tags: ['react'],
+    visibility: 'public',
   },
   {
     slug: 'thumbnail-worker',
@@ -17,6 +18,7 @@ const posts: PostSummary[] = [
     description: '메인 스레드 밖에서 썸네일을 생성합니다.',
     date: '2026-07-09',
     tags: ['web-worker'],
+    visibility: 'public',
   },
 ];
 

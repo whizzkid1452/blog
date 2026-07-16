@@ -39,6 +39,7 @@ function createPostSummary(overrides: Partial<PostSummary> = {}): PostSummary {
     description: 'Post description',
     date: '2026-07-01',
     tags: ['nextjs'],
+    visibility: 'public',
     ...overrides,
   };
 }

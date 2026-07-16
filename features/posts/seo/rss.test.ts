@@ -12,6 +12,7 @@ describe('createRssFeed', () => {
         date: '2026-07-03',
         publishedAt: '2026-07-03T12:30:00.000Z',
         tags: ['nextjs', 'rss'],
+        visibility: 'public',
       },
     ];
 
@@ -31,6 +32,7 @@ describe('createRssFeed', () => {
         date: '2026-07-03',
         publishedAt: '2026-07-03T09:00:00.000Z',
         tags: ['nextjs'],
+        visibility: 'public',
       },
       {
         slug: 'older-post',
@@ -38,6 +40,7 @@ describe('createRssFeed', () => {
         date: '2026-07-02',
         publishedAt: '2026-07-02T09:00:00.000Z',
         tags: ['nextjs'],
+        visibility: 'public',
       },
     ];
 

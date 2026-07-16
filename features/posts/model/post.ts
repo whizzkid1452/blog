@@ -13,6 +13,7 @@ export interface PostSummary {
   date: string;
   publishedAt?: string;
   tags: string[];
+  visibility: PostVisibility;
   coverImage?: string;
   coverAlt?: string;
   series?: SeriesMetadata;

@@ -90,6 +90,7 @@ function toPostSummary(post: Post): PostSummary {
     date: post.date,
     publishedAt: post.publishedAt,
     tags: post.tags,
+    visibility: post.visibility,
     coverImage: post.coverImage,
     coverAlt: post.coverAlt,
     series: post.series,
