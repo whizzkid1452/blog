@@ -1,4 +1,5 @@
 import type { Locale } from '@/shared/i18n/i18n';
+import { SITE_NAME } from '@/shared/config/site-config';
 import type { PostSummary } from '../../model/post';
 import type { ReactNode } from 'react';
 import { PostCard } from '../post-card/post-card';
@@ -18,7 +19,7 @@ export function PostListView({
   locale = 'ko',
   posts,
   eyebrow = 'Personal notes',
-  title = 'Blog',
+  title = SITE_NAME,
   description = 'Essays, engineering notes, and implementation logs.',
   emptyMessage = 'No posts published yet.',
   headerActions,

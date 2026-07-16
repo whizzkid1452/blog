@@ -23,7 +23,7 @@ describe('SiteLayout', () => {
 
     expect(markup).not.toContain('<header');
     expect(sidebarMarkup).not.toContain('>Blog</a>');
-    expect(sidebarMarkup).toContain('>Whizzkid Blog</p>');
+    expect(sidebarMarkup).toContain('>앨리스의 토끼굴</p>');
     expect(sidebarMarkup).toContain('>@whizzkid1452</p>');
     expect(sidebarMarkup).toContain('>블로그 메뉴</h2>');
     expect(sidebarMarkup).toContain('>홈</a>');
@@ -34,7 +34,7 @@ describe('SiteLayout', () => {
     expect(sidebarMarkup.indexOf('>About</a>')).toBeLessThan(sidebarMarkup.indexOf('>홈</a>'));
     expect(sidebarMarkup.indexOf('>English</a>')).toBeLessThan(sidebarMarkup.indexOf('>홈</a>'));
     expect(sidebarMarkup.indexOf('>홈</a>')).toBeLessThan(sidebarMarkup.indexOf('>주제<'));
-    expect(sidebarMarkup.indexOf('>Whizzkid Blog</p>')).toBeLessThan(sidebarMarkup.indexOf('>블로그 메뉴</h2>'));
+    expect(sidebarMarkup.indexOf('>앨리스의 토끼굴</p>')).toBeLessThan(sidebarMarkup.indexOf('>블로그 메뉴</h2>'));
     expect(sidebarMarkup.indexOf('>블로그 메뉴</h2>')).toBeLessThan(sidebarMarkup.indexOf('>검색</h2>'));
     expect(sidebarMarkup.indexOf('>검색</h2>')).toBeLessThan(sidebarMarkup.indexOf('>주제</h2>'));
     expect(sidebarMarkup.indexOf('>주제</h2>')).toBeLessThan(sidebarMarkup.indexOf('>최근 글</h2>'));

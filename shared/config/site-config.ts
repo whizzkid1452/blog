@@ -1,6 +1,6 @@
 import type { Locale } from '@/shared/i18n/i18n';
 
-export const SITE_NAME = 'Blog';
+export const SITE_NAME = '앨리스의 토끼굴';
 export const SITE_AUTHOR_NAME = 'whizzkid1452';
 export const SITE_AUTHOR_URL = 'https://github.com/whizzkid1452';
 export const SITE_DESCRIPTION = '개발 과정에서 얻은 설계, 성능, 구현 경험을 기록하는 기술 블로그입니다.';

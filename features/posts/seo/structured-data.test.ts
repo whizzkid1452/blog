@@ -107,7 +107,7 @@ describe('createSiteJsonLd', () => {
       {
         '@type': 'WebSite',
         '@id': 'https://example.com/#website',
-        name: 'Blog',
+        name: '앨리스의 토끼굴',
         description: '개발 과정에서 얻은 설계, 성능, 구현 경험을 기록하는 기술 블로그입니다.',
         url: 'https://example.com/',
         inLanguage: 'ko-KR',
@@ -133,7 +133,7 @@ describe('createPostBreadcrumbJsonLd', () => {
       {
         '@type': 'ListItem',
         position: 1,
-        name: 'Blog',
+        name: '앨리스의 토끼굴',
         item: 'https://example.com/',
       },
       {
