@@ -18,13 +18,15 @@ import {
   prepareMarkdownContent,
   type MarkdownTableOfContentsItem,
 } from './markdown-table-of-contents';
+import { MarkdownTableOfContents } from './markdown-table-of-contents-view';
 
 interface MarkdownContentProps {
   content: string;
+  postSlug?: string;
   title?: string;
 }
 
-export async function MarkdownContent({ content, title }: MarkdownContentProps) {
+export async function MarkdownContent({ content, postSlug, title }: MarkdownContentProps) {
   const preparedContent = prepareMarkdownContent({ content, title });
   const renderedContent = await MarkdownAsync({
     children: preparedContent.content,
@@ -39,7 +41,9 @@ export async function MarkdownContent({ content, title }: MarkdownContentProps) 
         {preparedContent.tableOfContentsItems.length > 0 ? (
           <MarkdownTableOfContents items={preparedContent.tableOfContentsItems} />
         ) : null}
-        <div className={styles.content}>{renderedContent}</div>
+        <div className={styles.content} data-post-slug={postSlug}>
+          {renderedContent}
+        </div>
       </div>
     </MarkdownCodeBlockProvider>
   );
@@ -65,10 +69,6 @@ type HrefNavigationKind = 'externalWeb' | 'internalRoute' | 'other';
 
 interface CreateMarkdownComponentsParams {
   tableOfContentsItems: MarkdownTableOfContentsItem[];
-}
-
-interface MarkdownTableOfContentsProps {
-  items: MarkdownTableOfContentsItem[];
 }
 
 interface MarkdownHeadingProps extends ComponentPropsWithoutRef<'h2'> {
@@ -99,27 +99,6 @@ function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownCompon
     pre: MarkdownPre,
     summary: MarkdownSummary,
   };
-}
-
-function MarkdownTableOfContents({ items }: MarkdownTableOfContentsProps) {
-  return (
-    <aside className={styles.tableOfContentsSidebar}>
-      <nav aria-labelledby="markdown-table-of-contents-title">
-        <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">
-          목차
-        </p>
-        <ol className={styles.tableOfContentsList}>
-          {items.map(item => (
-            <li className={styles.tableOfContentsListItem} data-level={item.level} key={item.id}>
-              <a className={styles.tableOfContentsLink} href={`#${item.id}`}>
-                {item.title}
-              </a>
-            </li>
-          ))}
-        </ol>
-      </nav>
-    </aside>
-  );
 }
 
 function MarkdownHeading({ children, headingIdResolver, level, ...headingPropsWithNode }: MarkdownHeadingProps) {

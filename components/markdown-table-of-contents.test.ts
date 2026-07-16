@@ -62,6 +62,36 @@ describe('prepareMarkdownContent', () => {
     ]);
     expect(preparedContent.content).toBe('## 부제목\n\n\n## 개요\n\n### 세부 조건\n\n본문');
   });
+
+  it('uses concise table of contents labels while preserving heading targets and levels', () => {
+    const preparedContent = prepareMarkdownContent({
+      content: [
+        '## 목차',
+        '',
+        '1. 저장 문제',
+        '2. 자동 저장',
+        '',
+        '## 문제 1. 오래된 값이 저장되고 있었다',
+        '',
+        '### 프로젝트 자동 저장',
+      ].join('\n'),
+    });
+
+    expect(preparedContent.tableOfContentsItems).toEqual([
+      {
+        headingTitle: '문제 1. 오래된 값이 저장되고 있었다',
+        id: '문제-1-오래된-값이-저장되고-있었다',
+        level: 2,
+        title: '저장 문제',
+      },
+      {
+        headingTitle: '프로젝트 자동 저장',
+        id: '프로젝트-자동-저장',
+        level: 3,
+        title: '자동 저장',
+      },
+    ]);
+  });
 });
 
 describe('hasMarkdownTableOfContents', () => {

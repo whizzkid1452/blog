@@ -8,24 +8,24 @@ draft: false
 
 ## 목차
 
-1. 디자인 시스템이란 무엇인가?
-2. 왜 우리 회사에 디자인 시스템이 필요했는가
-3. 왜 배포 방식부터 결정했는가
-4. 왜 npm 패키지 방식이 매력적으로 보였는가
-5. 왜 micro SaaS에서는 패키지의 비용이 커졌는가
-6. shadcn Registry는 무엇이 다른가
-7. Registry 방식으로 무엇을 얻고 무엇을 포기하는가
-8. Registry 방식과 라이브러리 방식은 어떻게 다른가
-9. Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가
-10. 그중 왜 Vite를 선택했는가
-11. Registry를 선택하면 Vite의 역할은 어떻게 달라지는가
-12. shadcn을 사용한다는 말의 범위를 어떻게 정했는가
-13. 왜 Radix UI를 접근성 Primitive로 사용하는가
-14. 왜 Emotion은 유지하고 디자인 토큰은 CSS 변수로 두는가
-15. Figma와 코드의 이름을 왜 맞춰야 하는가
-16. Storybook을 어떤 검증 도구로 사용할 것인가
-17. 최종 구조를 어떻게 설계했는가
-18. npm 패키지 대신 Registry를 선택하며 배운 것
+1. 디자인 시스템
+2. 도입 배경
+3. 배포 방식 우선 결정
+4. npm 패키지의 장점
+5. micro SaaS의 패키지 비용
+6. shadcn Registry
+7. Registry의 트레이드오프
+8. Registry와 라이브러리 비교
+9. 빌드 도구 비교
+10. Vite 선택
+11. Registry에서 Vite의 역할
+12. shadcn 사용 범위
+13. Radix UI와 접근성
+14. Emotion과 CSS 변수
+15. Figma와 코드 이름
+16. Storybook 검증
+17. 최종 구조
+18. Registry 선택에서 배운 점
 
 ## 1. 디자인 시스템이란 무엇인가?
 

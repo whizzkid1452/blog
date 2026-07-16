@@ -1,6 +1,8 @@
 .markdownLayout {
+  --table-of-contents-width: 248px;
+
   display: grid;
-  grid-template-columns: minmax(0, 720px) minmax(0, 208px);
+  grid-template-columns: minmax(0, 720px) minmax(0, var(--table-of-contents-width));
   align-items: start;
   gap: 32px;
 }
@@ -187,10 +189,12 @@
 }
 
 .tableOfContentsSidebar {
-  position: sticky;
+  position: fixed;
   top: 96px;
+  right: 24px;
   grid-column: 2;
   grid-row: 1;
+  width: var(--table-of-contents-width);
   max-height: calc(100dvh - 120px);
   overflow-y: auto;
   border-left: 1px solid var(--color-border);
@@ -235,15 +239,18 @@
 }
 
 .tableOfContentsListItem[data-level='3'] {
-  padding-left: 14px;
+  padding-left: 16px;
 }
 
 .tableOfContentsLink {
-  display: block;
+  display: -webkit-box;
+  overflow: hidden;
   color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.5;
   text-decoration: none;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
 }
 
 .tableOfContentsLink:hover,
@@ -253,6 +260,11 @@
   text-underline-offset: 0.2em;
 }
 
+.tableOfContentsLink[aria-current='location'] {
+  color: var(--color-text-primary);
+  font-weight: 700;
+}
+
 .markdownImage {
   display: block;
   width: auto;
@@ -260,6 +272,31 @@
   height: auto;
   border: 1px solid var(--color-border);
   border-radius: 8px;
+}
+
+.content[data-post-slug='electron-multi-window-shared-data-ssot'] > h2:not(:first-child) {
+  margin-top: 68px;
+}
+
+.content[data-post-slug='electron-multi-window-shared-data-ssot'] > h3 {
+  margin-top: 60px;
+}
+
+.content[data-post-slug='electron-multi-window-shared-data-ssot'] > p:has(> .markdownImage) {
+  margin: 64px 0 0;
+}
+
+.content[data-post-slug='electron-multi-window-shared-data-ssot'] .markdownImage {
+  width: min(100%, 440px);
+  margin-inline: auto;
+}
+
+.content[data-post-slug='electron-multi-window-shared-data-ssot'] > p:has(> .markdownImage) + p:has(> em:only-child) {
+  margin: 4px auto 64px;
+  color: var(--color-text-muted);
+  font-size: 14px;
+  line-height: 1.5;
+  text-align: center;
 }
 
 .codeBlock {
@@ -404,6 +441,7 @@
 
   .tableOfContentsSidebar {
     position: static;
+    width: auto;
     max-height: none;
     margin-bottom: 32px;
     overflow: visible;
