@@ -41,6 +41,16 @@ describe('post table of contents layout', () => {
   });
 });
 
+describe('markdown image dialog layout', () => {
+  it('keeps the dialog content boundary on the image so Radix can dismiss outside clicks', () => {
+    const dialogContentRule = getCssRule(markdownContentStyles, '.markdownImageZoomContent');
+
+    expect(dialogContentRule).toContain('top: 50%;');
+    expect(dialogContentRule).toContain('left: 50%;');
+    expect(dialogContentRule).not.toContain('inset: 0;');
+  });
+});
+
 function getCssRule(styleSheet: string, selector: string): string {
   const ruleStart = styleSheet.indexOf(`${selector} {`);
   const ruleEnd = styleSheet.indexOf('}', ruleStart);

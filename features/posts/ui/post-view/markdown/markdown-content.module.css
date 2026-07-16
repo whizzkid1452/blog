@@ -398,21 +398,22 @@
 .markdownImageZoomContent {
   position: fixed;
   z-index: 61;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 64px 24px 24px;
-  pointer-events: none;
+  top: 50%;
+  left: 50%;
+  width: fit-content;
+  max-width: calc(100vw - 48px);
+  height: fit-content;
+  max-height: calc(100dvh - 48px);
+  transform: translate(-50%, -50%);
 }
 
 .markdownImageZoomExpandedImage {
+  display: block;
   width: auto;
-  max-width: 100%;
+  max-width: calc(100vw - 48px);
   height: auto;
-  max-height: calc(100dvh - 88px);
+  max-height: calc(100dvh - 48px);
   object-fit: contain;
-  pointer-events: auto;
 }
 
 .markdownImageZoomCloseButton {
