@@ -89,6 +89,15 @@ export function MarkdownTableOfContentsNavigation({ items }: MarkdownTableOfCont
 
   return (
     <>
+      <section className={styles.tableOfContentsTop}>
+        <nav aria-labelledby="markdown-table-of-contents-top-title">
+          <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-top-title">
+            목차
+          </p>
+          <TableOfContentsList activeHeadingId={activeHeadingId} items={items} onClick={handleTableOfContentsClick} />
+        </nav>
+      </section>
+
       <aside className={styles.tableOfContentsNavigation}>
         <nav aria-labelledby="markdown-table-of-contents-title">
           <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">

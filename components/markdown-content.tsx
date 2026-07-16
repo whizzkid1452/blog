@@ -19,15 +19,13 @@ import {
   prepareMarkdownContent,
   type MarkdownTableOfContentsItem,
 } from './markdown-table-of-contents';
-import { MarkdownTableOfContents } from './markdown-table-of-contents-view';
 
 interface MarkdownContentProps {
   content: string;
-  postSlug?: string;
   title?: string;
 }
 
-export async function MarkdownContent({ content, postSlug, title }: MarkdownContentProps) {
+export async function MarkdownContent({ content, title }: MarkdownContentProps) {
   const preparedContent = prepareMarkdownContent({ content, title });
   const renderedContent = await MarkdownAsync({
     children: preparedContent.content,
@@ -42,9 +40,7 @@ export async function MarkdownContent({ content, postSlug, title }: MarkdownCont
         {preparedContent.tableOfContentsItems.length > 0 ? (
           <MarkdownTableOfContentsNavigation items={preparedContent.tableOfContentsItems} />
         ) : null}
-        <div className={styles.content} data-post-slug={postSlug}>
-          {renderedContent}
-        </div>
+        <div className={styles.content}>{renderedContent}</div>
       </div>
     </MarkdownCodeBlockProvider>
   );

@@ -9,32 +9,12 @@ describe('MarkdownContent', () => {
     const markdownElement = await MarkdownContent({ content: markdownContent });
     const renderedMarkup = renderToStaticMarkup(markdownElement);
 
+    expect(renderedMarkup).toContain('<aside');
+    expect(renderedMarkup).toContain('<nav aria-labelledby="markdown-table-of-contents-title">');
     expect(renderedMarkup).toContain('<nav aria-labelledby="markdown-table-of-contents-top-title">');
     expect(renderedMarkup).toContain('href="#개요"');
     expect(renderedMarkup).toContain('href="#세부-조건"');
-    expect(renderedMarkup).not.toContain('<aside');
-    expect(renderedMarkup).not.toContain('aria-label="목차 열기"');
-  });
-
-  it('removes structural section numbers from table of contents labels', async () => {
-    const markdownContent = ['## 목차', '', '## 문제 1. 오래된 값이 저장된다'].join('\n');
-
-    const markdownElement = await MarkdownContent({ content: markdownContent });
-    const renderedMarkup = renderToStaticMarkup(markdownElement);
-
-    expect(renderedMarkup).toContain('href="#문제-1-오래된-값이-저장된다">오래된 값이 저장된다</a>');
-  });
-
-  it('links concise table of contents labels to the original heading', async () => {
-    const markdownContent = ['## 목차', '', '1. 저장 문제', '', '## 문제 1. 오래된 값이 저장되고 있었다'].join('\n');
-
-    const markdownElement = await MarkdownContent({ content: markdownContent });
-    const renderedMarkup = renderToStaticMarkup(markdownElement);
-
-    expect(renderedMarkup).toContain('href="#문제-1-오래된-값이-저장되고-있었다">저장 문제</a>');
-    expect(renderedMarkup).toContain(
-      '<h2 id="문제-1-오래된-값이-저장되고-있었다">문제 1. 오래된 값이 저장되고 있었다</h2>'
-    );
+    expect(renderedMarkup).toContain('aria-label="목차 열기"');
   });
 
   it('renders markdown details markup as a collapsed disclosure element', async () => {

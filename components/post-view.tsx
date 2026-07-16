@@ -44,7 +44,7 @@ export function PostView({ locale = 'ko', post, relatedPosts, translationHref }:
             ))}
           </div>
         </header>
-        <MarkdownContent content={post.content} postSlug={post.slug} title={post.title} />
+        <MarkdownContent content={post.content} title={post.title} />
       </article>
       {relatedPosts.length > 0 ? (
         <section className={styles.relatedSection} aria-labelledby="related-posts-title">

@@ -1,5 +1,4 @@
 export interface MarkdownTableOfContentsItem {
-  headingTitle?: string;
   id: string;
   level: 2 | 3;
   title: string;
@@ -8,10 +7,6 @@ export interface MarkdownTableOfContentsItem {
 interface MarkdownHeading {
   level: 2 | 3;
   title: string;
-}
-
-interface SelectedMarkdownHeading extends MarkdownHeading {
-  headingTitle?: string;
 }
 
 interface PrepareMarkdownContentParams {
@@ -59,7 +54,7 @@ export function createMarkdownHeadingIdResolver({
   tableOfContentsItems,
 }: CreateMarkdownHeadingIdResolverParams): MarkdownHeadingIdResolver {
   const idByComparableTitle = new Map(
-    tableOfContentsItems.map(item => [normalizeHeadingTitle(item.headingTitle ?? item.title), item.id] as const)
+    tableOfContentsItems.map(item => [normalizeHeadingTitle(item.title), item.id] as const)
   );
   const usedIdCounts = new Map<string, number>();
 
@@ -208,6 +203,7 @@ function createTableOfContentsItems({
     };
   });
 }
+
 function normalizeHeadingTitle(headingText: string): string {
   return headingText.trim().replace(LEADING_SECTION_NUMBER_PATTERN, '').trim();
 }

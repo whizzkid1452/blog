@@ -1,21 +1,5 @@
-import { createElement } from 'react';
-import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
-import { findActiveHeadingId, MarkdownTableOfContentsNavigation } from './markdown-table-of-contents-navigation';
-
-describe('MarkdownTableOfContentsNavigation', () => {
-  it('renders only the external sidebar and narrow-screen trigger', () => {
-    const markup = renderToStaticMarkup(
-      createElement(MarkdownTableOfContentsNavigation, {
-        items: [{ id: 'overview', level: 2, title: 'Overview' }],
-      })
-    );
-
-    expect(markup).toContain('<aside');
-    expect(markup).toContain('aria-label="목차 열기"');
-    expect(markup).not.toContain('markdown-table-of-contents-top-title');
-  });
-});
+import { findActiveHeadingId } from './markdown-table-of-contents-navigation';
 
 describe('findActiveHeadingId', () => {
   const headingPositions = [
