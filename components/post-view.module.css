@@ -6,10 +6,6 @@
   margin: 0 auto;
 }
 
-.pageShell[data-has-table-of-contents='true'] {
-  width: min(100%, 960px);
-}
-
 .article {
   display: flex;
   flex-direction: column;
@@ -130,21 +126,14 @@
   line-height: 1.5;
 }
 
-.pageShell[data-has-table-of-contents='true'] .header,
-.pageShell[data-has-table-of-contents='true'] .relatedSection,
-.pageShell[data-has-table-of-contents='true'] > section {
-  width: min(100%, 720px);
-}
-
-@media (max-width: 1300px) {
+@media (min-width: 1301px) {
   .pageShell[data-has-table-of-contents='true'] {
-    width: min(100%, 768px);
-  }
+    --desktop-table-of-contents-width: 280px;
+    --desktop-table-of-contents-content-offset: -140px;
 
-  .pageShell[data-has-table-of-contents='true'] .header,
-  .pageShell[data-has-table-of-contents='true'] .relatedSection,
-  .pageShell[data-has-table-of-contents='true'] > section {
-    width: 100%;
+    position: relative;
+    width: min(calc(100% - var(--desktop-table-of-contents-width)), 720px);
+    inset-inline-start: var(--desktop-table-of-contents-content-offset);
   }
 }
 

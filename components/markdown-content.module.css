@@ -1,16 +1,11 @@
 .markdownLayout {
-  display: grid;
-  grid-template-columns: minmax(0, 720px) minmax(0, 208px);
-  align-items: start;
-  gap: 32px;
+  display: block;
 }
 
 .content {
   --markdown-image-block-spacing: 64px;
   --markdown-image-caption-gap: 4px;
 
-  grid-column: 1;
-  grid-row: 2;
   color: var(--color-text-secondary);
   font-size: 16px;
   line-height: 2;
@@ -190,8 +185,7 @@
 }
 
 .tableOfContentsTop {
-  grid-column: 1;
-  grid-row: 1;
+  margin-bottom: 32px;
   border: 1px solid var(--color-border);
   border-radius: 8px;
   padding: 16px 18px;
@@ -199,18 +193,29 @@
 }
 
 .tableOfContentsNavigation {
-  position: sticky;
-  top: 96px;
-  align-self: start;
-  grid-column: 2;
-  grid-row: 1 / span 2;
-  width: 100%;
-  max-height: calc(100dvh - 120px);
+  position: fixed;
+  z-index: 5;
+  top: 0;
+  right: 0;
+  width: var(--desktop-table-of-contents-width);
+  height: 100dvh;
   overflow-y: auto;
+  overscroll-behavior: contain;
   border-left: 1px solid var(--color-border);
-  padding-left: 20px;
-  scrollbar-color: var(--color-border) transparent;
-  scrollbar-width: thin;
+  padding: 56px 24px 72px;
+  background: var(--background);
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
+}
+
+.tableOfContentsNavigation::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.tableOfContentsNavigation::-webkit-scrollbar-thumb,
+.tableOfContentsNavigation::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .tableOfContentsTitle {
@@ -346,7 +351,7 @@
 
 .markdownImage {
   display: block;
-  width: auto;
+  width: 100%;
   max-width: 100%;
   height: auto;
   margin-inline: auto;
@@ -507,16 +512,8 @@
 }
 
 @media (max-width: 1300px) {
-  .markdownLayout {
-    display: block;
-  }
-
   .tableOfContentsNavigation {
     display: none;
-  }
-
-  .tableOfContentsTop {
-    margin-bottom: 32px;
   }
 
   .mobileTableOfContentsTrigger {
