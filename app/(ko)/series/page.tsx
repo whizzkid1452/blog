@@ -1,5 +1,5 @@
-import { SeriesView } from '@/components/series-view';
-import { getPostIndex } from '@/lib/posts';
+import { SeriesView } from '@/features/posts/ui/post-collection/series-view';
+import { getPostIndex } from '@/features/posts/server/post-repository';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

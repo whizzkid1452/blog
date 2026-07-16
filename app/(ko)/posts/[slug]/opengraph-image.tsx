@@ -3,8 +3,8 @@ import {
   POST_OPEN_GRAPH_IMAGE_CONTENT_TYPE,
   POST_OPEN_GRAPH_IMAGE_SIZE,
   createPostOpenGraphImage,
-} from '@/components/post-open-graph-image';
-import { getPostIndex } from '@/lib/posts';
+} from '@/features/posts/ui/post-open-graph-image/post-open-graph-image';
+import { getPostIndex } from '@/features/posts/server/post-repository';
 
 interface PostOpenGraphImageProps {
   params: Promise<{

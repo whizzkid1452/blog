@@ -1,6 +1,6 @@
-import { PostSearchView } from '@/components/post-search-view';
-import { getPostIndexForLocale } from '@/lib/post-translations';
-import { getSearchQuery } from '@/lib/search-query';
+import { PostSearchView } from '@/features/posts/ui/post-collection/post-search-view';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
+import { getSearchQuery } from '@/features/posts/search/model/search-query';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

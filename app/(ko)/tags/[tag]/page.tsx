@@ -1,7 +1,7 @@
-import { HomeView } from '@/components/home-view';
-import { getPostIndex } from '@/lib/posts';
-import { getPostIndexForLocale } from '@/lib/post-translations';
-import { createTagPageMetadata } from '@/lib/seo-metadata';
+import { PostListView } from '@/features/posts/ui/post-list/post-list-view';
+import { getPostIndex } from '@/features/posts/server/post-repository';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
+import { createTagPageMetadata } from '@/features/posts/seo/seo-metadata';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -46,7 +46,7 @@ export default async function TagPage({ params }: TagPageProps) {
   const posts = postIndex.getPostSummariesByTag(tag);
 
   return (
-    <HomeView
+    <PostListView
       posts={posts}
       eyebrow="Tag"
       title={`#${tag}`}

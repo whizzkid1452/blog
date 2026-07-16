@@ -1,6 +1,6 @@
-import { PostSearchView } from '@/components/post-search-view';
-import { getPostIndex } from '@/lib/posts';
-import { getSearchQuery } from '@/lib/search-query';
+import { PostSearchView } from '@/features/posts/ui/post-collection/post-search-view';
+import { getPostIndex } from '@/features/posts/server/post-repository';
+import { getSearchQuery } from '@/features/posts/search/model/search-query';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

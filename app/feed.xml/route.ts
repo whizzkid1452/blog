@@ -1,5 +1,5 @@
-import { getPostIndex } from '@/lib/posts';
-import { createRssFeed } from '@/lib/rss';
+import { getPostIndex } from '@/features/posts/server/post-repository';
+import { createRssFeed } from '@/features/posts/seo/rss';
 
 export const dynamic = 'force-static';
 

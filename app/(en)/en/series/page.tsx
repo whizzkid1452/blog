@@ -1,5 +1,5 @@
-import { SeriesView } from '@/components/series-view';
-import { getPostIndexForLocale } from '@/lib/post-translations';
+import { SeriesView } from '@/features/posts/ui/post-collection/series-view';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {

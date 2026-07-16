@@ -1,6 +1,6 @@
-import type { BlogComment, CommentRepository, CreateCommentInput } from '@/lib/comments/comment-types';
+import type { BlogComment, CommentRepository, CreateCommentInput } from '@/features/comments/model/comment-types';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { createCommentRouteHandlers } from './route';
+import { createCommentRouteHandlers } from '@/features/comments/server/comment-route-handlers';
 
 const POST_SLUG = 'first-post';
 const COMMENT: BlogComment = {

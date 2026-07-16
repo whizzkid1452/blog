@@ -1,6 +1,6 @@
-import { getSafeReturnPath } from '@/lib/auth/redirect';
-import { getSiteUrl } from '@/lib/site-config';
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getSafeReturnPath } from '@/features/authentication/server/redirect';
+import { getSiteUrl } from '@/shared/config/site-config';
+import { createSupabaseServerClient } from '@/shared/infrastructure/supabase/server';
 import { NextResponse } from 'next/server';
 
 export async function GET(request: Request): Promise<Response> {

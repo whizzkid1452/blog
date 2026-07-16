@@ -3,8 +3,8 @@ import {
   POST_OPEN_GRAPH_IMAGE_CONTENT_TYPE,
   POST_OPEN_GRAPH_IMAGE_SIZE,
   createPostOpenGraphImage,
-} from '@/components/post-open-graph-image';
-import { getPostIndexForLocale } from '@/lib/post-translations';
+} from '@/features/posts/ui/post-open-graph-image/post-open-graph-image';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
 
 interface EnglishPostOpenGraphImageProps {
   params: Promise<{

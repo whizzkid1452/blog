@@ -1,6 +1,6 @@
-import { HomeView } from '@/components/home-view';
-import { getPostIndexForLocale } from '@/lib/post-translations';
-import { createTagPageMetadata } from '@/lib/seo-metadata';
+import { PostListView } from '@/features/posts/ui/post-list/post-list-view';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
+import { createTagPageMetadata } from '@/features/posts/seo/seo-metadata';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -37,7 +37,7 @@ export default async function EnglishTagPage({ params }: EnglishTagPageProps) {
   }
 
   return (
-    <HomeView
+    <PostListView
       locale="en"
       posts={postIndex.getPostSummariesByTag(tag)}
       eyebrow="Tag"

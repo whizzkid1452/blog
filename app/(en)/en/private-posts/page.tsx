@@ -1,7 +1,7 @@
-import { HomeView } from '@/components/home-view';
-import styles from '@/components/home-view.module.css';
-import { requireAuthenticatedGoogleUser } from '@/lib/auth/google-user';
-import { getPostIndexForLocale } from '@/lib/post-translations';
+import { AccountActions } from '@/features/authentication/ui/account-actions/account-actions';
+import { PostListView } from '@/features/posts/ui/post-list/post-list-view';
+import { requireAuthenticatedGoogleUser } from '@/features/authentication/server/google-user';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -20,7 +20,7 @@ export default async function EnglishPrivatePostsPage() {
   const posts = getPostIndexForLocale('en').getAuthenticatedPostSummaries();
 
   return (
-    <HomeView
+    <PostListView
       locale="en"
       posts={posts}
       eyebrow="Authenticated"
@@ -28,14 +28,12 @@ export default async function EnglishPrivatePostsPage() {
       description="These posts are available only to users authenticated with Google."
       emptyMessage="No private posts yet."
       headerActions={
-        <div className={styles.accountActions}>
-          <span className={styles.accountEmail}>{user.email ?? 'Google user'}</span>
-          <form action="/auth/logout?next=/en" method="post">
-            <button className={styles.signOutButton} type="submit">
-              Sign out
-            </button>
-          </form>
-        </div>
+        <AccountActions
+          anonymousLabel="Google user"
+          email={user.email}
+          logoutPath="/auth/logout?next=/en"
+          signOutLabel="Sign out"
+        />
       }
     />
   );

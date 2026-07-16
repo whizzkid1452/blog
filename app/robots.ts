@@ -1,4 +1,4 @@
-import { createAbsoluteUrl, getSiteUrl } from '@/lib/site-config';
+import { createAbsoluteUrl, getSiteUrl } from '@/shared/config/site-config';
 import type { MetadataRoute } from 'next';
 
 export const dynamic = 'force-static';

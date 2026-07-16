@@ -1,9 +1,9 @@
-import { PostView } from '@/components/post-view';
-import { getViewablePost } from '@/lib/auth/post-access';
-import { createLocalizedPath } from '@/lib/i18n';
-import { getPostIndexForLocale } from '@/lib/post-translations';
-import { createPostPageMetadata } from '@/lib/seo-metadata';
-import { createPostBreadcrumbJsonLd, createPostJsonLd } from '@/lib/structured-data';
+import { PostView } from '@/features/posts/ui/post-view/post-view';
+import { getViewablePost } from '@/features/authentication/server/post-access';
+import { createLocalizedPath } from '@/shared/i18n/i18n';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
+import { createPostPageMetadata } from '@/features/posts/seo/seo-metadata';
+import { createPostBreadcrumbJsonLd, createPostJsonLd } from '@/features/posts/seo/structured-data';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 

@@ -1,6 +1,6 @@
-import { getPostIndexForLocale } from '@/lib/post-translations';
-import { getPostIndex } from '@/lib/posts';
-import { createSitemap } from '@/lib/sitemap';
+import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
+import { getPostIndex } from '@/features/posts/server/post-repository';
+import { createSitemap } from '@/features/posts/seo/sitemap';
 import type { MetadataRoute } from 'next';
 
 export const dynamic = 'force-static';

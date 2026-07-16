@@ -1,6 +1,6 @@
-import { SiteLayoutContainer } from '@/components/site-layout-container';
-import { createRootMetadata } from '@/lib/seo-metadata';
-import { createSiteJsonLd } from '@/lib/structured-data';
+import { SiteLayoutContainer } from '@/features/site-shell/ui/site-layout/site-layout-container';
+import { createRootMetadata } from '@/features/posts/seo/seo-metadata';
+import { createSiteJsonLd } from '@/features/posts/seo/structured-data';
 import type { Metadata } from 'next';
 import '../globals.css';
 

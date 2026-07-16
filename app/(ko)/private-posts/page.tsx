@@ -1,7 +1,7 @@
-import { HomeView } from '@/components/home-view';
-import styles from '@/components/home-view.module.css';
-import { requireAuthenticatedGoogleUser } from '@/lib/auth/google-user';
-import { getPostIndex } from '@/lib/posts';
+import { AccountActions } from '@/features/authentication/ui/account-actions/account-actions';
+import { PostListView } from '@/features/posts/ui/post-list/post-list-view';
+import { requireAuthenticatedGoogleUser } from '@/features/authentication/server/google-user';
+import { getPostIndex } from '@/features/posts/server/post-repository';
 import type { Metadata } from 'next';
 
 export const dynamic = 'force-dynamic';
@@ -20,21 +20,19 @@ export default async function PrivatePostsPage() {
   const posts = getPostIndex().getAuthenticatedPostSummaries();
 
   return (
-    <HomeView
+    <PostListView
       posts={posts}
       eyebrow="Authenticated"
       title="비공개 글"
       description="Google 계정으로 인증된 사용자만 볼 수 있는 글입니다."
       emptyMessage="비공개 글이 없습니다."
       headerActions={
-        <div className={styles.accountActions}>
-          <span className={styles.accountEmail}>{user.email ?? 'Google 사용자'}</span>
-          <form action="/auth/logout?next=/" method="post">
-            <button className={styles.signOutButton} type="submit">
-              로그아웃
-            </button>
-          </form>
-        </div>
+        <AccountActions
+          anonymousLabel="Google 사용자"
+          email={user.email}
+          logoutPath="/auth/logout?next=/"
+          signOutLabel="로그아웃"
+        />
       }
     />
   );
