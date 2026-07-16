@@ -16,42 +16,52 @@ draft: false
 ## 목차
 
 1. 개요
-2. 수정한 스크립트 유실
-3. 수정 전 내용 저장
-4. 여러 데이터 기준점
-5. 공유 데이터 기능
-6. 프로젝트 자동 저장
-7. SRT Script Panel
-8. Editor
-9. Admin
-10. 화면과 자동 저장 규칙
-11. Editor와 Studio 접근 제한
-12. SRT Panel 창 분리
-13. 로컬 PC 자동 저장
-14. Renderer Process 분리
-15. Store 인스턴스 분리
-16. Renderer Store 직접 동기화
-17. Local Project File 기준
-18. Main Process를 SSOT로 선택
-19. SSOT와 복사본
-20. ProjectSession 구조
-21. Plain Object
-22. Class
-23. Vanilla Zustand
-24. 공유 데이터 생명주기
-25. 프로젝트 정보
-26. 실시간 편집 정보
-27. ProjectSession Class
-28. Vanilla Zustand Store
-29. Renderer 요청과 Main 확정
-30. Snapshot 기반 자동 저장
-31. Renderer Store 역할
-32. 늦게 열린 화면의 Snapshot 검증
-33. MessagePort 이벤트 분리
-34. AS IS
-35. TO BE
-36. 회고
-37. 이미지 출처
+2. 문제
+   1. 수정한 스크립트 유실
+   2. 수정 전 내용 저장
+   3. 여러 데이터 기준점
+3. 조건
+   1. 공유 데이터 기능
+      1. 프로젝트 자동 저장
+      2. SRT Script Panel
+      3. Editor
+      4. Admin
+   2. 화면과 자동 저장 규칙
+      1. Editor와 Studio 접근 제한
+      2. SRT Panel 창 분리
+      3. 로컬 PC 자동 저장
+4. 원인
+   1. Renderer Process 분리
+   2. Store 인스턴스 분리
+5. 시도
+   1. Renderer Store 직접 동기화
+   2. Local Project File 기준
+6. 결정
+   1. Main Process를 SSOT로 선택
+7. 설계
+   1. SSOT와 복사본
+   2. ProjectSession 구조
+      1. Plain Object
+      2. Class
+      3. Vanilla Zustand
+   3. 공유 데이터 생명주기
+      1. 프로젝트 정보
+      2. 실시간 편집 정보
+      3. ProjectSession Class
+      4. Vanilla Zustand Store
+8. 구현
+   1. Renderer 요청과 Main 확정
+   2. Snapshot 기반 자동 저장
+   3. Renderer Store 역할
+9. 보완
+   1. 늦게 열린 화면의 Snapshot 검증
+   2. MessagePort 이벤트 분리
+10. 결과
+    1. AS IS
+    2. TO BE
+11. 회고
+    1. 자동 저장보다 먼저 정해야 했던 것
+12. 이미지 출처
 
 ## 개요
 
@@ -107,7 +117,9 @@ _기존 텍스트 흐름 순서도_
 
 ---
 
-## 문제 1. 점심을 먹고 돌아오면 수정한 스크립트가 사라졌다
+## 문제
+
+### 점심을 먹고 돌아오면 수정한 스크립트가 사라졌다
 
 문제가 발생한 기능은 SRT Script Panel이었다.
 
@@ -143,7 +155,7 @@ SRT Panel에서는 음성 합성과 편집에 사용할 자막 Row를 실시간�
 
 ---
 
-## 문제 2. 저장되지 않은 것이 아니라 수정 전 내용이 저장되고 있었다
+### 저장되지 않은 것이 아니라 수정 전 내용이 저장되고 있었다
 
 처음 보이는 증상만 보면 자동 저장 기능의 문제처럼 느껴질 수 있다.
 
@@ -224,7 +236,7 @@ _자동 저장: “저는 전달받은 값을 정확히 저장했는데요?”_
 
 ---
 
-## 문제 3. 같은 데이터에 기준점이 여러 개였다
+### 같은 데이터에 기준점이 여러 개였다
 
 처음에는 화면 사이의 동기화 코드가 한두 군데 누락된 문제처럼 보였다.
 
@@ -285,23 +297,25 @@ Admin의 이전 값 저장
 
 ---
 
-## 조건 1. 어떤 기능이 같은 데이터를 공유했는가
+## 조건
+
+### 어떤 기능이 같은 데이터를 공유했는가
 
 공유 데이터의 위치를 결정하기 전에 어떤 기능이 실제로 같은 데이터를 사용하는지 정리했다.
 
-### 프로젝트 자동 저장
+#### 프로젝트 자동 저장
 
 현재 프로젝트 정보를 사용자의 로컬 PC에 저장한다.
 
-### SRT Script Panel
+#### SRT Script Panel
 
 SRT Row를 실시간으로 수정한다. 별도의 창으로 분리할 수 있기 때문에 다른 페이지와 동시에 열릴 수 있다.
 
-### Editor
+#### Editor
 
 SRT 데이터와 연결된 편집 정보를 사용한다. SRT Panel에서 데이터가 변경되면 현재 열려 있는 Editor에도 반영돼야 한다.
 
-### Admin
+#### Admin
 
 현재 프로젝트와 SRT 데이터를 조회하거나 수정한다. Admin으로 이동했을 때도 최신 데이터가 표시돼야 한다.
 
@@ -309,11 +323,11 @@ SRT 데이터와 연결된 편집 정보를 사용한다. SRT Panel에서 데이
 
 ---
 
-## 조건 2. 화면과 자동 저장에는 어떤 규칙이 있었는가
+### 화면과 자동 저장에는 어떤 규칙이 있었는가
 
 다음으로 화면 접근과 데이터 반영 규칙을 정리했다.
 
-### Editor와 Studio는 동시에 접근할 수 없다
+#### Editor와 Studio는 동시에 접근할 수 없다
 
 Editor와 Studio 페이지는 동시에 사용할 수 없다는 규칙이 있었다.
 
@@ -326,7 +340,7 @@ Editor + Studio
 
 하지만 모든 동기화 문제를 없애주지는 않았다.
 
-### SRT Panel은 별도의 창으로 분리할 수 있다
+#### SRT Panel은 별도의 창으로 분리할 수 있다
 
 SRT Script Panel은 독립된 창으로 분리할 수 있었다.
 
@@ -344,7 +358,7 @@ SRT Panel에서 변경한 내용은 현재 열려 있는 Editor 또는 Admin에 
 
 반대로 Editor에서 발생한 관련 변경도 SRT Panel이 열려 있다면 전달돼야 했다.
 
-### 변경된 내용은 로컬 PC에 자동 저장해야 한다
+#### 변경된 내용은 로컬 PC에 자동 저장해야 한다
 
 프로젝트에서 변경된 내용은 사용자의 로컬 PC에 계속 저장돼야 했다.
 
@@ -366,7 +380,9 @@ SRT Panel에서 변경한 내용은 현재 열려 있는 Editor 또는 Admin에 
 
 ---
 
-## 원인 1. Electron의 창은 서로 다른 Renderer Process에서 동작한다
+## 원인
+
+### Electron의 창은 서로 다른 Renderer Process에서 동작한다
 
 일반적인 React 애플리케이션에서는 Zustand나 Redux Store 하나를 만들고 여러 컴포넌트가 같은 값을 구독할 수 있다.
 
@@ -397,7 +413,7 @@ Main Process
 
 ---
 
-## 원인 2. 같은 Store 코드는 같은 Store 인스턴스가 아니었다
+### 같은 Store 코드는 같은 Store 인스턴스가 아니었다
 
 Editor와 SRT Panel에서 같은 Store 모듈을 import했다는 것은 **같은 코드로 Store를 생성했다**는 뜻이다.
 
@@ -435,7 +451,9 @@ Renderer 간 데이터를 전달하려면 Main Process를 메시지 중계자로
 
 ---
 
-## 시도 1. Renderer Store끼리 직접 동기화한다
+## 시도
+
+### Renderer Store끼리 직접 동기화한다
 
 첫 번째로 생각한 방법은 각 Renderer Store를 서로 동기화하는 것이었다.
 
@@ -473,7 +491,7 @@ _동기화가 누락될 때마다 IPC 하나씩 추가하던 시절._
 
 ---
 
-## 시도 2. Local Project File을 기준으로 삼는다
+### Local Project File을 기준으로 삼는다
 
 두 번째로 프로젝트 파일을 SSOT로 사용하는 방법을 검토했다.
 
@@ -515,7 +533,9 @@ Renderer에서 변경
 
 ---
 
-## 결정 1. Main Process를 SSOT로 둔다
+## 결정
+
+### Main Process를 SSOT로 둔다
 
 여기까지 오고 나니 질문 자체가 잘못됐다는 것을 알았다.
 
@@ -580,7 +600,9 @@ Modal, Hover, 검색어처럼 특정 화면에서만 사용하는 상태는 계�
 
 ---
 
-## 설계 1. SSOT는 복사본을 하나만 두는 것이 아니다
+## 설계
+
+### SSOT는 복사본을 하나만 두는 것이 아니다
 
 Main Process를 SSOT로 정했다고 해서 Renderer에 프로젝트 데이터가 존재하면 안 되는 것은 아니다.
 
@@ -602,7 +624,7 @@ Renderer에는 화면 렌더링을 위한 데이터 복사본이 존재할 수 �
 
 ---
 
-## 설계 2. ProjectSession은 Class와 Vanilla Zustand를 조합한다
+### ProjectSession은 Class와 Vanilla Zustand를 조합한다
 
 SSOT의 위치를 정한 뒤에는 다음 질문이 생겼다.
 
@@ -614,7 +636,7 @@ Main Process에는 React 컴포넌트 트리가 없다.
 
 세 가지 방법을 검토했다.
 
-### Plain Object
+#### Plain Object
 
 현재 Snapshot을 보관하는 것만 필요하다면 일반 객체로도 충분하다.
 
@@ -634,7 +656,7 @@ let currentProject: ProjectSnapshot = initialProjectSnapshot;
 
 Plain Object만으로도 구현할 수 있지만, 관련 코드가 여러 위치로 흩어질 가능성이 있었다.
 
-### Class
+#### Class
 
 Class를 사용하면 외부에 허용된 변경 메서드만 공개할 수 있다.
 
@@ -645,7 +667,7 @@ projectSession.updateProjectInfo(info);
 
 프로젝트 변경 규칙, 파일 저장, Renderer Broadcast를 하나의 객체 안에 캡슐화할 수 있다는 장점도 있었다.
 
-### Vanilla Zustand
+#### Vanilla Zustand
 
 Zustand의 `createStore`는 React 없이 사용할 수 있는 Vanilla Store를 만든다.
 
@@ -662,18 +684,18 @@ Class와 Vanilla Zustand는 서로 다른 문제를 해결하고 있었다.
 
 ---
 
-## 설계 3. ProjectSession이 공유 데이터의 생명주기를 관리한다
+### ProjectSession이 공유 데이터의 생명주기를 관리한다
 
 Main Process에서 관리해야 할 데이터는 크게 두 종류였다.
 
-### 자주 변경되지 않는 프로젝트 정보
+#### 자주 변경되지 않는 프로젝트 정보
 
 - 프로젝트 이름
 - 프로젝트 경로
 - 설정 정보
 - 메타데이터
 
-### 실시간으로 변경되는 편집 정보
+#### 실시간으로 변경되는 편집 정보
 
 - SRT Script Row
 - 스크립트 내용
@@ -758,7 +780,7 @@ class ProjectSession {
 
 이 구조에서 역할은 다음처럼 나뉜다.
 
-### ProjectSession Class
+#### ProjectSession Class
 
 - 프로젝트 데이터의 변경 규칙 관리
 - 외부에서 호출할 수 있는 API 제한
@@ -767,7 +789,7 @@ class ProjectSession {
 - Renderer Broadcast
 - 외부 직접 변경 방지
 
-### Vanilla Zustand Store
+#### Vanilla Zustand Store
 
 - 현재 프로젝트 Snapshot 보관
 - `getState`를 통한 Snapshot 조회
@@ -780,7 +802,9 @@ Zustand를 애플리케이션 전체 아키텍처로 사용한 것은 아니다.
 
 ---
 
-## 구현 1. Renderer는 변경을 요청하고 Main이 확정한다
+## 구현
+
+### Renderer는 변경을 요청하고 Main이 확정한다
 
 기존에는 각 Renderer가 자신의 Store를 수정하고, 해당 Store의 값이 자동 저장에 사용될 수 있었다.
 
@@ -839,7 +863,7 @@ _변경 요청, 자동 저장, Renderer Broadcast의 순서를 시각화했다._
 
 ---
 
-## 구현 2. 자동 저장은 ProjectSession의 Snapshot만 사용한다
+### 자동 저장은 ProjectSession의 Snapshot만 사용한다
 
 자동 저장 구조를 변경할 때 가장 중요한 규칙은 단순했다.
 
@@ -886,7 +910,7 @@ Main Snapshot 즉시 변경
 
 ---
 
-## 구현 3. Renderer Store는 화면 렌더링에만 사용한다
+### Renderer Store는 화면 렌더링에만 사용한다
 
 Main Process의 Snapshot이 변경되면 Renderer 화면도 다시 렌더링돼야 한다.
 
@@ -930,7 +954,9 @@ Renderer Store를 제거한 것이 아니다.
 
 ---
 
-## 보완 1. 늦게 열린 화면은 Snapshot을 다시 검증한다
+## 보완
+
+### 늦게 열린 화면은 Snapshot을 다시 검증한다
 
 현재 열려 있는 Renderer에는 Main Process가 변경된 Snapshot을 Broadcast하면 된다.
 
@@ -996,7 +1022,7 @@ function applySnapshot(incoming: ProjectSnapshot): void {
 
 ---
 
-## 보완 2. 저장하지 않는 이벤트는 MessagePort로 분리한다
+### 저장하지 않는 이벤트는 MessagePort로 분리한다
 
 프로젝트 데이터 동기화와 비슷해 보이지만 성격이 다른 요구사항도 있었다.
 
@@ -1062,7 +1088,9 @@ Main Process는 채널을 연결하지만, 이 이벤트를 프로젝트 Snapsho
 
 ---
 
-## 결과 1. AS IS
+## 결과
+
+### AS IS
 
 기존 구조에는 다음과 같은 문제가 있었다.
 
@@ -1085,7 +1113,7 @@ Main Process는 채널을 연결하지만, 이 이벤트를 프로젝트 Snapsho
 
 ---
 
-## 결과 2. TO BE
+### TO BE
 
 구조를 변경한 뒤에는 데이터 흐름이 다음과 같이 정리됐다.
 
@@ -1133,7 +1161,9 @@ I love architecture._
 
 ---
 
-## 회고. 자동 저장보다 먼저 정해야 했던 것
+## 회고
+
+### 자동 저장보다 먼저 정해야 했던 것
 
 처음에는 자동 저장을 가장 유력한 용의자로 봤다.
 
