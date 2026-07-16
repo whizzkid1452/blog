@@ -5,7 +5,7 @@ import { createLocalizedPath, getUiMessages } from '@/shared/i18n/i18n';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import Link from 'next/link';
 import { useState } from 'react';
-import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags } from './sidebar-topics';
+import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 import styles from './site-layout.module.css';
 
 interface SidebarTopicsSectionProps {
@@ -54,7 +54,10 @@ function TopicTagList({ locale, tags }: { locale: Locale; tags: string[] }) {
           className={styles.tagLink}
           href={createLocalizedPath(locale, `/tags/${encodeURIComponent(tag)}`)}
         >
-          #{tag}
+          <span>{getSidebarTopicLabel(tag)}</span>
+          <span className={styles.tagLinkChevron} aria-hidden="true">
+            ›
+          </span>
         </Link>
       ))}
     </div>

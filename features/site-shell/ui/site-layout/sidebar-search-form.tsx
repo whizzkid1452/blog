@@ -23,8 +23,11 @@ export function SidebarSearchForm({ locale }: SidebarSearchFormProps) {
             autoComplete="off"
           />
         </label>
-        <button className={styles.sidebarSearchButton} type="submit">
-          {messages.submit}
+        <button className={styles.sidebarSearchButton} type="submit" aria-label={messages.submit}>
+          <svg className={styles.sidebarSearchIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="11" cy="11" r="6" />
+            <path d="m16 16 4 4" />
+          </svg>
         </button>
       </form>
     </section>

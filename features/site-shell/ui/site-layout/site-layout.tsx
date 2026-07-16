@@ -6,6 +6,7 @@ import type { ReactNode } from 'react';
 import { MobileNavigationDialog } from './mobile-navigation-dialog';
 import { PrimaryNavigationLink } from './primary-navigation-link';
 import { SidebarSearchForm } from './sidebar-search-form';
+import { SidebarProfile } from './sidebar-profile';
 import { SidebarTopicsSection } from './sidebar-topics-section';
 import styles from './site-layout.module.css';
 
@@ -40,16 +41,10 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
     <div className={styles.siteShell}>
       <div className={styles.bodyLayout}>
         <aside className={styles.sidebar} aria-label={messages.blogNavigationLabel}>
-          <nav className={styles.sidebarNavigation} aria-label={messages.primaryNavigationLabel}>
-            <Link className={styles.brandLink} href={createLocalizedPath(locale, '/')}>
-              Blog
-            </Link>
+          <SidebarProfile locale={locale} />
 
-            <div className={styles.sidebarNavigationLinks}>
-              {primaryNavigationLinks.map(link => (
-                <PrimaryNavigationLink key={link.href} href={link.href} label={link.label} />
-              ))}
-            </div>
+          <nav className={styles.sidebarNavigation} aria-label={messages.primaryNavigationLabel}>
+            <h2 className={styles.sidebarTitle}>{messages.blogNavigationLabel}</h2>
 
             <div className={styles.sidebarUtilityLinks}>
               <a
@@ -77,6 +72,12 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
               >
                 {messages.languageLinkLabel}
               </Link>
+            </div>
+
+            <div className={styles.sidebarNavigationLinks}>
+              {primaryNavigationLinks.map(link => (
+                <PrimaryNavigationLink key={link.href} href={link.href} label={link.label} />
+              ))}
             </div>
           </nav>
 
