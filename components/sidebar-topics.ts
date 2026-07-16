@@ -1,16 +1,10 @@
 const PRIMARY_SIDEBAR_TOPIC_TAGS = [
-  'react',
-  'architecture',
-  'nextjs',
-  'seo',
   'performance',
-  'state-management',
-  'zustand',
-  'design-system',
+  'architecture',
+  'react',
   'canvas',
-  'electron',
   'web-worker',
-  'webcodecs',
+  'electron',
 ] as const;
 
 const SIDEBAR_TOPIC_LABELS: Partial<Record<string, string>> = {
@@ -25,12 +19,10 @@ export function getPrimarySidebarTopicTags(tags: string[]): string[] {
   return PRIMARY_SIDEBAR_TOPIC_TAGS.filter(tag => availableTagSet.has(tag));
 }
 
-export function getExpandedSidebarTopicTags(tags: string[]): string[] {
-  const primaryTopicTags = getPrimarySidebarTopicTags(tags);
-  const primaryTopicTagSet = new Set(primaryTopicTags);
-  const remainingTags = tags.filter(tag => !primaryTopicTagSet.has(tag));
+export function getAdditionalSidebarTopicTags(tags: string[]): string[] {
+  const primaryTopicTagSet = new Set<string>(PRIMARY_SIDEBAR_TOPIC_TAGS);
 
-  return [...primaryTopicTags, ...remainingTags];
+  return tags.filter(tag => !primaryTopicTagSet.has(tag));
 }
 
 export function getSidebarTopicLabel(tag: string): string {

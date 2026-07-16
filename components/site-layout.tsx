@@ -5,6 +5,7 @@ import Link from 'next/link';
 import type { ReactNode } from 'react';
 import { MobileNavigationDialog } from './mobile-navigation-dialog';
 import { PrimaryNavigationLink } from './primary-navigation-link';
+import { SidebarSearchForm } from './sidebar-search-form';
 import { SidebarTopicsSection } from './sidebar-topics-section';
 import styles from './site-layout.module.css';
 
@@ -31,61 +32,56 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
     { href: createLocalizedPath(locale, '/'), label: messages.home },
     { href: createLocalizedPath(locale, '/posts'), label: messages.posts },
     { href: createLocalizedPath(locale, '/series'), label: 'Series' },
-    { href: createLocalizedPath(locale, '/search'), label: 'Search' },
     { href: createLocalizedPath(locale, '/private-posts'), label: locale === 'ko' ? '비공개 글' : 'Private posts' },
   ];
   const visibleRecentPosts = recentPosts.slice(0, RECENT_POST_COUNT);
 
   return (
     <div className={styles.siteShell}>
-      <header className={styles.siteHeader}>
-        <div className={styles.headerInner}>
-          <Link className={styles.brandLink} href={createLocalizedPath(locale, '/')}>
-            Blog
-          </Link>
-          <nav className={styles.primaryNavigation} aria-label={messages.primaryNavigationLabel}>
-            {primaryNavigationLinks.map(link => (
-              <PrimaryNavigationLink key={link.href} href={link.href} label={link.label} />
-            ))}
-            <a
-              className={styles.externalNavigationAnchor}
-              href={GITHUB_PROFILE_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="GitHub profile"
-            >
-              GitHub
-            </a>
-            <a
-              className={styles.externalNavigationAnchor}
-              href={RESUME_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label="About"
-            >
-              About
-            </a>
-            <Link
-              className={styles.externalNavigationAnchor}
-              href={createLocalizedPath(alternateLocale, '/')}
-              hrefLang={alternateLocale}
-            >
-              {messages.languageLinkLabel}
-            </Link>
-          </nav>
-          <MobileNavigationDialog
-            locale={locale}
-            primaryNavigationLinks={primaryNavigationLinks}
-            githubProfileUrl={GITHUB_PROFILE_URL}
-            resumeUrl={RESUME_URL}
-            tags={tags}
-            recentPosts={visibleRecentPosts}
-          />
-        </div>
-      </header>
-
       <div className={styles.bodyLayout}>
         <aside className={styles.sidebar} aria-label={messages.blogNavigationLabel}>
+          <nav className={styles.sidebarNavigation} aria-label={messages.primaryNavigationLabel}>
+            <Link className={styles.brandLink} href={createLocalizedPath(locale, '/')}>
+              Blog
+            </Link>
+
+            <div className={styles.sidebarNavigationLinks}>
+              {primaryNavigationLinks.map(link => (
+                <PrimaryNavigationLink key={link.href} href={link.href} label={link.label} />
+              ))}
+            </div>
+
+            <div className={styles.sidebarUtilityLinks}>
+              <a
+                className={styles.externalNavigationAnchor}
+                href={GITHUB_PROFILE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="GitHub profile"
+              >
+                GitHub
+              </a>
+              <a
+                className={styles.externalNavigationAnchor}
+                href={RESUME_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="About"
+              >
+                About
+              </a>
+              <Link
+                className={styles.externalNavigationAnchor}
+                href={createLocalizedPath(alternateLocale, '/')}
+                hrefLang={alternateLocale}
+              >
+                {messages.languageLinkLabel}
+              </Link>
+            </div>
+          </nav>
+
+          <SidebarSearchForm locale={locale} />
+
           <SidebarTopicsSection locale={locale} tags={tags} />
 
           <section className={styles.sidebarSection}>
@@ -108,6 +104,15 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
             )}
           </section>
         </aside>
+
+        <MobileNavigationDialog
+          locale={locale}
+          primaryNavigationLinks={primaryNavigationLinks}
+          githubProfileUrl={GITHUB_PROFILE_URL}
+          resumeUrl={RESUME_URL}
+          tags={tags}
+          recentPosts={visibleRecentPosts}
+        />
 
         <main className={styles.mainContent}>{children}</main>
       </div>

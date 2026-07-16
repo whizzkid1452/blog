@@ -9,6 +9,8 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { useState } from 'react';
+import { SidebarSearchForm } from './sidebar-search-form';
+import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags } from './sidebar-topics';
 import styles from './site-layout.module.css';
 
 interface MobileNavigationDialogProps {
@@ -29,6 +31,12 @@ interface MobileNavigationCollapsibleSectionProps {
   title: string;
   children: ReactNode;
   defaultOpen?: boolean;
+}
+
+interface MobileNavigationTopicsProps {
+  locale: Locale;
+  tags: string[];
+  onNavigate: () => void;
 }
 
 export function MobileNavigationDialog({
@@ -110,24 +118,9 @@ export function MobileNavigationDialog({
             </div>
           </nav>
 
-          <MobileNavigationCollapsibleSection title={messages.topics}>
-            {tags.length > 0 ? (
-              <div className={styles.mobileTagList}>
-                {tags.map(tag => (
-                  <Dialog.Close key={tag} asChild>
-                    <Link
-                      className={styles.tagLink}
-                      href={createLocalizedPath(locale, `/tags/${encodeURIComponent(tag)}`)}
-                    >
-                      #{tag}
-                    </Link>
-                  </Dialog.Close>
-                ))}
-              </div>
-            ) : (
-              <p className={styles.emptyText}>{messages.noTopics}</p>
-            )}
-          </MobileNavigationCollapsibleSection>
+          <SidebarSearchForm locale={locale} />
+
+          <MobileNavigationTopics locale={locale} tags={tags} onNavigate={() => setIsOpen(false)} />
 
           <MobileNavigationCollapsibleSection title={messages.recent} defaultOpen>
             {recentPosts.length > 0 ? (
@@ -152,6 +145,55 @@ export function MobileNavigationDialog({
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>
+  );
+}
+
+export function MobileNavigationTopics({ locale, tags, onNavigate }: MobileNavigationTopicsProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
+  const messages = getUiMessages(locale);
+  const primaryTopicTags = getPrimarySidebarTopicTags(tags);
+  const additionalTopicTags = getAdditionalSidebarTopicTags(tags);
+
+  return (
+    <section className={styles.mobileNavigationSection}>
+      <h2 className={styles.mobileNavigationSectionTitle}>{messages.topics}</h2>
+
+      {tags.length > 0 ? (
+        <div className={styles.mobileNavigationTopics}>
+          <MobileTopicTagList locale={locale} tags={primaryTopicTags} onNavigate={onNavigate} />
+
+          {additionalTopicTags.length > 0 ? (
+            <Collapsible.Root className={styles.mobileAdditionalTopics} open={isExpanded} onOpenChange={setIsExpanded}>
+              <Collapsible.Content className={styles.mobileNavigationCollapsibleContent}>
+                <MobileTopicTagList locale={locale} tags={additionalTopicTags} onNavigate={onNavigate} />
+              </Collapsible.Content>
+              <Collapsible.Trigger className={styles.mobileTopicListTrigger} type="button">
+                {isExpanded ? messages.collapseTopics : messages.viewAllTopics}
+              </Collapsible.Trigger>
+            </Collapsible.Root>
+          ) : null}
+        </div>
+      ) : (
+        <p className={styles.emptyText}>{messages.noTopics}</p>
+      )}
+    </section>
+  );
+}
+
+function MobileTopicTagList({ locale, tags, onNavigate }: MobileNavigationTopicsProps) {
+  return (
+    <div className={styles.mobileTagList}>
+      {tags.map(tag => (
+        <Link
+          key={tag}
+          className={styles.tagLink}
+          href={createLocalizedPath(locale, `/tags/${encodeURIComponent(tag)}`)}
+          onClick={onNavigate}
+        >
+          #{tag}
+        </Link>
+      ))}
+    </div>
   );
 }
 

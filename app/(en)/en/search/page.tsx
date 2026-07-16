@@ -1,5 +1,6 @@
 import { PostSearchView } from '@/components/post-search-view';
 import { getPostIndexForLocale } from '@/lib/post-translations';
+import { getSearchQuery } from '@/lib/search-query';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,8 +12,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function EnglishSearchPage() {
-  const posts = getPostIndexForLocale('en').getPostSummaries();
+interface EnglishSearchPageProps {
+  searchParams: Promise<{ q?: string | string[] }>;
+}
 
-  return <PostSearchView locale="en" posts={posts} />;
+export default async function EnglishSearchPage({ searchParams }: EnglishSearchPageProps) {
+  const posts = getPostIndexForLocale('en').getPostSummaries();
+  const query = getSearchQuery(await searchParams);
+
+  return <PostSearchView locale="en" posts={posts} query={query} />;
 }

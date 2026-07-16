@@ -1,11 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { getExpandedSidebarTopicTags, getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
+import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 
 describe('getPrimarySidebarTopicTags', () => {
   it('returns portfolio topic tags in configured order when available', () => {
-    expect(getPrimarySidebarTopicTags(['webcodecs', 'drag', 'react', 'nextjs', 'performance', 'architecture'])).toEqual(
-      ['react', 'architecture', 'nextjs', 'performance', 'webcodecs']
-    );
+    expect(
+      getPrimarySidebarTopicTags(['electron', 'drag', 'react', 'web-worker', 'performance', 'canvas', 'architecture'])
+    ).toEqual(['performance', 'architecture', 'react', 'canvas', 'web-worker', 'electron']);
   });
 
   it('omits portfolio topic tags without a matching published tag', () => {
@@ -13,11 +13,12 @@ describe('getPrimarySidebarTopicTags', () => {
   });
 });
 
-describe('getExpandedSidebarTopicTags', () => {
-  it('places portfolio topic tags before the remaining tags without duplicates', () => {
-    expect(
-      getExpandedSidebarTopicTags(['webcodecs', 'drag', 'react', 'nextjs', 'performance', 'architecture'])
-    ).toEqual(['react', 'architecture', 'nextjs', 'performance', 'webcodecs', 'drag']);
+describe('getAdditionalSidebarTopicTags', () => {
+  it('returns only tags outside the portfolio topic set', () => {
+    expect(getAdditionalSidebarTopicTags(['drag', 'react', 'nextjs', 'performance', 'architecture'])).toEqual([
+      'drag',
+      'nextjs',
+    ]);
   });
 });
 

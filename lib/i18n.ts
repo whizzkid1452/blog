@@ -8,6 +8,8 @@ export interface UiMessages {
   home: string;
   posts: string;
   topics: string;
+  viewAllTopics: string;
+  collapseTopics: string;
   recent: string;
   noTopics: string;
   noPosts: string;
@@ -23,6 +25,8 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     home: '홈',
     posts: '글',
     topics: '주제',
+    viewAllTopics: '전체보기',
+    collapseTopics: '접기',
     recent: '최근 글',
     noTopics: '등록된 주제가 없습니다.',
     noPosts: '등록된 글이 없습니다.',
@@ -36,6 +40,8 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     home: 'Home',
     posts: 'Posts',
     topics: 'Topics',
+    viewAllTopics: 'View all',
+    collapseTopics: 'Show less',
     recent: 'Recent',
     noTopics: 'No topics yet.',
     noPosts: 'No posts yet.',

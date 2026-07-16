@@ -1,5 +1,6 @@
 import { PostSearchView } from '@/components/post-search-view';
 import { getPostIndex } from '@/lib/posts';
+import { getSearchQuery } from '@/lib/search-query';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
@@ -11,8 +12,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function SearchPage() {
-  const posts = getPostIndex().getPostSummaries();
+interface SearchPageProps {
+  searchParams: Promise<{ q?: string | string[] }>;
+}
 
-  return <PostSearchView posts={posts} />;
+export default async function SearchPage({ searchParams }: SearchPageProps) {
+  const posts = getPostIndex().getPostSummaries();
+  const query = getSearchQuery(await searchParams);
+
+  return <PostSearchView posts={posts} query={query} />;
 }

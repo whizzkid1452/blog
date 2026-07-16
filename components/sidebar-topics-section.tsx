@@ -4,6 +4,8 @@ import type { Locale } from '@/lib/i18n';
 import { createLocalizedPath, getUiMessages } from '@/lib/i18n';
 import * as Collapsible from '@radix-ui/react-collapsible';
 import Link from 'next/link';
+import { useState } from 'react';
+import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags } from './sidebar-topics';
 import styles from './site-layout.module.css';
 
 interface SidebarTopicsSectionProps {
@@ -12,29 +14,34 @@ interface SidebarTopicsSectionProps {
 }
 
 export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSectionProps) {
+  const [isExpanded, setIsExpanded] = useState(false);
   const messages = getUiMessages(locale);
+  const primaryTopicTags = getPrimarySidebarTopicTags(tags);
+  const additionalTopicTags = getAdditionalSidebarTopicTags(tags);
 
   return (
-    <Collapsible.Root asChild defaultOpen={false}>
-      <section className={styles.sidebarSection}>
-        <div className={styles.sidebarSectionHeader}>
-          <h2 className={styles.sidebarTitle}>{messages.topics}</h2>
-          <Collapsible.Trigger
-            className={styles.sidebarSectionTrigger}
-            type="button"
-            aria-label={`Toggle ${messages.topics}`}
-          />
-        </div>
+    <section className={styles.sidebarSection}>
+      <h2 className={styles.sidebarTitle}>{messages.topics}</h2>
 
-        <Collapsible.Content className={styles.sidebarCollapsibleContent}>
-          {tags.length > 0 ? (
-            <TopicTagList locale={locale} tags={tags} />
-          ) : (
-            <p className={styles.emptyText}>{messages.noTopics}</p>
-          )}
-        </Collapsible.Content>
-      </section>
-    </Collapsible.Root>
+      {tags.length > 0 ? (
+        <div className={styles.sidebarTopics}>
+          <TopicTagList locale={locale} tags={primaryTopicTags} />
+
+          {additionalTopicTags.length > 0 ? (
+            <Collapsible.Root className={styles.sidebarAdditionalTopics} open={isExpanded} onOpenChange={setIsExpanded}>
+              <Collapsible.Content className={styles.sidebarCollapsibleContent}>
+                <TopicTagList locale={locale} tags={additionalTopicTags} />
+              </Collapsible.Content>
+              <Collapsible.Trigger className={styles.sidebarSectionTrigger} type="button">
+                {isExpanded ? messages.collapseTopics : messages.viewAllTopics}
+              </Collapsible.Trigger>
+            </Collapsible.Root>
+          ) : null}
+        </div>
+      ) : (
+        <p className={styles.emptyText}>{messages.noTopics}</p>
+      )}
+    </section>
   );
 }
 

@@ -1,5 +1,4 @@
 .siteShell {
-  --desktop-header-height: 64px;
   --desktop-sidebar-width: 280px;
 
   display: flex;
@@ -7,38 +6,30 @@
   flex-direction: column;
 }
 
-.siteHeader {
-  position: sticky;
-  z-index: 10;
-  top: 0;
-  border-bottom: 1px solid var(--color-border);
-  background: color-mix(in srgb, var(--background) 92%, transparent);
-  backdrop-filter: blur(16px);
-}
-
-.headerInner {
+.sidebarNavigation {
   display: flex;
-  width: 100%;
-  min-height: 64px;
-  align-items: center;
-  justify-content: space-between;
-  gap: 24px;
-  margin: 0 auto;
-  padding: 0 24px;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .brandLink {
   color: var(--color-text-primary);
-  font-size: 18px;
+  font-size: 20px;
   font-weight: 700;
   letter-spacing: 0;
   text-decoration: none;
 }
 
-.primaryNavigation {
+.sidebarNavigationLinks,
+.sidebarUtilityLinks {
   display: flex;
-  gap: 6px;
-  align-items: center;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebarUtilityLinks {
+  border-top: 1px solid var(--color-border);
+  padding-top: 14px;
 }
 
 .mobileNavigationTrigger {
@@ -90,7 +81,7 @@
   scrollbar-color: transparent transparent;
   scrollbar-width: none;
   border-right: 1px solid var(--color-border);
-  padding: calc(var(--desktop-header-height) + 56px) 24px 72px;
+  padding: 40px 24px 72px;
 }
 
 .sidebar::-webkit-scrollbar {
@@ -118,41 +109,82 @@
   text-transform: uppercase;
 }
 
-.sidebarSectionHeader {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+.sidebarSearchForm {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
 }
 
-.sidebarSectionTrigger {
-  display: inline-flex;
-  width: 28px;
-  height: 28px;
-  align-items: center;
-  justify-content: center;
+.sidebarSearchLabel {
+  min-width: 0;
+}
+
+.sidebarSearchInput {
+  width: 100%;
+  min-width: 0;
   border: 1px solid var(--color-border);
-  border-radius: 6px;
+  border-radius: 8px;
+  padding: 9px 10px;
+  background: var(--background);
+  color: var(--color-text-primary);
+  font: inherit;
+  font-size: 14px;
+}
+
+.sidebarSearchInput:focus-visible {
+  border-color: var(--color-link);
+  outline: 2px solid color-mix(in srgb, var(--color-link) 24%, transparent);
+  outline-offset: 1px;
+}
+
+.sidebarSearchButton {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 0 10px;
   background: transparent;
   color: var(--color-text-secondary);
   cursor: pointer;
   font: inherit;
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.sidebarSectionTrigger::before {
-  content: '-';
-  font-size: 16px;
-  font-weight: 650;
-  line-height: 1;
+.sidebarSearchButton:hover,
+.sidebarSearchButton:focus-visible {
+  border-color: var(--color-link);
+  color: var(--color-link);
+  outline: none;
 }
 
-.sidebarSectionTrigger[data-state='closed']::before {
-  content: '+';
+.sidebarTopics,
+.sidebarAdditionalTopics,
+.mobileNavigationTopics,
+.mobileAdditionalTopics {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.sidebarSectionTrigger,
+.mobileTopicListTrigger {
+  border: 0;
+  padding: 0;
+  background: transparent;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .sidebarSectionTrigger:hover,
-.sidebarSectionTrigger:focus-visible {
-  border-color: var(--color-link);
+.sidebarSectionTrigger:focus-visible,
+.mobileTopicListTrigger:hover,
+.mobileTopicListTrigger:focus-visible {
   color: var(--color-link);
   outline: none;
 }
@@ -409,11 +441,11 @@
 }
 
 @media (max-width: 900px) {
-  .primaryNavigation {
-    display: none;
-  }
-
   .mobileNavigationTrigger {
+    position: fixed;
+    z-index: 20;
+    top: 16px;
+    right: 20px;
     display: inline-flex;
     width: 38px;
     height: 38px;
@@ -423,7 +455,8 @@
     gap: 4px;
     border: 1px solid var(--color-border);
     border-radius: 6px;
-    background: transparent;
+    background: color-mix(in srgb, var(--background) 92%, transparent);
+    backdrop-filter: blur(16px);
     cursor: pointer;
   }
 
@@ -459,14 +492,12 @@
   .mainContent {
     grid-column: auto;
     order: 1;
-    padding: 40px 20px 0;
+    padding: 72px 20px 0;
   }
 }
 
 @media (max-width: 640px) {
-  .headerInner {
-    min-height: 60px;
-    gap: 16px;
-    padding: 0 20px;
+  .mobileNavigationTrigger {
+    top: 12px;
   }
 }
