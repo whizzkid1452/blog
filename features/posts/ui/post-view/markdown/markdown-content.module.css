@@ -54,8 +54,7 @@
 .content ul,
 .content ol,
 .content blockquote,
-.content pre,
-.content table {
+.content pre {
   margin: 0 0 24px;
 }
 
@@ -130,10 +129,15 @@
   color: var(--color-text-primary);
 }
 
-.content table {
-  display: block;
+.markdownTableContainer {
   width: 100%;
   overflow-x: auto;
+  margin: 0 0 24px;
+}
+
+.content table {
+  width: auto;
+  margin-inline: auto;
   border-collapse: collapse;
   font-size: 15px;
   line-height: 1.6;
@@ -369,16 +373,82 @@
   border-radius: 8px;
 }
 
-.content p:has(> .markdownImage:only-child) {
+.markdownImageZoomTrigger {
+  display: block;
+  width: 100%;
+  border: 0;
+  border-radius: 8px;
+  padding: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+
+.markdownImageZoomTrigger:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 4px;
+}
+
+.markdownImageZoomOverlay {
+  position: fixed;
+  z-index: 60;
+  inset: 0;
+  background: color-mix(in srgb, #000000 88%, transparent);
+}
+
+.markdownImageZoomContent {
+  position: fixed;
+  z-index: 61;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 64px 24px 24px;
+  pointer-events: none;
+}
+
+.markdownImageZoomExpandedImage {
+  width: auto;
+  max-width: 100%;
+  height: auto;
+  max-height: calc(100dvh - 88px);
+  object-fit: contain;
+  pointer-events: auto;
+}
+
+.markdownImageZoomCloseButton {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  border: 1px solid color-mix(in srgb, #ffffff 58%, transparent);
+  border-radius: 999px;
+  padding: 8px 14px;
+  background: color-mix(in srgb, #000000 68%, transparent);
+  color: #ffffff;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
+  pointer-events: auto;
+}
+
+.markdownImageZoomCloseButton:hover,
+.markdownImageZoomCloseButton:focus-visible {
+  border-color: #ffffff;
+  outline: none;
+  background: color-mix(in srgb, #000000 88%, transparent);
+}
+
+.content p:has(> .markdownImageZoomTrigger:only-child) {
   margin-top: var(--markdown-image-block-spacing);
   margin-bottom: var(--markdown-image-block-spacing);
 }
 
-.content p:has(> .markdownImage:only-child):has(+ p > em:only-child) {
+.content p:has(> .markdownImageZoomTrigger:only-child):has(+ p > em:only-child) {
   margin-bottom: var(--markdown-image-caption-gap);
 }
 
-.content p:has(> .markdownImage:only-child) + p:has(> em:only-child) {
+.content p:has(> .markdownImageZoomTrigger:only-child) + p:has(> em:only-child) {
   color: var(--color-text-muted);
   font-size: 13px;
   line-height: 1.5;

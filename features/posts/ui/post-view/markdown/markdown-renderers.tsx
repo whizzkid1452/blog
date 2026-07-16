@@ -1,18 +1,16 @@
-/* eslint-disable @next/next/no-img-element */
 import { getPublicImageSize } from '@/shared/server/public-image';
-import Image from 'next/image';
 import Link from 'next/link';
 import type { ComponentPropsWithoutRef, ReactNode } from 'react';
 import { isValidElement } from 'react';
 import type { Components } from 'react-markdown';
 import { MarkdownCodeBlock } from './markdown-code-block';
 import styles from './markdown-content.module.css';
+import { MarkdownImageViewer } from './markdown-image-viewer';
 import { MarkdownMermaidDiagram } from './markdown-mermaid-diagram';
 import { createMarkdownHeadingIdResolver, type MarkdownTableOfContentsItem } from './markdown-table-of-contents';
 
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
 const PROTOCOL_RELATIVE_URL_PREFIX = '//';
-const MARKDOWN_IMAGE_SIZES = '(max-width: 768px) 100vw, 768px';
 const MERMAID_CODE_LANGUAGE = 'mermaid';
 
 type HrefNavigationKind = 'externalWeb' | 'internalRoute' | 'other';
@@ -36,6 +34,7 @@ type MarkdownDetailsProps = ComponentPropsWithoutRef<'details'> & MarkdownAstNod
 type MarkdownImageProps = ComponentPropsWithoutRef<'img'> & MarkdownAstNodeProps;
 type MarkdownPreProps = ComponentPropsWithoutRef<'pre'> & MarkdownAstNodeProps;
 type MarkdownSummaryProps = ComponentPropsWithoutRef<'summary'> & MarkdownAstNodeProps;
+type MarkdownTableProps = ComponentPropsWithoutRef<'table'> & MarkdownAstNodeProps;
 
 export function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownComponentsParams): Components {
   const headingIdResolver = createMarkdownHeadingIdResolver({ tableOfContentsItems });
@@ -49,6 +48,7 @@ export function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdow
     img: MarkdownImage,
     pre: MarkdownPre,
     summary: MarkdownSummary,
+    table: MarkdownTable,
   };
 }
 
@@ -105,22 +105,16 @@ function MarkdownImage({ src, alt, title }: MarkdownImageProps) {
 
   const size = getPublicImageSize(src);
 
-  if (size == null) {
-    return (
-      <img className={styles.markdownImage} src={src} alt={alt ?? ''} title={title} loading="lazy" decoding="async" />
-    );
-  }
+  return <MarkdownImageViewer src={src} alt={alt ?? ''} title={title} size={size} />;
+}
+
+function MarkdownTable(tablePropsWithNode: MarkdownTableProps) {
+  const tableProps = omitMarkdownAstNodeProp(tablePropsWithNode);
 
   return (
-    <Image
-      className={styles.markdownImage}
-      src={src}
-      alt={alt ?? ''}
-      title={title}
-      width={size.width}
-      height={size.height}
-      sizes={MARKDOWN_IMAGE_SIZES}
-    />
+    <div className={styles.markdownTableContainer}>
+      <table {...tableProps} />
+    </div>
   );
 }
 
