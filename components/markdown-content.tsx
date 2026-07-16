@@ -13,6 +13,7 @@ import remarkGfm from 'remark-gfm';
 import { MarkdownCodeBlock, MarkdownCodeBlockProvider } from './markdown-code-block';
 import styles from './markdown-content.module.css';
 import { MarkdownMermaidDiagram } from './markdown-mermaid-diagram';
+import { MarkdownTableOfContentsNavigation } from './markdown-table-of-contents-navigation';
 import {
   createMarkdownHeadingIdResolver,
   prepareMarkdownContent,
@@ -39,7 +40,7 @@ export async function MarkdownContent({ content, postSlug, title }: MarkdownCont
     <MarkdownCodeBlockProvider>
       <div className={styles.markdownLayout}>
         {preparedContent.tableOfContentsItems.length > 0 ? (
-          <MarkdownTableOfContents items={preparedContent.tableOfContentsItems} />
+          <MarkdownTableOfContentsNavigation items={preparedContent.tableOfContentsItems} />
         ) : null}
         <div className={styles.content} data-post-slug={postSlug}>
           {renderedContent}

@@ -190,73 +190,24 @@ function createTableOfContentsItems({
   const usedIdCounts = new Map<string, number>();
   const selectedHeadings =
     titles.length > 0
-      ? titles.map((title, headingIndex) => selectMarkdownHeading({ headingIndex, headings, title }))
-      : headings;
+      ? titles.map((title, index) => ({
+          idSourceTitle: headings[index]?.title ?? title,
+          level: headings[index]?.level ?? 2,
+          title,
+        }))
+      : headings.map(heading => ({ ...heading, idSourceTitle: heading.title }));
 
-  return selectedHeadings.map((heading, headingIndex) =>
-    createTableOfContentsItem({ heading, headingIndex, usedIdCounts })
-  );
+  return selectedHeadings.map(({ idSourceTitle, level, title }, index) => {
+    const fallbackId = `${EMPTY_SECTION_ID}-${index + 1}`;
+    const baseId = createSlug(normalizeHeadingTitle(idSourceTitle)) ?? fallbackId;
+
+    return {
+      id: createUniqueId({ baseId, usedIdCounts }),
+      level,
+      title,
+    };
+  });
 }
-
-function selectMarkdownHeading({
-  headingIndex,
-  headings,
-  title,
-}: {
-  headingIndex: number;
-  headings: MarkdownHeading[];
-  title: string;
-}): SelectedMarkdownHeading {
-  const matchingHeading = findMarkdownHeading({ headings, title }) ?? headings[headingIndex];
-
-  if (matchingHeading == null) {
-    return { level: 2, title };
-  }
-
-  if (normalizeHeadingTitle(matchingHeading.title) === normalizeHeadingTitle(title)) {
-    return { level: matchingHeading.level, title };
-  }
-
-  return {
-    headingTitle: matchingHeading.title,
-    level: matchingHeading.level,
-    title,
-  };
-}
-
-function createTableOfContentsItem({
-  heading,
-  headingIndex,
-  usedIdCounts,
-}: {
-  heading: SelectedMarkdownHeading;
-  headingIndex: number;
-  usedIdCounts: Map<string, number>;
-}): MarkdownTableOfContentsItem {
-  const fallbackId = `${EMPTY_SECTION_ID}-${headingIndex + 1}`;
-  const sourceTitle = heading.headingTitle ?? heading.title;
-  const baseId = createSlug(normalizeHeadingTitle(sourceTitle)) ?? fallbackId;
-  const item = {
-    id: createUniqueId({ baseId, usedIdCounts }),
-    level: heading.level,
-    title: heading.title,
-  };
-
-  return heading.headingTitle == null ? item : { ...item, headingTitle: heading.headingTitle };
-}
-
-function findMarkdownHeading({
-  headings,
-  title,
-}: {
-  headings: MarkdownHeading[];
-  title: string;
-}): MarkdownHeading | undefined {
-  const comparableTitle = normalizeHeadingTitle(title);
-
-  return headings.find(heading => normalizeHeadingTitle(heading.title) === comparableTitle);
-}
-
 function normalizeHeadingTitle(headingText: string): string {
   return headingText.trim().replace(LEADING_SECTION_NUMBER_PATTERN, '').trim();
 }
