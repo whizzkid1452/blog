@@ -51,27 +51,45 @@ describe('prepareMarkdownContent', () => {
     ]);
   });
 
-  it('creates a table of contents from headings after a standalone marker', () => {
+  it('creates a hierarchical table of contents from headings after a standalone marker', () => {
     const preparedContent = prepareMarkdownContent({
-      content: ['## 부제목', '', '## 목차', '', '## 개요', '', '### 세부 조건', '', '본문'].join('\n'),
+      content: [
+        '## 부제목',
+        '',
+        '## 목차',
+        '',
+        '## 구현',
+        '',
+        '### Renderer 요청과 Main 확정',
+        '',
+        '#### IPC 요청 처리',
+        '',
+        '본문',
+      ].join('\n'),
     });
 
     expect(preparedContent.tableOfContentsItems).toEqual([
-      { id: '개요', level: 2, title: '개요' },
-      { id: '세부-조건', level: 3, title: '세부 조건' },
+      { id: '구현', level: 2, title: '구현' },
+      { id: 'renderer-요청과-main-확정', level: 3, title: 'Renderer 요청과 Main 확정' },
+      { id: 'ipc-요청-처리', level: 4, title: 'IPC 요청 처리' },
     ]);
-    expect(preparedContent.content).toBe('## 부제목\n\n\n## 개요\n\n### 세부 조건\n\n본문');
+    expect(preparedContent.content).toBe(
+      '## 부제목\n\n\n## 구현\n\n### Renderer 요청과 Main 확정\n\n#### IPC 요청 처리\n\n본문'
+    );
   });
 
-  it('links abbreviated table-of-contents labels to headings by document order', () => {
+  it('links nested abbreviated table-of-contents labels to headings by document order', () => {
     const preparedContent = prepareMarkdownContent({
       content: [
         '## 목차',
         '',
-        '1. 수정한 스크립트 유실',
-        '2. Snapshot',
+        '1. 문제',
+        '   1. 수정한 스크립트 유실',
+        '   2. Snapshot',
         '',
-        '## 문제 1. 점심을 먹고 돌아오면 수정한 스크립트가 사라졌다',
+        '## 문제',
+        '',
+        '### 점심을 먹고 돌아오면 수정한 스크립트가 사라졌다',
         '',
         '### Snapshot',
       ].join('\n'),
@@ -79,8 +97,13 @@ describe('prepareMarkdownContent', () => {
 
     expect(preparedContent.tableOfContentsItems).toEqual([
       {
-        id: '문제-1-점심을-먹고-돌아오면-수정한-스크립트가-사라졌다',
+        id: '문제',
         level: 2,
+        title: '문제',
+      },
+      {
+        id: '점심을-먹고-돌아오면-수정한-스크립트가-사라졌다',
+        level: 3,
         title: '수정한 스크립트 유실',
       },
       { id: 'snapshot', level: 3, title: 'Snapshot' },
@@ -90,8 +113,9 @@ describe('prepareMarkdownContent', () => {
       tableOfContentsItems: preparedContent.tableOfContentsItems,
     });
 
-    expect(headingIdResolver.resolveId('문제 1. 점심을 먹고 돌아오면 수정한 스크립트가 사라졌다')).toBe(
-      '문제-1-점심을-먹고-돌아오면-수정한-스크립트가-사라졌다'
+    expect(headingIdResolver.resolveId('문제')).toBe('문제');
+    expect(headingIdResolver.resolveId('점심을 먹고 돌아오면 수정한 스크립트가 사라졌다')).toBe(
+      '점심을-먹고-돌아오면-수정한-스크립트가-사라졌다'
     );
   });
 });

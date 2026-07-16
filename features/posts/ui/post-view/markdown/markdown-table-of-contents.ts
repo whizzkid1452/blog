@@ -1,11 +1,11 @@
 export interface MarkdownTableOfContentsItem {
   id: string;
-  level: 2 | 3;
+  level: 2 | 3 | 4;
   title: string;
 }
 
 interface MarkdownHeading {
-  level: 2 | 3;
+  level: 2 | 3 | 4;
   title: string;
 }
 
@@ -34,7 +34,7 @@ interface CreateUniqueIdParams {
 
 const TABLE_OF_CONTENTS_HEADING = '## 목차';
 const ORDERED_LIST_ITEM_PATTERN = /^\d+\.\s+(.+?)\s*$/;
-const MARKDOWN_HEADING_PATTERN = /^(#{2,3})\s+(.+?)\s*$/;
+const MARKDOWN_HEADING_PATTERN = /^(#{2,4})\s+(.+?)\s*$/;
 const LEADING_SECTION_NUMBER_PATTERN = /^\d+(?:-\d+)*\.\s*/;
 const NON_SLUG_CHARACTER_PATTERN = /[^0-9A-Za-z가-힣ㄱ-ㅎㅏ-ㅣ]+/g;
 const SLUG_SEPARATOR_PATTERN = /^-+|-+$/g;

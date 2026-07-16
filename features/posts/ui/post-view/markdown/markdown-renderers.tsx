@@ -23,7 +23,7 @@ interface CreateMarkdownComponentsParams {
 
 interface MarkdownHeadingProps extends ComponentPropsWithoutRef<'h2'> {
   headingIdResolver: ReturnType<typeof createMarkdownHeadingIdResolver>;
-  level: 2 | 3;
+  level: 2 | 3 | 4;
   node?: unknown;
 }
 
@@ -45,6 +45,7 @@ export function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdow
     details: MarkdownDetails,
     h2: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={2} />,
     h3: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={3} />,
+    h4: headingProps => <MarkdownHeading {...headingProps} headingIdResolver={headingIdResolver} level={4} />,
     img: MarkdownImage,
     pre: MarkdownPre,
     summary: MarkdownSummary,
