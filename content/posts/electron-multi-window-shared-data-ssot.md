@@ -59,15 +59,11 @@ draft: false
 
 하지만 그 기능이 최신 작업을 누구보다 성실하게 지우고 있었다.
 
-![힘든 상황을 이겨내기 위해 스스로를 가스라이팅하라는 위키하우 패러디 밈](/images/electron-multi-window-shared-data-ssot/self-gaslighting-hardship-meme.jpg)
-
-_자동 저장 버그를 마주한 나: 더 강해지기 위한 과정이라고 생각하기로 했다._
-
 Electron으로 SRT 스크립트와 음성을 함께 편집할 수 있는 멀티미디어 에디터를 개발했다. 애플리케이션에는 Editor와 Admin 페이지가 있었고, SRT Script Panel은 별도 창으로 분리할 수 있었다. 실무진은 Editor와 SRT Panel을 동시에 열어 둔 채 스크립트를 실시간으로 수정했다.
 
 ![동일 프로젝트를 편집하는 Editor와 분리된 SRT Script Panel](/images/electron-multi-window-shared-data-ssot/editor-srt-panel-browserwindows.png)
 
-_실제 개발 빌드의 두 BrowserWindow 렌더러 화면을 데모 데이터로 캡처해 나란히 배치했다._
+_BrowserWindow 렌더러 화면_
 
 프로젝트에는 자동 저장도 적용되어 있었다. 사용자가 저장 버튼을 누르지 않아도 변경 내용을 로컬 PC에 계속 기록해 주는, 평소라면 아주 든든한 기능이었다.
 
@@ -101,7 +97,7 @@ SRT Panel에는 최신 값이 표시됨
 
 ![오래된 Renderer Snapshot이 최신 스크립트를 덮어쓰는 순서](/images/electron-multi-window-shared-data-ssot/stale-snapshot-overwrite-sequence.png)
 
-_기존 텍스트 흐름을 순서도로 함께 표현했다._
+_기존 텍스트 흐름 순서도_
 
 자동 저장은 사용자의 작업을 보호하기 위해 만든 기능이었다.
 
@@ -155,7 +151,7 @@ SRT Panel에서는 음성 합성과 편집에 사용할 자막 Row를 실시간�
 
 저장 요청이 누락됐다면 사용자가 수정한 화면의 값은 최소한 현재 Renderer 안에는 남아 있어야 한다. 그런데 이 문제에서는 프로젝트 데이터를 다시 불러온 뒤 화면의 값까지 수정 전 상태로 되돌아갔다.
 
-즉, 누군가 이전 내용을 다시 저장하고 있었다.
+즉, 어디에선가 이전 내용을 다시 저장하고 있었다.
 
 당시 같은 프로젝트 데이터를 사용하는 기능은 크게 네 가지였다.
 
@@ -1176,5 +1172,3 @@ Electron에서 공유 데이터를 설계할 때는 “어떤 Store를 사용할
 ## 이미지 출처
 
 본문의 밈 이미지는 [hello_world.cpp의 개발자 유머 짤 모음](https://raekki.tistory.com/entry/%EA%B0%9C%EB%B0%9C%EC%9E%90-%EC%9C%A0%EB%A8%B8-%EC%A7%A4-%EB%B0%88-%EC%BB%B4%EA%B3%B5-%EC%A7%A4-gif-%EC%9D%B4%EB%AF%B8%EC%A7%80 '개발자 유머 짤, 밈 / 컴공 짤 / gif, 이미지')에서 가져왔다. 해당 페이지는 여러 이미지를 모아 둔 형태이므로, 공개 게시 전 각 이미지의 원출처와 재사용 조건을 확인하는 것을 권장한다.
-
-`힘든 상황을 이겨내는 방법` 이미지는 [루리웹 게시물](https://m.ruliweb.com/etcs/board/300781/read/60873745 '힘든 상황을 이겨내는 방법')에서 가져왔다. 이 게시물 역시 재게시물로 보이므로, 공개 게시 전 원출처와 재사용 조건을 별도로 확인해야 한다.
