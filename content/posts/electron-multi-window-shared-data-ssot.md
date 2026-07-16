@@ -77,7 +77,7 @@ _실제 개발 빌드의 두 BrowserWindow 렌더러 화면을 데모 데이터�
 
 수정 직후에는 분명 멀쩡했다. SRT Panel에도 최신 문장이 표시됐고, 실무진도 변경 내용을 확인한 뒤 자리를 비웠다. 그런데 프로젝트를 다시 확인하니 스크립트가 수정 전 내용으로 돌아가 있었다.
 
-![별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈](/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg)
+<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg" alt="별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈" /></p>
 
 _로그를 열기 전까지는 아무도 “어?”라고 하지 않기로 했다._
 
@@ -214,7 +214,7 @@ Admin Store
 
 잘못된 것은 저장 동작이 아니라 **저장에 전달된 데이터**, 다시 말해 input이었다.
 
-![지시를 문자 그대로 해석해 우유를 여섯 개 사 온 상황을 보여주는 밈](/images/electron-multi-window-shared-data-ssot/literal-instruction-meme.jpg)
+<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/literal-instruction-meme.jpg" alt="지시를 문자 그대로 해석해 우유를 여섯 개 사 온 상황을 보여주는 밈" /></p>
 
 _자동 저장: “저는 전달받은 값을 정확히 저장했는데요?”_
 
@@ -249,7 +249,7 @@ SRT Panel ─────→ Editor
    Admin ←────── Studio
 ```
 
-![종료 태그로 전쟁을 멈춰 달라고 요구하는 개발자 밈](/images/electron-multi-window-shared-data-ssot/closing-tag-war-meme.jpg)
+<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/closing-tag-war-meme.jpg" alt="종료 태그로 전쟁을 멈춰 달라고 요구하는 개발자 밈" /></p>
 
 _Renderer 간 Store 전쟁을 멈춰 주세요._
 
@@ -463,7 +463,7 @@ Admin Store 갱신
 - 하나의 이벤트 전달이 누락되면 다시 데이터가 어긋난다.
 - 동시에 여러 변경이 발생하면 어떤 값이 최신인지 판단하기 어렵다.
 
-![코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈](/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg)
+<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg" alt="코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈" /></p>
 
 _동기화가 누락될 때마다 IPC 하나씩 추가하던 시절._
 
@@ -527,7 +527,7 @@ Renderer에서 변경
 
 > “애초에 누가 원본이지?”
 
-![잠든 개발자를 깨워 버그 해결법을 알려 주는 뇌 밈](/images/electron-multi-window-shared-data-ssot/midnight-bug-solution-meme.jpg)
+<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/midnight-bug-solution-meme.jpg" alt="잠든 개발자를 깨워 버그 해결법을 알려 주는 뇌 밈" /></p>
 
 _뇌: “주인님, 자동 저장 버그가 아니라 데이터 소유권 문제인 것 같아요.”_
 
@@ -1129,7 +1129,7 @@ Main Process의 ProjectSession
 
 구조를 바꾼 뒤에는 자동 저장이 다시 본업으로 돌아왔다. 사용자의 작업을 지우는 기능이 아니라, 사용자의 작업을 지키는 기능이 됐다.
 
-![프로그래밍을 싫어하다가 코드가 작동하면 다시 좋아하는 개발자 티셔츠 밈](/images/electron-multi-window-shared-data-ssot/hate-love-programming-meme.png)
+<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/hate-love-programming-meme.png" alt="프로그래밍을 싫어하다가 코드가 작동하면 다시 좋아하는 개발자 티셔츠 밈" /></p>
 
 _I hate multi-window state.\
 Oh, SSOT works.\
