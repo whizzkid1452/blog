@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import nextConfig from './next.config';
 
 describe('nextConfig', () => {
-  it('builds a standalone Node.js server artifact', () => {
-    expect(nextConfig.output).toBe('standalone');
+  it('uses the native Vercel Next.js build output', () => {
+    expect(nextConfig.output).toBeUndefined();
   });
 });

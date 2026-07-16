@@ -2,14 +2,15 @@
 
 ## Goal
 
-Markdown 글은 Next.js App Router로 정적 생성하고, 배포 환경에서는 Next.js Node.js 서버가 페이지와 API를 제공한다.
+Markdown 글은 Next.js App Router로 정적 생성하고, Vercel에서 페이지와 API를 배포한다.
 
-이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. **서버 배포**는 Next.js standalone 산출물을 Node.js 프로세스로 실행하는 방식을 뜻한다. 서버를 사용해도 공개 글 페이지의 기본 렌더링 전략은 SSG로 유지된다.
+이 문서에서 **정적 생성**은 Next.js가 빌드 시점에 HTML을 미리 생성하는 Static Site Generation(SSG)을 뜻한다. 공개 글 페이지의 기본 렌더링 전략은 배포 환경에서도 SSG로 유지된다.
 
 ## Prerequisites
 
 - Node.js 22 계열
 - pnpm
+- GitHub 저장소와 연결된 Vercel 프로젝트
 - 배포 도메인을 나타내는 `NEXT_PUBLIC_SITE_URL`
 
 로컬 개발에서는 `NEXT_PUBLIC_SITE_URL`이 없어도 `http://localhost:3000`을 사용한다. 배포 환경에서는 canonical URL, sitemap, RSS, Open Graph URL이 실제 도메인을 가리키도록 반드시 설정한다.
@@ -56,7 +57,7 @@ visibility: public
 Google 인증 사용자에게만 공개하려면 `visibility: authenticated`를 사용한다. 설정 방법은
 [Google OAuth 비공개 글 설정](./docs/google-oauth-private-posts-setup.md)을 참고한다.
 
-### 4. 정적 생성과 서버 산출물 확인
+### 4. 정적 생성 결과 확인
 
 ```bash
 pnpm build
@@ -71,8 +72,6 @@ pnpm build
 
 `/posts/[slug]`와 `/tags/[tag]`가 `SSG`로 표시되면 글 상세와 태그 페이지가 빌드 시점에 생성된 것이다.
 
-`.next/standalone`에 Node.js 서버 실행에 필요한 산출물이 생성된다.
-
 ### 5. production 서버 실행
 
 빌드가 끝난 후 production 서버를 실행한다.
@@ -81,20 +80,22 @@ pnpm build
 pnpm start
 ```
 
-브라우저에서 `http://localhost:3000`을 열고 글 목록, 글 상세, 태그 페이지를 확인한다. 프로세스 health check는 `GET /api/health`를 사용한다.
+브라우저에서 `http://localhost:3000`을 열고 글 목록, 글 상세, 태그 페이지를 확인한다.
 
-### 6. Docker 이미지 생성
+### 6. Vercel 배포
 
-```bash
-docker build --build-arg NEXT_PUBLIC_SITE_URL=https://example.com -t blog .
-docker run --rm -p 3000:3000 blog
+1. Vercel Dashboard에서 GitHub 저장소를 가져온다.
+2. Framework Preset이 `Next.js`인지 확인한다.
+3. Production Branch를 `main`으로 설정한다.
+4. Production 환경 변수에 실제 운영 주소를 등록한다.
+
+```dotenv
+NEXT_PUBLIC_SITE_URL=https://example.com
 ```
 
-Docker 이미지는 비 root 사용자인 `nextjs`로 standalone `server.js`를 실행한다.
+5. 첫 배포를 실행한다.
 
-### 7. AWS 배포
-
-`main`이 갱신되면 ARM64 Docker 이미지를 Amazon ECR에 저장하고 EC2 `t4g.small`에 자동 배포한다. 최초 인프라 생성과 도메인 전환 순서는 [AWS 서버 배포 가이드](./docs/aws-deployment-plan.md)를 따른다.
+연결 후 Pull Request에는 Preview Deployment가 생성되고, `main` 갱신에는 Production Deployment가 생성된다. Preview 환경에 `NEXT_PUBLIC_SITE_URL`이 없으면 애플리케이션은 Vercel이 제공하는 `VERCEL_URL`을 사용한다.
 
 ## SEO 구조
 
