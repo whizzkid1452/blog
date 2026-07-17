@@ -1,6 +1,6 @@
 ---
 title: 'Electron에서는 공유 데이터를 어디에 둬야 할까?'
-description: '멀티 윈도우 환경에서 오래된 Renderer 상태가 최신 작업을 덮어쓴 원인을 분석하고, Main Process를 공유 데이터의 SSOT로 재설계한 과정을 정리합니다.'
+description: '멀티 윈도우 환경에서 오래된 Renderer 상태가 최신 작업을 덮어쓴 원인을 분석하고, Main Process의 ProjectSession을 공유 데이터의 SSOT로 재설계한 과정을 정리합니다.'
 date: '2026-07-15'
 publishedAt: '2026-07-15T09:00:00+09:00'
 tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
@@ -11,10 +11,10 @@ draft: false
 
 ## 오래된 Renderer 상태가 최신 작업을 덮어쓴 원인과 Main Process를 SSOT로 설계한 과정
 
-`#electron` `#state-management` `#zustand` `#ssot`
+`#electron` `#state-management` `#zustand` `#ssot` `#autosave`
 
 > **요약**  
-> Electron 멀티 윈도우 환경에서 각 Renderer가 프로젝트 데이터의 복사본을 독립적으로 관리하면서, 오래된 Snapshot이 자동 저장을 통해 최신 작업을 덮어쓰는 문제가 발생했습니다. 이 글에서는 원인을 추적한 과정과 Main Process의 `ProjectSession`을 공유 데이터의 SSOT로 두고, Renderer Store와 영속 저장소의 역할을 분리한 설계를 설명합니다.
+> Electron 멀티 윈도우 환경에서 각 Renderer가 프로젝트 데이터의 복사본을 독립적으로 관리하면서, 오래된 Snapshot이 자동 저장을 통해 최신 작업을 덮어쓰는 문제가 발생했습니다. 이 글에서는 원인을 추적한 과정과 Main Process의 `ProjectSession`을 공유 데이터의 SSOT로 두고, Renderer Cache와 영속 저장소의 역할을 분리한 설계를 설명합니다.
 
 ## 목차
 
@@ -32,13 +32,13 @@ _BrowserWindow로 실행되는 Editor와 SRT Script Panel_
 
 그러던 중 다음과 같은 제보가 들어왔습니다.
 
-> “스크립트를 수정하고 점심을 먹고 왔는데, 수정한 내용이 사라져 있어요.”
+> “스크립트를 수정하고 점심을 먹고 오니까 수정한 내용이 사라졌어요!”
 
 수정 직후에는 SRT Panel에 최신 문장이 정상적으로 표시됐습니다. 그러나 프로젝트를 다시 확인하면 스크립트가 수정 전 내용으로 돌아가 있었습니다.
 
-<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg" alt="별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈" /></p>
+![별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈](/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg)
 
-_화면 갱신 문제인지, 실제 데이터 유실인지부터 확인해야 했습니다._
+_로그를 열기 전까지는 아무도 “어?”라고 하지 않기로 했습니다._
 
 저장 요청 자체가 누락됐다면 마지막으로 저장된 값이 남아 있어야 합니다. 하지만 이번 문제에서는 이미 반영된 최신 내용이 과거 데이터로 되돌아가고 있었습니다.
 
@@ -278,11 +278,11 @@ Admin Store 갱신
 - 이벤트가 한 번 누락되면 Store가 다시 어긋납니다.
 - 동시에 여러 변경이 발생하면 어느 값이 최신인지 판단하기 어렵습니다.
 
-<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg" alt="코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈" /></p>
+![코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈](/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg)
 
-_누락된 경로마다 IPC를 추가하는 방식으로는 기준점 문제를 해결할 수 없었습니다._
+_동기화가 누락될 때마다 IPC 하나씩 추가하던 시절._
 
-Renderer 간 동기화 자체는 필요하지만, 동기화보다 먼저 모든 Renderer가 따라야 할 기준점이 필요했습니다.
+누락된 경로마다 IPC를 추가하는 방식으로는 이 문제에서 손을 뗄 수 없었습니다. Renderer 간 동기화 자체는 필요하지만, 동기화보다 먼저 모든 Renderer가 따라야 할 기준점이 필요했습니다.
 
 ### 대안 2. Local Project File을 기준으로 삼는다
 
@@ -320,7 +320,7 @@ Renderer에서 변경
 
 ---
 
-## 6. Main Process를 SSOT로 선택한 이유
+## 6. Main Process에 SSOT를 둔 이유
 
 대안을 검토하면서 질문을 다음과 같이 바꿨습니다.
 
@@ -352,9 +352,9 @@ Editor가 닫혀도 Main Process의 현재 프로젝트 데이터는 유지할 �
 
 이러한 이유로 실행 중인 공유 데이터의 SSOT를 Main Process에 두기로 했습니다.
 
-![Main Process의 ProjectDocumentService를 SSOT로 둔 TO-BE 구조](/images/electron-multi-window-shared-data-ssot/to-be-project-document-service.png)
+![Main Process의 ProjectSession을 SSOT로 둔 TO-BE 구조](/images/electron-multi-window-shared-data-ssot/to-be-project-document-service.png)
 
-_Main Process의 ProjectDocumentService를 SSOT로 둔 구조_
+_Main Process의 ProjectSession을 SSOT로 둔 구조_
 
 다만 모든 상태를 Main Process에서 관리한 것은 아닙니다. 다음 조건에 해당하는 데이터만 Main의 공유 상태로 관리했습니다.
 
@@ -365,9 +365,9 @@ _Main Process의 ProjectDocumentService를 SSOT로 둔 구조_
 
 Modal, Hover, 검색어처럼 특정 화면에서만 사용하는 상태는 계속 각 Renderer에서 관리했습니다.
 
-### SSOT는 복사본이 하나라는 뜻이 아니다
+### SSOT의 의미
 
-Renderer가 화면을 렌더링하려면 로컬 상태가 필요합니다. 따라서 Main Process를 SSOT로 정했다고 해서 Renderer에 프로젝트 데이터가 없어야 하는 것은 아닙니다.
+Renderer가 화면을 렌더링하려면 로컬 상태가 필요합니다. 따라서 Main Process에 단일 진실 공급원(Single Source of Truth, SSOT)을 두기로 정했다고 해서 Renderer에 프로젝트 데이터가 없어야 하는 것은 아닙니다.
 
 이번 구조에서 SSOT는 다음과 같이 정의했습니다.
 
@@ -375,11 +375,11 @@ Renderer가 화면을 렌더링하려면 로컬 상태가 필요합니다. 따�
 
 Renderer에는 화면 렌더링을 위한 복사본이 존재할 수 있습니다. 다만 Main과 Renderer의 값이 다르면 Main의 Snapshot을 기준으로 맞추며, 프로젝트 데이터 변경도 Main에서 최종 확정합니다.
 
-| 위치               | 역할                                                |
-| ------------------ | --------------------------------------------------- |
-| Main Process       | 최신 Snapshot 결정, 변경 규칙 적용, 저장, Broadcast |
-| Renderer Store     | 화면을 렌더링하기 위한 로컬 복사본                  |
-| Local Project File | 앱 종료 이후에도 데이터를 유지하는 영속 저장소      |
+| 위치                  | 역할                                           |
+| --------------------- | ---------------------------------------------- |
+| Main `ProjectSession` | 최신 Snapshot 결정, 변경 규칙과 version 적용   |
+| Renderer Cache        | 화면을 렌더링하기 위한 읽기 전용 로컬 복사본   |
+| Local Project File    | 앱 종료 이후에도 데이터를 유지하는 영속 저장소 |
 
 ---
 
@@ -387,7 +387,7 @@ Renderer에는 화면 렌더링을 위한 복사본이 존재할 수 있습니�
 
 SSOT의 위치를 정한 뒤에는 Main Process에서 현재 프로젝트 Snapshot을 어떤 형태로 관리할지 결정해야 했습니다.
 
-Main Process에는 React 컴포넌트 트리가 없으므로 `useState`나 React Context처럼 렌더링을 전제로 하는 도구를 그대로 사용할 수 없습니다. Plain Object, Class, Vanilla Zustand를 검토했습니다.
+Main Process에는 React 컴포넌트 트리가 없으므로 `useState`나 React Context처럼 렌더링을 전제로 하는 도구를 그대로 사용할 수 없습니다. Plain Object, Class private field, Vanilla Zustand를 검토했습니다.
 
 ### Plain Object
 
@@ -397,41 +397,45 @@ Main Process에는 React 컴포넌트 트리가 없으므로 `useState`나 React
 let currentProject: ProjectSnapshot = initialProjectSnapshot;
 ```
 
-하지만 이번 구조에는 값 보관 외에도 다음 책임이 있었습니다.
+하지만 이번 구조에는 값 보관 외에도 다음 규칙이 필요했습니다.
 
 - 현재 Snapshot 조회
-- SRT Row 변경
-- 프로젝트 정보 수정
-- 변경 감지
-- 로컬 파일 저장 요청
-- Renderer Broadcast
+- 변경 요청 검증과 적용
+- project version 증가
+- Undo/Redo History 기록
+- 확정된 변경 결과 발행
 - 외부 코드의 직접 변경 방지
 
-Plain Object만으로도 구현할 수 있지만, 변경 규칙과 부수 효과가 여러 위치로 흩어질 가능성이 있었습니다.
+Plain Object만으로도 구현할 수 있지만, 외부 코드가 값을 직접 바꾸지 못하게 제한하고 모든 변경 규칙을 한 경로로 모으려면 별도의 API 경계가 필요했습니다.
 
 ### Class
 
 Class를 사용하면 외부에 허용할 변경 메서드만 공개할 수 있습니다.
 
 ```ts
-projectSession.updateScriptRows(rows);
-projectSession.updateProjectInfo(info);
+projectSession.dispatch(action);
+projectSession.undo();
+projectSession.redo();
 ```
 
-프로젝트 변경 규칙, 파일 저장, Renderer Broadcast를 하나의 객체에 캡슐화할 수 있다는 장점도 있습니다.
+프로젝트 Snapshot은 private field로 감추고, 변경 검증과 version 증가를 공개 메서드 안에서 함께 처리할 수 있습니다.
 
 ### Vanilla Zustand
 
-Zustand의 `createStore`는 React 없이 사용할 수 있는 Vanilla Store를 만듭니다. 생성된 Store는 `getState`, `setState`, `subscribe` API를 제공하므로 Snapshot을 보관하고 변경을 감지하는 용도로 사용할 수 있습니다. ([Zustand](https://zustand.docs.pmnd.rs/reference/apis/create-store 'createStore - Zustand'))
+Zustand의 `createStore`는 React 없이 사용할 수 있는 Vanilla Store를 만듭니다. 생성된 Store는 `getState`, `setState`, `subscribe` API를 제공하므로 Snapshot 보관과 구독이 필요한 경우 사용할 수 있습니다. ([Zustand](https://zustand.docs.pmnd.rs/reference/apis/create-store 'createStore - Zustand'))
 
-Class와 Vanilla Zustand는 서로 다른 역할에 적합했습니다.
+다만 Main에서 필요했던 기능은 `ProjectSession`의 private field와 method만으로 구현할 수 있었습니다.
 
-| 도구            | 담당 역할                                   |
-| --------------- | ------------------------------------------- |
-| Class           | 프로젝트 변경 규칙, 저장, Broadcast, 캡슐화 |
-| Vanilla Zustand | Snapshot 보관, 조회, 변경, 구독             |
+| 기준           | Class private field | Vanilla Zustand                    |
+| -------------- | ------------------- | ---------------------------------- |
+| 외부 변경 차단 | private로 제한      | Store API 노출 범위를 별도로 제한  |
+| Selector 구독  | 직접 구현           | Store API로 제공                   |
+| Middleware     | 직접 구현           | 생태계를 활용할 수 있음            |
+| 현재 요구사항  | 충분함              | `ProjectSession` API와 기능이 겹침 |
 
-따라서 `ProjectSession` Class 내부에 Vanilla Zustand Store를 두는 구조를 선택했습니다.
+따라서 초기 구조에서는 Vanilla Zustand를 Main의 저장소로 추가하지 않고, `ProjectSession`의 private field에 Snapshot을 보관했습니다. Main 내부에서 여러 모듈이 서로 다른 Selector를 구독하거나 Middleware가 필요해질 때 Vanilla Zustand를 다시 비교할 수 있습니다.
+
+`useSyncExternalStore`도 Main의 Snapshot 저장소를 만드는 API는 아닙니다. 이 Hook은 React 컴포넌트가 React 외부 Store의 값을 읽고 변경을 구독하도록 연결합니다. 이번 구조에서는 Renderer의 프로젝트 Snapshot을 TanStack Query Cache에 보관하므로 `useSyncExternalStore`를 직접 구현하지 않았습니다. ([React](https://react.dev/reference/react/useSyncExternalStore 'useSyncExternalStore'))
 
 ### ProjectSnapshot과 ProjectSession
 
@@ -444,97 +448,58 @@ Main Process에서 관리할 데이터는 크게 두 종류였습니다.
 
 ```ts
 type ProjectSnapshot = {
-  revision: number;
+  version: number;
   projectInfo: ProjectInfo;
   scriptRows: SrtRow[];
 };
 ```
 
-`ProjectSession`은 현재 Snapshot을 보관하고, 외부에는 허용된 변경 메서드만 제공합니다.
+`ProjectSession`은 현재 Snapshot을 보관하고, 외부에는 허용된 변경 API만 제공합니다. 핵심 책임만 남긴 예시는 다음과 같습니다.
 
 ```ts
-import { createStore } from 'zustand/vanilla';
-
 class ProjectSession {
-  private readonly store = createStore<ProjectSnapshot>()(() => initialProjectSnapshot);
+  private currentSnapshot: ProjectSnapshot;
 
-  private saveQueue: Promise<void> = Promise.resolve();
-
-  private readonly unsubscribe: () => void;
-
-  constructor() {
-    this.unsubscribe = this.store.subscribe((snapshot, previousSnapshot) => {
-      if (snapshot.revision === previousSnapshot.revision) {
-        return;
-      }
-
-      const nextSnapshot = structuredClone(snapshot);
-
-      this.enqueueSave(nextSnapshot);
-      this.broadcastProjectChanged(nextSnapshot);
-    });
+  constructor(initialSnapshot: ProjectSnapshot) {
+    this.currentSnapshot = structuredClone(initialSnapshot);
   }
 
   getSnapshot(): ProjectSnapshot {
-    return structuredClone(this.store.getState());
+    return structuredClone(this.currentSnapshot);
   }
 
-  updateScriptRows(scriptRows: SrtRow[]): void {
-    this.store.setState(state => ({
-      scriptRows,
-      revision: state.revision + 1,
-    }));
-  }
+  dispatch(action: ProjectAction): ProjectUpdateResult {
+    const previousVersion = this.currentSnapshot.version;
+    const nextDocument = applyProjectAction(this.currentSnapshot, action);
 
-  updateProjectInfo(projectInfo: ProjectInfo): void {
-    this.store.setState(state => ({
-      projectInfo,
-      revision: state.revision + 1,
-    }));
-  }
+    // 변경 내용과 version을 같은 동기 작업 안에서 확정합니다.
+    this.currentSnapshot = {
+      ...nextDocument,
+      version: previousVersion + 1,
+    };
 
-  dispose(): void {
-    this.unsubscribe();
-  }
-
-  private enqueueSave(snapshot: ProjectSnapshot): void {
-    this.saveQueue = this.saveQueue
-      .then(() => this.saveProject(snapshot))
-      .catch(error => {
-        console.error('Failed to save project', error);
-      });
-  }
-
-  private async saveProject(snapshot: ProjectSnapshot): Promise<void> {
-    // 사용자의 로컬 프로젝트 파일에 저장한다.
-  }
-
-  private broadcastProjectChanged(snapshot: ProjectSnapshot): void {
-    // 현재 열려 있는 관련 Renderer에
-    // 최신 Snapshot 또는 Patch를 전달한다.
+    return createUpdateResult({
+      action,
+      previousVersion,
+      snapshot: this.getSnapshot(),
+    });
   }
 }
 ```
 
-이 구조에서 역할은 다음과 같이 나뉩니다.
+예시에서 `applyProjectAction`은 요청을 검증하고 새 문서를 만드는 순수 함수이며, `createUpdateResult`는 확정된 Snapshot과 version을 응답 형태로 조립합니다. 실제 변경 종류에 따라 forward patch와 inverse patch를 함께 만들어 Undo/Redo History에 기록할 수 있습니다.
 
-#### ProjectSession Class
+저장과 Broadcast까지 `ProjectSession`이 직접 수행하게 하지는 않았습니다. Main 내부 책임은 다음과 같이 분리했습니다.
 
-- 프로젝트 데이터의 변경 규칙 관리
-- 외부에서 호출할 수 있는 API 제한
-- 로컬 파일 저장 요청
-- 저장 순서 관리
-- Renderer Broadcast
-- 외부 직접 변경 방지
+| 역할                    | 책임                                                   |
+| ----------------------- | ------------------------------------------------------ |
+| `ProjectSession`        | 변경 검증, document update, version, Undo/Redo History |
+| Project Event Publisher | 열린 Renderer에 확정 결과 발행                         |
+| Autosave Coordinator    | Debounce, pending Snapshot, 파일 쓰기 순서, `flush`    |
+| Project Repository      | JSON 변환과 로컬 프로젝트 파일 교체                    |
+| IPC Handler             | Preload에 노출할 API와 입력 검증 경계                  |
 
-#### Vanilla Zustand Store
-
-- 현재 프로젝트 Snapshot 보관
-- `getState`를 통한 Snapshot 조회
-- `setState`를 통한 Snapshot 변경
-- `subscribe`를 통한 변경 감지
-
-Zustand를 애플리케이션 전체 아키텍처로 사용한 것은 아닙니다. Main Process 안에서 현재 Snapshot을 보관하고 변경을 구독하는 구현 도구로 제한했습니다.
+이 분리로 `ProjectSession`은 파일 형식이나 Renderer Cache를 알지 않고, Repository는 언제 무엇을 저장할지 결정하지 않습니다.
 
 ---
 
@@ -544,47 +509,57 @@ Zustand를 애플리케이션 전체 아키텍처로 사용한 것은 아닙니�
 
 기존에는 각 Renderer가 자신의 Store를 수정했고, 해당 Store의 값이 자동 저장에 사용될 수 있었습니다.
 
-변경 후에는 Renderer가 프로젝트 데이터를 직접 확정하지 않습니다. Renderer는 사용자의 변경 의도를 Main Process에 전달하고, Main이 `ProjectSession`을 변경합니다.
+변경 후에는 Renderer가 프로젝트 데이터를 직접 확정하지 않습니다. Renderer는 사용자의 변경 의도를 `ProjectAction`으로 Main Process에 전달하고, Main이 요청을 검증한 뒤 Snapshot과 version을 확정합니다.
 
 ```text
 SRT Renderer
-    ↓ updateScriptRows
-Main Process
-    ↓
-ProjectSession Snapshot 변경
-    ↓
-로컬 파일 저장 요청
-    ↓
-관련 Renderer에 Broadcast
+    ↓ ProjectAction
+Main IPC Handler
+    ↓ dispatch
+ProjectSession
+    ├─ Snapshot과 version 확정
+    ├─ Autosave Coordinator에 전달
+    └─ 관련 Renderer에 확정 결과 발행
 ```
 
 SRT Panel에서는 다음과 같이 변경을 요청합니다.
 
 ```ts
-window.project.updateScriptRows(nextRows);
+const updateResult = await window.project.dispatch({
+  actionId: crypto.randomUUID(),
+  baseVersion: projectSnapshot.version,
+  type: 'srt-row-text-updated',
+  payload: { rowId, text: nextText },
+});
 ```
 
 Main Process는 요청을 받아 `ProjectSession`을 변경합니다.
 
 ```ts
-ipcMain.on('project:update-script-rows', (_event, rows: SrtRow[]) => {
-  projectSession.updateScriptRows(rows);
+ipcMain.handle('project:dispatch', (_event, action: ProjectAction) => {
+  const updateResult = projectSession.dispatch(action);
+  const snapshot = projectSession.getSnapshot();
+
+  projectEventPublisher.publish(updateResult);
+  autosaveCoordinator.schedule(snapshot);
+
+  return updateResult;
 });
 ```
 
-Snapshot이 변경되면 Vanilla Zustand의 `subscribe`가 실행됩니다.
+`baseVersion`은 Renderer가 어느 version을 보고 수정했는지 Main이 판단할 근거입니다. 현재 version과 다를 때 요청을 거절할지, 항목 단위 version으로 비교할지, 마지막으로 도착한 요청을 적용할지는 별도의 충돌 정책으로 정해야 합니다.
 
 ```text
 Renderer의 변경 요청
         ↓
-ProjectSession의 변경 메서드
+ProjectSession dispatch
         ↓
-Vanilla Zustand setState
+검증 · document update · version 증가
         ↓
-subscribe
-   ┌────┴─────┐
-   ↓          ↓
-파일 저장   Renderer Broadcast
+확정된 ProjectUpdateResult
+   ┌──────────┴───────────┐
+   ↓                      ↓
+Autosave Coordinator   Renderer Broadcast
 ```
 
 ![Renderer 변경 요청부터 Main 저장과 Broadcast까지의 순서](/images/electron-multi-window-shared-data-ssot/project-document-update-save-broadcast.png)
@@ -616,51 +591,51 @@ ProjectSession
 자동 저장
 ```
 
-사용자의 변경은 Main Process의 메모리 Snapshot에 즉시 반영합니다. 디스크 쓰기는 비동기로 처리하되, 이전 Snapshot의 저장이 나중에 완료되면서 최신 파일을 다시 덮어쓰지 않도록 저장 순서를 보장합니다.
+사용자의 변경은 Main Process의 메모리 Snapshot에 즉시 반영합니다. 디스크 쓰기는 비동기로 처리하되, 이전 Snapshot의 저장이 나중에 완료되면서 최신 파일을 다시 덮어쓰지 않도록 프로젝트별 파일 쓰기를 순서대로 실행합니다.
 
 ```text
 사용자 입력
     ↓
 Main Snapshot 즉시 변경
     ↓
-저장 Queue에 요청 등록
+Debounce 동안 pending Snapshot을 최신 값으로 교체
     ↓
-입력 순서대로 비동기 파일 저장
+같은 프로젝트의 파일 쓰기를 하나씩 실행
 ```
 
-변경 빈도가 높다면 짧은 시간 동안 발생한 파일 저장 요청을 병합할 수 있습니다. 다만 파일 쓰기를 지연하더라도 Main Process의 Snapshot 갱신까지 늦추면 안 됩니다. 실행 중인 최신 값의 기준은 항상 `ProjectSession`이어야 합니다.
+예를 들어 version 10을 저장하는 동안 version 11, 12, 13이 들어오면 11과 12를 각각 파일로 만들 필요는 없습니다. 현재 쓰기가 끝난 뒤 저장하지 않은 최신 version 13을 기록하면 됩니다. 이것은 여러 Snapshot을 합치는 merge가 아니라, pending Snapshot 참조를 최신 값으로 교체하는 coalescing입니다.
 
-### Renderer Store는 화면 렌더링에 사용한다
+파일 쓰기는 프로젝트별 queued sequential execution으로 제한했습니다. 이 순서 제어는 모든 document update에 적용하지 않습니다. 메모리의 Snapshot과 version은 즉시 확정하고, 같은 프로젝트 파일을 대상으로 한 비동기 쓰기만 앞선 작업이 끝난 뒤 시작합니다.
 
-Main Process의 Snapshot이 변경되면 Renderer 화면도 갱신돼야 합니다. Renderer는 Main에서 변경 이벤트를 받고, 전달받은 Snapshot 또는 Patch를 로컬 Zustand Store에 반영합니다.
+### Renderer Cache는 화면 렌더링에 사용한다
+
+Main Process의 Snapshot이 변경되면 Renderer 화면도 갱신돼야 합니다. Renderer는 Main에서 확정 결과를 받고, 전달받은 Snapshot 또는 Patch를 TanStack Query Cache에 반영합니다.
 
 ```ts
-window.project.onSnapshotChanged(snapshot => {
-  useProjectRendererStore.getState().applySnapshot(snapshot);
-});
+function applyConfirmedSnapshot(incomingSnapshot: ProjectSnapshot): void {
+  queryClient.setQueryData<ProjectSnapshot>(['project', incomingSnapshot.projectInfo.id], currentSnapshot => {
+    if (currentSnapshot && incomingSnapshot.version <= currentSnapshot.version) {
+      return currentSnapshot;
+    }
+
+    return incomingSnapshot;
+  });
+}
 ```
 
-컴포넌트는 필요한 Slice만 Selector로 구독합니다.
+`setQueryData`는 이미 받은 확정 결과를 Cache에 동기적으로 반영할 때 사용합니다. 기존 Cache 객체를 직접 수정하지 않고 새 Snapshot을 반환합니다. ([TanStack Query](https://tanstack.com/query/latest/docs/reference/QueryClient#queryclientsetquerydata 'QueryClient.setQueryData'))
 
-```ts
-const scriptRows = useProjectRendererStore(state => state.scriptRows);
-```
-
-```ts
-const projectName = useProjectRendererStore(state => state.projectInfo.name);
-```
-
-Main Process Store와 Renderer Store는 역할이 다릅니다.
+Main Process의 `ProjectSession`과 Renderer Cache는 역할이 다릅니다.
 
 ```text
-Main Process Store
+Main ProjectSession
 └─ 무엇이 최신인지 결정하는 SSOT
 
-Renderer Store
-└─ 최신 데이터를 화면에 표시하기 위한 로컬 복사본
+Renderer TanStack Query Cache
+└─ 확정된 데이터를 화면에 표시하기 위한 읽기 전용 복사본
 ```
 
-Renderer Store를 제거한 것이 아니라, 진실을 결정하는 역할에서 화면을 렌더링하는 역할로 변경했습니다.
+여기서 읽기 전용은 JavaScript 객체를 기술적으로 변경할 수 없다는 뜻이 아닙니다. UI가 Cache의 값을 프로젝트의 최종 상태로 확정하지 않고, 사용자 입력을 다시 Main에 요청한다는 API 규칙을 뜻합니다.
 
 프로젝트 규모가 커져 전체 Snapshot을 매번 전달하는 비용이 부담된다면, 변경된 영역만 Patch로 전달하는 방식도 적용할 수 있습니다.
 
@@ -697,7 +672,7 @@ Main Process의 Snapshot
 ```ts
 const snapshot = await window.project.getSnapshot();
 
-useProjectRendererStore.getState().applySnapshot(snapshot);
+applyConfirmedSnapshot(snapshot);
 ```
 
 전체 흐름은 다음과 같습니다.
@@ -710,19 +685,17 @@ useProjectRendererStore.getState().applySnapshot(snapshot);
 └─ Main의 현재 Snapshot 다시 요청
 ```
 
-비동기 Snapshot 요청과 Broadcast의 도착 순서가 뒤바뀔 수 있다면 `revision`을 비교해 오래된 Snapshot이 최신 값을 덮어쓰지 못하도록 처리할 수 있습니다.
+비동기 Snapshot 요청과 Broadcast의 도착 순서가 뒤바뀔 수 있으므로 `version`을 비교해 오래된 Snapshot이 최신 값을 덮어쓰지 못하도록 처리했습니다.
 
-```ts
-function applySnapshot(incoming: ProjectSnapshot): void {
-  const currentRevision = useProjectRendererStore.getState().revision;
+```text
+현재 version이 12일 때
 
-  if (incoming.revision < currentRevision) {
-    return;
-  }
-
-  useProjectRendererStore.setState(incoming);
-}
+12 이하 수신  → 이미 적용했거나 오래된 결과이므로 무시
+13 수신       → 다음 update이므로 적용
+14 이상 수신  → 중간 event 누락으로 판단하고 Main Snapshot 재요청
 ```
+
+이 규칙은 중복 전달, 순서 역전, event 누락을 구분합니다. 같은 SRT Row를 서로 다른 의도로 수정한 의미적 충돌까지 해결하지는 않으므로, 그 경우에는 `baseVersion`과 별도의 충돌 정책이 필요합니다.
 
 ### 저장하지 않는 이벤트는 별도 채널로 분리한다
 
@@ -754,11 +727,11 @@ Project Snapshot 변경
 
 따라서 데이터를 성격에 따라 세 종류로 구분했습니다.
 
-| 데이터 종류           | 예시                              | 관리 위치             | 파일 저장 |
-| --------------------- | --------------------------------- | --------------------- | --------- |
-| 저장되는 공유 데이터  | SRT Row, 프로젝트 정보, 편집 결과 | Main의 ProjectSession | 필요      |
-| Renderer 내부 상태    | Modal, Filter, Hover              | 각 Renderer Store     | 불필요    |
-| 일시적인 창 간 이벤트 | Highlight, Scroll, Selection      | IPC 또는 MessagePort  | 불필요    |
+| 데이터 종류           | 예시                              | 관리 위치                      | 파일 저장 |
+| --------------------- | --------------------------------- | ------------------------------ | --------- |
+| 저장되는 공유 데이터  | SRT Row, 프로젝트 정보, 편집 결과 | Main의 `ProjectSession`        | 필요      |
+| Renderer 내부 상태    | Modal, Filter, Hover              | React State 또는 Zustand Store | 불필요    |
+| 일시적인 창 간 이벤트 | Highlight, Scroll, Selection      | IPC 또는 MessagePort           | 불필요    |
 
 단발성 이벤트는 일반 IPC로 전달할 수 있습니다. 지속적이거나 빈도가 높은 이벤트를 별도 채널로 분리해야 한다면 `MessageChannelMain`과 `MessagePortMain`을 사용할 수 있습니다. Main Process에서 연결된 Port 쌍을 생성해 각 Renderer에 전달하면 초기 연결 이후 지속적인 메시지 채널을 구성할 수 있습니다. ([Electron](https://electronjs.org/docs/latest/tutorial/message-ports 'MessagePorts in Electron'))
 
@@ -805,11 +778,11 @@ Main Process는 채널 연결만 담당하고, 해당 이벤트를 프로젝트 
 
 ```text
 Renderer
-   ↓ 변경 요청
+   ↓ ProjectAction
 Main Process의 ProjectSession
-   ├─ 최신 Snapshot 확정
-   ├─ Local Project File 저장
-   └─ 관련 Renderer에 Broadcast
+   ├─ Snapshot과 version 확정
+   ├─ Project Event Publisher → 관련 Renderer
+   └─ Autosave Coordinator → Local Project File
 ```
 
 변경 후에는 역할이 다음과 같이 정리됐습니다.
@@ -818,7 +791,7 @@ Main Process의 ProjectSession
 - Renderer는 프로젝트 데이터를 직접 확정하지 않고 Main에 변경을 요청합니다.
 - 자동 저장은 항상 `ProjectSession`의 Snapshot을 기준으로 실행합니다.
 - Main이 확정한 Snapshot을 관련 Renderer에 전달합니다.
-- Renderer Store는 화면 렌더링을 위한 로컬 복사본으로 사용합니다.
+- TanStack Query Cache는 화면 렌더링을 위한 읽기 전용 복사본으로 사용합니다.
 - 새로운 창이나 탭은 진입 시 Main의 현재 Snapshot을 다시 요청합니다.
 - 로컬 프로젝트 파일은 영속 저장과 앱 재실행 시 복구에 사용합니다.
 - Highlight와 Scroll 같은 임시 이벤트는 별도 채널로 전달합니다.
@@ -829,8 +802,11 @@ Main Process의 ProjectSession
 저장되는 공유 데이터
 └─ Main Process의 ProjectSession
 
-화면을 위한 로컬 상태
-└─ Renderer Zustand Store
+공유 데이터를 표시하는 Renderer Cache
+└─ TanStack Query Cache
+
+화면에만 필요한 UI 상태
+└─ React State 또는 Zustand Store
 
 저장되지 않는 임시 이벤트
 └─ IPC 또는 MessagePort
@@ -852,11 +828,11 @@ _역할을 분리한 뒤 자동 저장은 다시 사용자의 작업을 보호�
 
 Electron 멀티 윈도우 환경에서는 각 창이 별도의 Renderer Process에서 실행됩니다. 따라서 한 Renderer의 전역 Store를 애플리케이션 전체의 전역 Store처럼 사용할 수 없습니다.
 
-이번 프로젝트에서는 저장되는 공유 데이터의 기준을 Main Process에 두었습니다. Renderer Store는 전달받은 데이터를 화면에 표시하고, 저장할 필요가 없는 일시적인 UI 이벤트는 별도 채널로 전달했습니다.
+이번 프로젝트에서는 저장되는 공유 데이터의 기준을 Main Process에 두었습니다. TanStack Query Cache는 전달받은 데이터를 화면에 표시하고, Renderer의 UI 상태는 React State나 Zustand Store에 남겼습니다. 저장할 필요가 없는 일시적인 창 간 이벤트는 별도 채널로 전달했습니다.
 
 핵심은 모든 상태를 한곳에 모으는 것이 아니었습니다. 저장되는 데이터, 화면을 위한 상태, 순간적인 UI 이벤트를 구분하고, 공유 데이터의 최신 값을 확정하는 주체를 하나로 정하는 것이었습니다.
 
-데이터의 소유권을 먼저 정하자 Zustand, IPC, MessagePort의 역할도 자연스럽게 나뉘었습니다. 새로운 상태 관리 라이브러리가 문제를 해결한 것이 아니라, 값이 서로 다를 때 무엇을 신뢰할지 명확히 정한 것이 구조를 바꿨습니다.
+데이터의 소유권을 먼저 정하자 TanStack Query, Zustand, IPC, MessagePort의 역할도 자연스럽게 나뉘었습니다. 새로운 상태 관리 라이브러리가 문제를 해결한 것이 아니라, 값이 서로 다를 때 무엇을 신뢰할지 명확히 정한 것이 구조를 바꿨습니다.
 
 Electron에서 공유 데이터를 설계할 때는 “어떤 Store를 사용할까?”보다 다음 질문을 먼저 검토하는 편이 좋습니다.
 
