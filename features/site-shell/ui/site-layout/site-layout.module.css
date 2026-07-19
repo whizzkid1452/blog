@@ -32,12 +32,7 @@
   height: 112px;
   border-radius: 50%;
   object-fit: cover;
-  transition: transform 160ms ease;
-}
-
-.sidebarProfileLink:hover .sidebarProfileImage,
-.sidebarProfileLink:focus-visible .sidebarProfileImage {
-  transform: translateY(-2px);
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
 .sidebarProfileLink:focus-visible {
@@ -567,5 +562,21 @@
 @media (max-width: 640px) {
   .mobileNavigationTrigger {
     top: 12px;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .sidebarProfileLink:hover .sidebarProfileImage {
+    transform: translateY(-2px);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sidebarProfileImage {
+    transition: none;
+  }
+
+  .sidebarProfileLink:hover .sidebarProfileImage {
+    transform: none;
   }
 }

@@ -118,6 +118,7 @@ export function MarkdownCodeBlock({ children, copyText }: MarkdownCodeBlockProps
         <Tooltip.Trigger asChild>
           <button
             className={styles.codeCopyButton}
+            data-motion="pressable"
             type="button"
             onClick={handleCopy}
             disabled={isCopyDisabled}

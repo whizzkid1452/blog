@@ -47,8 +47,8 @@ export function MarkdownImageViewer({ src, alt, title, size }: MarkdownImageView
         </button>
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className={styles.markdownImageZoomOverlay} />
-        <Dialog.Content className={styles.markdownImageZoomContent}>
+        <Dialog.Overlay className={styles.markdownImageZoomOverlay} data-motion-overlay="backdrop" />
+        <Dialog.Content className={styles.markdownImageZoomContent} data-motion-overlay="centered-dialog">
           <Dialog.Title className={styles.visuallyHidden}>{accessibleImageName} 전체 화면 보기</Dialog.Title>
           <Dialog.Description className={styles.visuallyHidden}>
             Esc 키 또는 닫기 버튼을 눌러 원래 화면으로 돌아갈 수 있습니다.
@@ -63,6 +63,7 @@ export function MarkdownImageViewer({ src, alt, title, size }: MarkdownImageView
           />
           <Dialog.Close
             className={styles.markdownImageZoomCloseButton}
+            data-motion="pressable"
             type="button"
             aria-label="전체 화면 이미지 닫기"
           >

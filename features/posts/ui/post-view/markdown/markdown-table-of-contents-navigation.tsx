@@ -108,18 +108,28 @@ export function MarkdownTableOfContentsNavigation({ items }: MarkdownTableOfCont
       </aside>
 
       <Dialog.Root open={isMobileNavigationOpen} onOpenChange={setIsMobileNavigationOpen}>
-        <Dialog.Trigger className={styles.mobileTableOfContentsTrigger} type="button" aria-label="목차 열기">
+        <Dialog.Trigger
+          className={styles.mobileTableOfContentsTrigger}
+          data-motion="pressable"
+          type="button"
+          aria-label="목차 열기"
+        >
           <span className={styles.mobileTableOfContentsTriggerBar} aria-hidden="true" />
           <span className={styles.mobileTableOfContentsTriggerBar} aria-hidden="true" />
           <span className={styles.mobileTableOfContentsTriggerBar} aria-hidden="true" />
         </Dialog.Trigger>
         <Dialog.Portal>
-          <Dialog.Overlay className={styles.mobileTableOfContentsOverlay} />
-          <Dialog.Content className={styles.mobileTableOfContentsContent}>
+          <Dialog.Overlay className={styles.mobileTableOfContentsOverlay} data-motion-overlay="backdrop" />
+          <Dialog.Content className={styles.mobileTableOfContentsContent} data-motion-overlay="right-drawer">
             <header className={styles.mobileTableOfContentsHeader}>
               <Dialog.Title className={styles.mobileTableOfContentsTitle}>목차</Dialog.Title>
               <Dialog.Description className={styles.visuallyHidden}>현재 글의 섹션으로 이동합니다.</Dialog.Description>
-              <Dialog.Close className={styles.mobileTableOfContentsCloseButton} type="button" aria-label="목차 닫기">
+              <Dialog.Close
+                className={styles.mobileTableOfContentsCloseButton}
+                data-motion="pressable"
+                type="button"
+                aria-label="목차 닫기"
+              >
                 닫기
               </Dialog.Close>
             </header>

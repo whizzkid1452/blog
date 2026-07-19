@@ -54,20 +54,30 @@ export function MobileNavigationDialog({
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Trigger className={styles.mobileNavigationTrigger} type="button" aria-label="Open navigation">
+      <Dialog.Trigger
+        className={styles.mobileNavigationTrigger}
+        data-motion="pressable"
+        type="button"
+        aria-label="Open navigation"
+      >
         <span className={styles.mobileNavigationTriggerBar} aria-hidden="true" />
         <span className={styles.mobileNavigationTriggerBar} aria-hidden="true" />
         <span className={styles.mobileNavigationTriggerBar} aria-hidden="true" />
       </Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className={styles.mobileNavigationOverlay} />
-        <Dialog.Content className={styles.mobileNavigationContent}>
+        <Dialog.Overlay className={styles.mobileNavigationOverlay} data-motion-overlay="backdrop" />
+        <Dialog.Content className={styles.mobileNavigationContent} data-motion-overlay="right-drawer">
           <header className={styles.mobileNavigationHeader}>
             <Dialog.Title className={styles.mobileNavigationTitle}>Navigation</Dialog.Title>
             <Dialog.Description className={styles.visuallyHidden}>
               Browse primary links, topics, and recent posts.
             </Dialog.Description>
-            <Dialog.Close className={styles.mobileNavigationCloseButton} type="button" aria-label="Close navigation">
+            <Dialog.Close
+              className={styles.mobileNavigationCloseButton}
+              data-motion="pressable"
+              type="button"
+              aria-label="Close navigation"
+            >
               Close
             </Dialog.Close>
           </header>
@@ -208,6 +218,7 @@ function MobileNavigationCollapsibleSection({
         <h2 className={styles.mobileNavigationSectionTitle}>{title}</h2>
         <Collapsible.Trigger
           className={styles.mobileNavigationSectionTrigger}
+          data-motion="pressable"
           type="button"
           aria-label={`Toggle ${title}`}
         >
