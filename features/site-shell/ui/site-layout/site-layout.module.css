@@ -26,26 +26,17 @@
   text-decoration: none;
 }
 
-.sidebarProfileMark {
-  display: inline-flex;
+.sidebarProfileImage {
+  display: block;
   width: 112px;
   height: 112px;
-  align-items: center;
-  justify-content: center;
   border-radius: 50%;
-  background: #3b82f6;
-  color: #ffffff;
-  font-family: var(--font-geist-mono);
-  font-size: 35px;
-  font-weight: 800;
-  letter-spacing: -7px;
-  line-height: 1;
-  text-indent: -7px;
+  object-fit: cover;
   transition: transform 160ms ease;
 }
 
-.sidebarProfileLink:hover .sidebarProfileMark,
-.sidebarProfileLink:focus-visible .sidebarProfileMark {
+.sidebarProfileLink:hover .sidebarProfileImage,
+.sidebarProfileLink:focus-visible .sidebarProfileImage {
   transform: translateY(-2px);
 }
 

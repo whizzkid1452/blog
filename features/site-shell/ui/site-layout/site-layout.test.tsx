@@ -23,6 +23,7 @@ describe('SiteLayout', () => {
 
     expect(markup).not.toContain('<header');
     expect(sidebarMarkup).not.toContain('>Blog</a>');
+    expect(sidebarMarkup).toContain('profile-avatar.png');
     expect(sidebarMarkup).toContain('>앨리스의 토끼굴</p>');
     expect(sidebarMarkup).toContain('>@whizzkid1452</p>');
     expect(sidebarMarkup).toContain('>블로그 메뉴</h2>');
