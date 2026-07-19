@@ -216,22 +216,87 @@ version 13 파일 쓰기 시작
 
 ---
 
-## 6. Store보다 데이터의 최종 결정권을 먼저 정해야 한다
+## 6. 변경 전후 비교와 회고
 
-변경 전에는 각 Renderer의 Snapshot이 화면과 자동 저장의 기준으로 사용될 수 있었습니다. 변경 후에는 Main Process의 `ProjectSession`만 최신 Snapshot을 확정하고, Renderer Cache와 자동 저장은 그 결과를 사용합니다.
+### AS IS
 
-| 위치                  | 역할                                                    |
-| --------------------- | ------------------------------------------------------- |
-| Main `ProjectSession` | 프로젝트 변경과 version을 확정하는 SSOT                 |
-| Renderer Cache        | Main이 확정한 데이터를 화면에 표시하는 로컬 복사본      |
-| Local Project File    | 앱 종료 후에도 확정된 프로젝트 데이터를 유지하는 저장소 |
+```text
+각 Renderer
+└─ 프로젝트 데이터의 복사본을 독립적으로 관리
 
-이 구조는 이번 문제의 직접 원인이었던 오래된 Renderer Snapshot의 저장 경로를 제거했습니다. 다만 모든 상태 불일치나 동시 편집 충돌을 해결한다고 볼 수는 없습니다. 이벤트 누락은 version 비교와 재요청으로 복구하고, 의미적 충돌은 별도 정책으로 다뤄야 합니다.
+자동 저장
+└─ 호출된 위치의 Store를 기준으로 실행
+```
 
-처음에는 자동 저장 기능을 의심했습니다. 하지만 저장은 실패하지 않았습니다. 최신 값을 결정할 기준이 없는 상태에서 오래된 데이터를 정상적으로 저장하고 있었습니다.
+기존 구조에는 다음 문제가 있었습니다.
 
-> 어떤 Store를 사용할 것인가보다, 값이 다를 때 누구의 데이터를 신뢰할 것인가를 먼저 정해야 합니다.
+- 창마다 Store 인스턴스가 달랐습니다.
+- 동일한 데이터에 여러 기준점이 존재했습니다.
+- 사용자가 편집한 값과 자동 저장되는 값이 달라질 수 있었습니다.
+- 오래된 Snapshot이 최신 작업을 덮어쓸 수 있었습니다.
+- 새로 열린 화면은 이전 변경 이벤트를 받을 수 없었습니다.
+- 저장되는 데이터와 일시적인 UI 이벤트가 같은 흐름에 섞여 있었습니다.
 
-이번 프로젝트에서는 저장되는 공유 데이터의 결정권을 Main Process에 두었습니다. TanStack Query Cache는 화면 표시를, React State와 Zustand Store는 Renderer 내부 상태를, IPC는 저장하지 않는 창 간 이벤트를 담당하도록 경계를 나눴습니다.
+### TO BE
 
-핵심은 모든 상태를 한곳에 모으는 것이 아닙니다. 저장되는 데이터와 화면 상태를 구분하고, 공유 데이터의 최신 값을 확정하는 주체를 하나로 정하는 것입니다.
+```text
+Renderer
+   ↓ ProjectAction
+Main Process의 ProjectSession
+   ├─ Snapshot과 version 확정
+   ├─ Project Event Publisher → 관련 Renderer
+   └─ Autosave Coordinator → Local Project File
+```
+
+변경 후에는 역할이 다음과 같이 정리됐습니다.
+
+- Main Process의 `ProjectSession`이 공유 데이터의 최신 값을 결정합니다.
+- Renderer는 프로젝트 데이터를 직접 확정하지 않고 Main에 변경을 요청합니다.
+- 자동 저장은 항상 `ProjectSession`의 Snapshot을 기준으로 실행합니다.
+- Main이 확정한 Snapshot을 관련 Renderer에 전달합니다.
+- TanStack Query Cache는 화면 렌더링을 위한 읽기 전용 복사본으로 사용합니다.
+- 새로운 창이나 탭은 진입 시 Main의 현재 Snapshot을 다시 요청합니다.
+- 로컬 프로젝트 파일은 영속 저장과 앱 재실행 시 복구에 사용합니다.
+- Highlight와 Scroll 같은 임시 이벤트는 별도 채널로 전달합니다.
+
+최종적으로 데이터 흐름은 세 가지로 분리됐습니다.
+
+```text
+저장되는 공유 데이터
+└─ Main Process의 ProjectSession
+
+공유 데이터를 표시하는 Renderer Cache
+└─ TanStack Query Cache
+
+화면에만 필요한 UI 상태
+└─ React State 또는 Zustand Store
+
+저장되지 않는 임시 이벤트
+└─ IPC 또는 MessagePort
+```
+
+<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/hate-love-programming-meme.png" alt="프로그래밍을 싫어하다가 코드가 작동하면 다시 좋아하는 개발자 티셔츠 밈" /></p>
+
+_역할을 분리한 뒤 자동 저장은 다시 사용자의 작업을 보호하는 기능이 됐습니다._
+
+### 회고
+
+처음에는 자동 저장 기능을 가장 먼저 의심했습니다. 그러나 로그를 따라가 보니 저장은 실패하지 않았습니다. 오래된 데이터를 정상적으로 저장하고 있었습니다.
+
+문제는 저장 함수가 아니라, 어떤 데이터를 저장해야 하는지 결정하는 주체가 없었다는 점이었습니다. 각 Renderer는 같은 프로젝트 데이터의 복사본을 가지고 있었고, 어느 값이 최신인지 판단할 기준이 없었습니다.
+
+이번 문제를 해결하며 상태 관리 도구를 선택하기 전에 먼저 결정해야 할 것이 있다는 점을 확인했습니다.
+
+> 어떤 Store를 사용할 것인가보다, 이 데이터의 최종 결정권을 어디에 둘 것인가가 먼저입니다.
+
+Electron 멀티 윈도우 환경에서는 각 창이 별도의 Renderer Process에서 실행됩니다. 따라서 한 Renderer의 전역 Store를 애플리케이션 전체의 전역 Store처럼 사용할 수 없습니다.
+
+이번 프로젝트에서는 저장되는 공유 데이터의 기준을 Main Process에 두었습니다. TanStack Query Cache는 전달받은 데이터를 화면에 표시하고, Renderer의 UI 상태는 React State나 Zustand Store에 남겼습니다. 저장할 필요가 없는 일시적인 창 간 이벤트는 별도 채널로 전달했습니다.
+
+핵심은 모든 상태를 한곳에 모으는 것이 아니었습니다. 저장되는 데이터, 화면을 위한 상태, 순간적인 UI 이벤트를 구분하고, 공유 데이터의 최신 값을 확정하는 주체를 하나로 정하는 것이었습니다.
+
+데이터의 소유권을 먼저 정하자 TanStack Query, Zustand, IPC, MessagePort의 역할도 자연스럽게 나뉘었습니다. 새로운 상태 관리 라이브러리가 문제를 해결한 것이 아니라, 값이 서로 다를 때 무엇을 신뢰할지 명확히 정한 것이 구조를 바꿨습니다.
+
+Electron에서 공유 데이터를 설계할 때는 “어떤 Store를 사용할까?”보다 다음 질문을 먼저 검토하는 편이 좋습니다.
+
+> 자동 저장과 다른 Renderer는 누구의 데이터를 신뢰해야 하는가?
