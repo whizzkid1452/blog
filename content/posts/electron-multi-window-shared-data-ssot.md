@@ -837,9 +837,3 @@ Electron 멀티 윈도우 환경에서는 각 창이 별도의 Renderer Process�
 Electron에서 공유 데이터를 설계할 때는 “어떤 Store를 사용할까?”보다 다음 질문을 먼저 검토하는 편이 좋습니다.
 
 > 자동 저장과 다른 Renderer는 누구의 데이터를 신뢰해야 하는가?
-
----
-
-## 11. 이미지 출처
-
-본문의 밈 이미지는 [hello_world.cpp의 개발자 유머 짤 모음](https://raekki.tistory.com/entry/%EA%B0%9C%EB%B0%9C%EC%9E%90-%EC%9C%A0%EB%A8%B8-%EC%A7%A4-%EB%B0%88-%EC%BB%B4%EA%B3%B5-%EC%A7%A4-gif-%EC%9D%B4%EB%AF%B8%EC%A7%80 '개발자 유머 짤, 밈 / 컴공 짤 / gif, 이미지')에서 가져왔습니다. 해당 페이지는 여러 이미지를 모아 둔 형태이므로, 공개 게시 전 각 이미지의 원출처와 재사용 조건을 확인하는 것을 권장합니다.
