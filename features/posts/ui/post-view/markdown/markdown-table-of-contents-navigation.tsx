@@ -1,12 +1,15 @@
 'use client';
 
 import * as Dialog from '@radix-ui/react-dialog';
+import type { Locale } from '@/shared/i18n/i18n';
+import { getUiMessages } from '@/shared/i18n/i18n';
 import { useEffect, useState, type MouseEvent } from 'react';
 import styles from './markdown-content.module.css';
 import type { MarkdownTableOfContentsItem } from './markdown-table-of-contents';
 
 interface MarkdownTableOfContentsNavigationProps {
   items: MarkdownTableOfContentsItem[];
+  locale: Locale;
 }
 
 interface HeadingPosition {
@@ -28,9 +31,10 @@ interface TableOfContentsListProps {
 
 const HEADING_ACTIVATION_OFFSET = 96;
 
-export function MarkdownTableOfContentsNavigation({ items }: MarkdownTableOfContentsNavigationProps) {
+export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTableOfContentsNavigationProps) {
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(items[0]?.id ?? null);
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
+  const messages = getUiMessages(locale);
 
   useEffect(() => {
     let animationFrameId: number | null = null;
@@ -92,7 +96,7 @@ export function MarkdownTableOfContentsNavigation({ items }: MarkdownTableOfCont
       <section className={styles.tableOfContentsTop}>
         <nav aria-labelledby="markdown-table-of-contents-top-title">
           <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-top-title">
-            목차
+            {messages.tableOfContentsLabel}
           </p>
           <TableOfContentsList activeHeadingId={activeHeadingId} items={items} onClick={handleTableOfContentsClick} />
         </nav>
@@ -101,7 +105,7 @@ export function MarkdownTableOfContentsNavigation({ items }: MarkdownTableOfCont
       <aside className={styles.tableOfContentsNavigation}>
         <nav aria-labelledby="markdown-table-of-contents-title">
           <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">
-            목차
+            {messages.tableOfContentsLabel}
           </p>
           <TableOfContentsList activeHeadingId={activeHeadingId} items={items} onClick={handleTableOfContentsClick} />
         </nav>
@@ -112,28 +116,34 @@ export function MarkdownTableOfContentsNavigation({ items }: MarkdownTableOfCont
           className={styles.mobileTableOfContentsTrigger}
           data-motion="pressable"
           type="button"
-          aria-label="목차 열기"
+          aria-label={messages.openTableOfContentsLabel}
         >
-          <span className={styles.mobileTableOfContentsTriggerBar} aria-hidden="true" />
-          <span className={styles.mobileTableOfContentsTriggerBar} aria-hidden="true" />
-          <span className={styles.mobileTableOfContentsTriggerBar} aria-hidden="true" />
+          <svg className={styles.mobileTableOfContentsTriggerIcon} viewBox="0 0 20 20" aria-hidden="true">
+            <circle cx="3.5" cy="5" r="1" />
+            <circle cx="3.5" cy="10" r="1" />
+            <circle cx="3.5" cy="15" r="1" />
+            <path d="M7 5h10M7 10h10M7 15h10" />
+          </svg>
+          <span className={styles.mobileTableOfContentsTriggerLabel}>{messages.tableOfContentsLabel}</span>
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className={styles.mobileTableOfContentsOverlay} data-motion-overlay="backdrop" />
           <Dialog.Content className={styles.mobileTableOfContentsContent} data-motion-overlay="right-drawer">
             <header className={styles.mobileTableOfContentsHeader}>
-              <Dialog.Title className={styles.mobileTableOfContentsTitle}>목차</Dialog.Title>
-              <Dialog.Description className={styles.visuallyHidden}>현재 글의 섹션으로 이동합니다.</Dialog.Description>
+              <Dialog.Title className={styles.mobileTableOfContentsTitle}>{messages.tableOfContentsLabel}</Dialog.Title>
+              <Dialog.Description className={styles.visuallyHidden}>
+                {messages.tableOfContentsDescription}
+              </Dialog.Description>
               <Dialog.Close
                 className={styles.mobileTableOfContentsCloseButton}
                 data-motion="pressable"
                 type="button"
-                aria-label="목차 닫기"
+                aria-label={messages.closeTableOfContentsLabel}
               >
-                닫기
+                {messages.closeLabel}
               </Dialog.Close>
             </header>
-            <nav aria-label="글 목차">
+            <nav aria-label={messages.tableOfContentsLabel}>
               <TableOfContentsList
                 activeHeadingId={activeHeadingId}
                 items={items}

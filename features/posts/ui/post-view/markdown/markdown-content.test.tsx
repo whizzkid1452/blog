@@ -29,6 +29,16 @@ describe('MarkdownContent', () => {
     expect(renderedMarkup).toContain('aria-label="목차 열기"');
   });
 
+  it('renders English table-of-contents controls for English posts', async () => {
+    const markdownContent = ['## Table of contents', '', '## Implementation'].join('\n');
+
+    const markdownElement = await MarkdownContent({ content: markdownContent, locale: 'en' });
+    const renderedMarkup = renderToStaticMarkup(markdownElement);
+
+    expect(renderedMarkup).toContain('aria-label="Open table of contents"');
+    expect(renderedMarkup).toContain('>Contents</span>');
+  });
+
   it('renders markdown details markup as a collapsed disclosure element', async () => {
     const markdownContent = [
       '<details>',

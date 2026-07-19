@@ -17,6 +17,15 @@ export interface UiMessages {
   languageLinkLabel: string;
   primaryNavigationLabel: string;
   blogNavigationLabel: string;
+  blogNavigationDescription: string;
+  menuLabel: string;
+  closeLabel: string;
+  openBlogNavigationLabel: string;
+  closeBlogNavigationLabel: string;
+  tableOfContentsLabel: string;
+  tableOfContentsDescription: string;
+  openTableOfContentsLabel: string;
+  closeTableOfContentsLabel: string;
   tagsLabel: string;
 }
 
@@ -34,6 +43,15 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     languageLinkLabel: 'English',
     primaryNavigationLabel: '주요 메뉴',
     blogNavigationLabel: '블로그 메뉴',
+    blogNavigationDescription: '주요 메뉴, 주제, 최근 글을 탐색합니다.',
+    menuLabel: '메뉴',
+    closeLabel: '닫기',
+    openBlogNavigationLabel: '블로그 메뉴 열기',
+    closeBlogNavigationLabel: '블로그 메뉴 닫기',
+    tableOfContentsLabel: '목차',
+    tableOfContentsDescription: '현재 글의 섹션으로 이동합니다.',
+    openTableOfContentsLabel: '목차 열기',
+    closeTableOfContentsLabel: '목차 닫기',
     tagsLabel: '태그',
   },
   en: {
@@ -49,6 +67,15 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     languageLinkLabel: '한국어',
     primaryNavigationLabel: 'Primary navigation',
     blogNavigationLabel: 'Blog navigation',
+    blogNavigationDescription: 'Browse primary links, topics, and recent posts.',
+    menuLabel: 'Menu',
+    closeLabel: 'Close',
+    openBlogNavigationLabel: 'Open blog navigation',
+    closeBlogNavigationLabel: 'Close blog navigation',
+    tableOfContentsLabel: 'Contents',
+    tableOfContentsDescription: 'Navigate to a section in the current post.',
+    openTableOfContentsLabel: 'Open table of contents',
+    closeTableOfContentsLabel: 'Close table of contents',
     tagsLabel: 'Tags',
   },
 };

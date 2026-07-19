@@ -1,4 +1,5 @@
 import { MarkdownAsync } from 'react-markdown';
+import type { Locale } from '@/shared/i18n/i18n';
 import type { Options as RehypePrettyCodeOptions } from 'rehype-pretty-code';
 import rehypePrettyCode from 'rehype-pretty-code';
 import rehypeRaw from 'rehype-raw';
@@ -11,6 +12,7 @@ import { prepareMarkdownContent } from './markdown-table-of-contents';
 
 interface MarkdownContentProps {
   content: string;
+  locale?: Locale;
   title?: string;
 }
 
@@ -25,7 +27,7 @@ const REHYPE_PRETTY_CODE_OPTIONS = {
   },
 } satisfies RehypePrettyCodeOptions;
 
-export async function MarkdownContent({ content, title }: MarkdownContentProps) {
+export async function MarkdownContent({ content, locale = 'ko', title }: MarkdownContentProps) {
   const preparedContent = prepareMarkdownContent({ content, title });
   const renderedContent = await MarkdownAsync({
     children: preparedContent.content,
@@ -38,7 +40,7 @@ export async function MarkdownContent({ content, title }: MarkdownContentProps) 
     <MarkdownCodeBlockProvider>
       <div className={styles.markdownLayout}>
         {preparedContent.tableOfContentsItems.length > 0 ? (
-          <MarkdownTableOfContentsNavigation items={preparedContent.tableOfContentsItems} />
+          <MarkdownTableOfContentsNavigation items={preparedContent.tableOfContentsItems} locale={locale} />
         ) : null}
         <div className={styles.content}>{renderedContent}</div>
       </div>

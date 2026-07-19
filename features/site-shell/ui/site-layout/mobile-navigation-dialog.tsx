@@ -58,32 +58,33 @@ export function MobileNavigationDialog({
         className={styles.mobileNavigationTrigger}
         data-motion="pressable"
         type="button"
-        aria-label="Open navigation"
+        aria-label={messages.openBlogNavigationLabel}
       >
-        <span className={styles.mobileNavigationTriggerBar} aria-hidden="true" />
-        <span className={styles.mobileNavigationTriggerBar} aria-hidden="true" />
-        <span className={styles.mobileNavigationTriggerBar} aria-hidden="true" />
+        <svg className={styles.mobileNavigationTriggerIcon} viewBox="0 0 20 20" aria-hidden="true">
+          <path d="M3 5h14M3 10h14M3 15h14" />
+        </svg>
+        <span className={styles.mobileNavigationTriggerLabel}>{messages.menuLabel}</span>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.mobileNavigationOverlay} data-motion-overlay="backdrop" />
         <Dialog.Content className={styles.mobileNavigationContent} data-motion-overlay="right-drawer">
           <header className={styles.mobileNavigationHeader}>
-            <Dialog.Title className={styles.mobileNavigationTitle}>Navigation</Dialog.Title>
+            <Dialog.Title className={styles.mobileNavigationTitle}>{messages.blogNavigationLabel}</Dialog.Title>
             <Dialog.Description className={styles.visuallyHidden}>
-              Browse primary links, topics, and recent posts.
+              {messages.blogNavigationDescription}
             </Dialog.Description>
             <Dialog.Close
               className={styles.mobileNavigationCloseButton}
               data-motion="pressable"
               type="button"
-              aria-label="Close navigation"
+              aria-label={messages.closeBlogNavigationLabel}
             >
-              Close
+              {messages.closeLabel}
             </Dialog.Close>
           </header>
 
-          <nav className={styles.mobileNavigationSection} aria-label="Mobile primary navigation">
-            <h2 className={styles.mobileNavigationSectionTitle}>Primary</h2>
+          <nav className={styles.mobileNavigationSection} aria-label={messages.primaryNavigationLabel}>
+            <h2 className={styles.mobileNavigationSectionTitle}>{messages.primaryNavigationLabel}</h2>
             <div className={styles.mobileNavigationLinkList}>
               {primaryNavigationLinks.map(link => (
                 <Dialog.Close key={link.href} asChild>

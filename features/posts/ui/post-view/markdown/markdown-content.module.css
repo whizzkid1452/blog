@@ -670,17 +670,18 @@
     top: 76px;
     right: 20px;
     display: inline-flex;
-    width: 42px;
+    width: auto;
     height: 42px;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 7px;
     border: 1px solid var(--color-border);
     border-radius: 8px;
     background: color-mix(in srgb, var(--background) 92%, transparent);
     box-shadow: 0 8px 24px color-mix(in srgb, #000000 12%, transparent);
     backdrop-filter: blur(16px);
+    padding: 0 12px;
+    color: var(--color-text-primary);
     cursor: pointer;
   }
 
@@ -690,11 +691,31 @@
     outline: none;
   }
 
-  .mobileTableOfContentsTriggerBar {
+  .mobileTableOfContentsTriggerIcon {
     width: 17px;
-    height: 2px;
-    border-radius: 999px;
-    background: var(--color-text-primary);
+    height: 17px;
+    fill: currentColor;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.6;
+  }
+
+  .mobileTableOfContentsTriggerLabel {
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .mobileTableOfContentsTrigger {
+    top: 62px;
+  }
+}
+
+@media (max-width: 640px) {
+  .mobileTableOfContentsTrigger {
+    top: 58px;
   }
 }
 

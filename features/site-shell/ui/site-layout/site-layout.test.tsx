@@ -7,6 +7,17 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('SiteLayout', () => {
+  it('renders a visible Korean label for the mobile navigation trigger', () => {
+    const markup = renderToStaticMarkup(
+      <SiteLayout locale="ko" tags={[]} recentPosts={[]}>
+        <p>Content</p>
+      </SiteLayout>
+    );
+
+    expect(markup).toContain('aria-label="블로그 메뉴 열기"');
+    expect(markup).toContain('>메뉴</span>');
+  });
+
   it('renders a profile-led information hierarchy inside the left sidebar', () => {
     const markup = renderToStaticMarkup(
       <SiteLayout

@@ -510,16 +510,17 @@
     top: 16px;
     right: 20px;
     display: inline-flex;
-    width: 38px;
+    width: auto;
     height: 38px;
-    flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 4px;
+    gap: 7px;
     border: 1px solid var(--color-border);
     border-radius: 6px;
     background: color-mix(in srgb, var(--background) 92%, transparent);
     backdrop-filter: blur(16px);
+    padding: 0 11px;
+    color: var(--color-text-primary);
     cursor: pointer;
   }
 
@@ -529,11 +530,19 @@
     outline: none;
   }
 
-  .mobileNavigationTriggerBar {
+  .mobileNavigationTriggerIcon {
     width: 16px;
-    height: 2px;
-    border-radius: 999px;
-    background: var(--color-text-primary);
+    height: 16px;
+    fill: none;
+    stroke: currentColor;
+    stroke-linecap: round;
+    stroke-width: 1.8;
+  }
+
+  .mobileNavigationTriggerLabel {
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1;
   }
 
   .bodyLayout {
