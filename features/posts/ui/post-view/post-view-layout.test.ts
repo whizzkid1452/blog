@@ -5,6 +5,15 @@ const markdownContentStyles = readFileSync(new URL('./markdown/markdown-content.
 const postViewStyles = readFileSync(new URL('./post-view.module.css', import.meta.url), 'utf8');
 
 describe('post table of contents layout', () => {
+  it('aligns table-of-contents navigation with the heading start', () => {
+    const headingRule = getCssRule(
+      markdownContentStyles,
+      ['.content h1', '.content h2', '.content h3', '.content h4'].join(',\n')
+    );
+
+    expect(headingRule).not.toContain('scroll-margin-top');
+  });
+
   it('places the desktop table of contents in a fixed right rail', () => {
     const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
 
