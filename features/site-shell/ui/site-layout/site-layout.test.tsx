@@ -2,12 +2,15 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { describe, expect, it, vi } from 'vitest';
 import { SiteLayout } from './site-layout';
 
+const { currentPathname } = vi.hoisted(() => ({ currentPathname: { value: '/' } }));
+
 vi.mock('next/navigation', () => ({
-  usePathname: () => '/',
+  usePathname: () => currentPathname.value,
 }));
 
 describe('SiteLayout', () => {
-  it('renders a visible Korean label for the mobile navigation trigger', () => {
+  it('모바일 헤더에 메뉴 트리거와 현재 페이지 제목을 표시한다', () => {
+    currentPathname.value = '/';
     const markup = renderToStaticMarkup(
       <SiteLayout locale="ko" tags={[]} recentPosts={[]}>
         <p>Content</p>
@@ -15,10 +18,29 @@ describe('SiteLayout', () => {
     );
 
     expect(markup).toContain('aria-label="블로그 메뉴 열기"');
-    expect(markup).toContain('>메뉴</span>');
+    expect(markup).toContain('data-mobile-navigation-trigger="true"');
+    expect(markup).toContain('>앨리스의 토끼굴</p>');
+  });
+
+  it('글 페이지의 모바일 헤더에 글 제목을 표시한다', () => {
+    currentPathname.value = '/posts/example';
+    const markup = renderToStaticMarkup(
+      <SiteLayout
+        locale="ko"
+        tags={['react']}
+        recentPosts={[
+          { slug: 'example', title: 'Example post', date: '2026-07-16', tags: ['react'], visibility: 'public' },
+        ]}
+      >
+        <p>Content</p>
+      </SiteLayout>
+    );
+
+    expect(markup).toContain('>Example post</p>');
   });
 
   it('renders a profile-led information hierarchy inside the left sidebar', () => {
+    currentPathname.value = '/';
     const markup = renderToStaticMarkup(
       <SiteLayout
         locale="ko"
@@ -32,7 +54,7 @@ describe('SiteLayout', () => {
     );
     const sidebarMarkup = markup.slice(markup.indexOf('<aside'), markup.indexOf('</aside>'));
 
-    expect(markup).not.toContain('<header');
+    expect(sidebarMarkup).not.toContain('<header');
     expect(sidebarMarkup).not.toContain('>Blog</a>');
     expect(sidebarMarkup).toContain('profile-avatar.png');
     expect(sidebarMarkup).toContain('>앨리스의 토끼굴</p>');

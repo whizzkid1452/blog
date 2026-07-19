@@ -112,6 +112,7 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
           githubProfileUrl={GITHUB_PROFILE_URL}
           resumeUrl={RESUME_URL}
           tags={tags}
+          posts={recentPosts}
           recentPosts={visibleRecentPosts}
         />
 

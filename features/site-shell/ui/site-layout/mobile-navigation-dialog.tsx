@@ -11,6 +11,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { SidebarSearchForm } from './sidebar-search-form';
 import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags } from './sidebar-topics';
+import { resolveMobileHeaderTitle } from './mobile-header-title';
 import styles from './site-layout.module.css';
 
 interface MobileNavigationDialogProps {
@@ -19,6 +20,7 @@ interface MobileNavigationDialogProps {
   githubProfileUrl: string;
   resumeUrl: string;
   tags: string[];
+  posts: PostSummary[];
   recentPosts: PostSummary[];
 }
 
@@ -45,26 +47,33 @@ export function MobileNavigationDialog({
   githubProfileUrl,
   resumeUrl,
   tags,
+  posts,
   recentPosts,
 }: MobileNavigationDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
   const messages = getUiMessages(locale);
   const alternateLocale = getAlternateLocale(locale);
+  const mobileHeaderTitle = resolveMobileHeaderTitle({ locale, pathname, posts });
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-      <Dialog.Trigger
-        className={styles.mobileNavigationTrigger}
-        data-motion="pressable"
-        type="button"
-        aria-label={messages.openBlogNavigationLabel}
-      >
-        <svg className={styles.mobileNavigationTriggerIcon} viewBox="0 0 20 20" aria-hidden="true">
-          <path d="M3 5h14M3 10h14M3 15h14" />
-        </svg>
-        <span className={styles.mobileNavigationTriggerLabel}>{messages.menuLabel}</span>
-      </Dialog.Trigger>
+      <header className={styles.mobileHeader}>
+        <Dialog.Trigger
+          className={styles.mobileNavigationTrigger}
+          data-mobile-navigation-trigger="true"
+          data-motion="pressable"
+          type="button"
+          aria-label={messages.openBlogNavigationLabel}
+        >
+          <svg className={styles.mobileNavigationTriggerIcon} viewBox="0 0 48 48" aria-hidden="true">
+            <path d="m20 14-7 10 7 10M28 14l7 10-7 10" />
+          </svg>
+        </Dialog.Trigger>
+        <p className={styles.mobileHeaderTitle} title={mobileHeaderTitle}>
+          {mobileHeaderTitle}
+        </p>
+      </header>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.mobileNavigationOverlay} data-motion-overlay="backdrop" />
         <Dialog.Content className={styles.mobileNavigationContent} data-motion-overlay="right-drawer">
