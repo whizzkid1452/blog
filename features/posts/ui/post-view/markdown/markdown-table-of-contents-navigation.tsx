@@ -119,10 +119,7 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
           aria-label={messages.openTableOfContentsLabel}
         >
           <svg className={styles.mobileTableOfContentsTriggerIcon} viewBox="0 0 20 20" aria-hidden="true">
-            <circle cx="3.5" cy="5" r="1" />
-            <circle cx="3.5" cy="10" r="1" />
-            <circle cx="3.5" cy="15" r="1" />
-            <path d="M7 5h10M7 10h10M7 15h10" />
+            <path d="m2 4.5 1.5 1.5L6 3M8.5 5h9M2 9.5 3.5 11 6 8M8.5 10h9M2 14.5l1.5 1.5L6 13M8.5 15h9" />
           </svg>
           <span className={styles.mobileTableOfContentsTriggerLabel}>{messages.tableOfContentsLabel}</span>
         </Dialog.Trigger>

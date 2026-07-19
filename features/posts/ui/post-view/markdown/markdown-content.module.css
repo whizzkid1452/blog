@@ -694,9 +694,10 @@
   .mobileTableOfContentsTriggerIcon {
     width: 17px;
     height: 17px;
-    fill: currentColor;
+    fill: none;
     stroke: currentColor;
     stroke-linecap: round;
+    stroke-linejoin: round;
     stroke-width: 1.6;
   }
 
@@ -709,13 +710,19 @@
 
 @media (max-width: 900px) {
   .mobileTableOfContentsTrigger {
-    top: 62px;
+    top: 82px;
   }
 }
 
 @media (max-width: 640px) {
   .mobileTableOfContentsTrigger {
-    top: 58px;
+    width: 40px;
+    height: 40px;
+    padding: 0;
+  }
+
+  .mobileTableOfContentsTriggerLabel {
+    display: none;
   }
 }
 
