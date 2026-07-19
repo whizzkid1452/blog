@@ -562,9 +562,9 @@ ProjectSession dispatch
 Autosave Coordinator   Renderer Broadcast
 ```
 
-![Renderer 변경 요청부터 Main 저장과 Broadcast까지의 순서](/images/electron-multi-window-shared-data-ssot/project-document-update-save-broadcast.png)
+![Main Process에서 확정한 Snapshot을 파일 저장과 Renderer 화면 갱신에 사용하는 흐름](/images/electron-multi-window-shared-data-ssot/project-document-update-save-broadcast.png)
 
-_Renderer 변경 요청부터 저장과 Broadcast까지의 흐름_
+_Main Process에서 확정한 Snapshot을 파일 저장과 Renderer 화면 갱신에 사용하는 흐름_
 
 이제 자동 저장은 특정 Renderer의 Store를 기준으로 실행하지 않습니다. 항상 Main Process의 `ProjectSession`이 가진 Snapshot을 사용합니다.
 
