@@ -66,9 +66,7 @@ export function MobileNavigationDialog({
           type="button"
           aria-label={messages.openBlogNavigationLabel}
         >
-          <svg className={styles.mobileNavigationTriggerIcon} viewBox="0 0 48 48" aria-hidden="true">
-            <path d="m20 14-7 10 7 10M28 14l7 10-7 10" />
-          </svg>
+          <span className={styles.mobileNavigationTriggerIcon} aria-hidden="true" />
         </Dialog.Trigger>
         <p className={styles.mobileHeaderTitle} title={mobileHeaderTitle}>
           {mobileHeaderTitle}

@@ -29,7 +29,13 @@ interface TableOfContentsListProps {
   onClick: (event: MouseEvent<HTMLAnchorElement>, headingId: string) => void;
 }
 
+interface ScrollToTableOfContentsHeadingParams {
+  prefersReducedMotion: boolean;
+  scrollIntoView: (options: ScrollIntoViewOptions) => void;
+}
+
 const HEADING_ACTIVATION_OFFSET = 96;
+const REDUCED_MOTION_MEDIA_QUERY = '(prefers-reduced-motion: reduce)';
 
 export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTableOfContentsNavigationProps) {
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(items[0]?.id ?? null);
@@ -86,7 +92,10 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
     }
 
     event.preventDefault();
-    heading.scrollIntoView();
+    scrollToTableOfContentsHeading({
+      prefersReducedMotion: window.matchMedia(REDUCED_MOTION_MEDIA_QUERY).matches,
+      scrollIntoView: options => heading.scrollIntoView(options),
+    });
     window.history.pushState(null, '', `#${encodeURIComponent(headingId)}`);
     setActiveHeadingId(headingId);
   };
@@ -179,6 +188,13 @@ function TableOfContentsList({ activeHeadingId, items, onClick }: TableOfContent
       })}
     </ol>
   );
+}
+
+export function scrollToTableOfContentsHeading({
+  prefersReducedMotion,
+  scrollIntoView,
+}: ScrollToTableOfContentsHeadingParams) {
+  scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
 }
 
 export function findActiveHeadingId({

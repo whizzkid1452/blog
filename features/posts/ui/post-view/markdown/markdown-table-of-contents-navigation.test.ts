@@ -1,5 +1,23 @@
-import { describe, expect, it } from 'vitest';
-import { findActiveHeadingId } from './markdown-table-of-contents-navigation';
+import { describe, expect, it, vi } from 'vitest';
+import { findActiveHeadingId, scrollToTableOfContentsHeading } from './markdown-table-of-contents-navigation';
+
+describe('scrollToTableOfContentsHeading', () => {
+  it('smoothly scrolls to the selected heading', () => {
+    const scrollIntoView = vi.fn();
+
+    scrollToTableOfContentsHeading({ prefersReducedMotion: false, scrollIntoView });
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth', block: 'start' });
+  });
+
+  it('moves immediately when reduced motion is requested', () => {
+    const scrollIntoView = vi.fn();
+
+    scrollToTableOfContentsHeading({ prefersReducedMotion: true, scrollIntoView });
+
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'auto', block: 'start' });
+  });
+});
 
 describe('findActiveHeadingId', () => {
   const headingPositions = [
