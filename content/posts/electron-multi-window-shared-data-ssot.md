@@ -36,7 +36,7 @@ _BrowserWindow로 실행되는 Editor와 SRT Script Panel_
 
 수정 직후에는 SRT Panel에 최신 문장이 정상적으로 표시됐습니다. 그러나 프로젝트를 다시 확인하면 스크립트가 수정 전 내용으로 돌아가 있었습니다.
 
-![별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈](/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg)
+<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg" alt="별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈" /></p>
 
 _로그를 열기 전까지는 아무도 “어?”라고 하지 않기로 했습니다._
 
@@ -278,7 +278,7 @@ Admin Store 갱신
 - 이벤트가 한 번 누락되면 Store가 다시 어긋납니다.
 - 동시에 여러 변경이 발생하면 어느 값이 최신인지 판단하기 어렵습니다.
 
-![코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈](/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg)
+<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg" alt="코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈" /></p>
 
 _동기화가 누락될 때마다 IPC 하나씩 추가하던 시절._
 
@@ -812,7 +812,7 @@ Main Process의 ProjectSession
 └─ IPC 또는 MessagePort
 ```
 
-<p style="width: 100%; max-width: 480px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/hate-love-programming-meme.png" alt="프로그래밍을 싫어하다가 코드가 작동하면 다시 좋아하는 개발자 티셔츠 밈" /></p>
+<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/hate-love-programming-meme.png" alt="프로그래밍을 싫어하다가 코드가 작동하면 다시 좋아하는 개발자 티셔츠 밈" /></p>
 
 _역할을 분리한 뒤 자동 저장은 다시 사용자의 작업을 보호하는 기능이 됐습니다._
 
