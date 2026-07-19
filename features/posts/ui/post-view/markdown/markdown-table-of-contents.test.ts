@@ -121,6 +121,10 @@ describe('prepareMarkdownContent', () => {
 });
 
 describe('hasMarkdownTableOfContents', () => {
+  it('recognizes an English table-of-contents heading', () => {
+    expect(hasMarkdownTableOfContents('## Overview\n\n## Table of contents\n\n## Implementation')).toBe(true);
+  });
+
   it('returns true only when the markdown contains a table of contents heading', () => {
     expect(hasMarkdownTableOfContents('## 개요\n\n## 목차\n\n## 본문')).toBe(true);
     expect(hasMarkdownTableOfContents('## 개요\n\n목차를 설명하는 문장')).toBe(false);

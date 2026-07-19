@@ -32,7 +32,7 @@ interface CreateUniqueIdParams {
   usedIdCounts: Map<string, number>;
 }
 
-const TABLE_OF_CONTENTS_HEADING = '## 목차';
+const TABLE_OF_CONTENTS_HEADINGS = new Set(['## 목차', '## Table of contents']);
 const ORDERED_LIST_ITEM_PATTERN = /^\d+\.\s+(.+?)\s*$/;
 const MARKDOWN_HEADING_PATTERN = /^(#{2,4})\s+(.+?)\s*$/;
 const LEADING_SECTION_NUMBER_PATTERN = /^\d+(?:-\d+)*\.\s*/;
@@ -41,7 +41,7 @@ const SLUG_SEPARATOR_PATTERN = /^-+|-+$/g;
 const EMPTY_SECTION_ID = 'section';
 
 export function hasMarkdownTableOfContents(content: string): boolean {
-  return content.split('\n').some(line => line.trim() === TABLE_OF_CONTENTS_HEADING);
+  return content.split('\n').some(isTableOfContentsHeading);
 }
 
 export function prepareMarkdownContent({ content, title }: PrepareMarkdownContentParams): PreparedMarkdownContent {
@@ -86,7 +86,7 @@ function removeDuplicateTitle({ content, title }: PrepareMarkdownContentParams):
 
 function extractTableOfContents(content: string): PreparedMarkdownContent {
   const lines = content.split('\n');
-  const headingIndex = lines.findIndex(line => line.trim() === TABLE_OF_CONTENTS_HEADING);
+  const headingIndex = lines.findIndex(isTableOfContentsHeading);
 
   if (headingIndex === -1) {
     return { content, tableOfContentsItems: [] };
@@ -109,6 +109,10 @@ function extractTableOfContents(content: string): PreparedMarkdownContent {
     content: removeTableOfContentsSource({ endIndex: sourceEndIndex, headingIndex, lines }),
     tableOfContentsItems: createTableOfContentsItems({ headings, titles: collectedList.titles }),
   };
+}
+
+function isTableOfContentsHeading(line: string): boolean {
+  return TABLE_OF_CONTENTS_HEADINGS.has(line.trim());
 }
 
 function removeTableOfContentsSource({
