@@ -109,6 +109,20 @@ describe('markdown image dialog layout', () => {
   });
 });
 
+describe('markdown blockquote presentation', () => {
+  it('distinguishes key statements with a restrained Tistory-style box', () => {
+    const blockquoteRule = getCssRule(markdownContentStyles, '.content blockquote');
+
+    expect(blockquoteRule).toContain('border: 1px solid var(--color-border);');
+    expect(blockquoteRule).toContain('padding: 21px 25px 20px;');
+    expect(blockquoteRule).toContain('background: color-mix(in srgb, var(--color-border) 20%, var(--background));');
+    expect(blockquoteRule).toContain('color: var(--color-text-secondary);');
+    expect(blockquoteRule).toContain('font-size: 16px;');
+    expect(blockquoteRule).toContain('font-weight: 400;');
+    expect(blockquoteRule).not.toContain('box-shadow:');
+  });
+});
+
 function getCssRule(styleSheet: string, selector: string): string {
   const ruleStart = styleSheet.indexOf(`${selector} {`);
   const ruleEnd = styleSheet.indexOf('}', ruleStart);
