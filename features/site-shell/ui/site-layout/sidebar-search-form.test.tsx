@@ -10,6 +10,7 @@ describe('SidebarSearchForm', () => {
     expect(markup).toContain('action="/search"');
     expect(markup).toContain('name="q"');
     expect(markup).toContain('placeholder="글 검색"');
+    expect(markup).not.toContain('<h2');
   });
 
   it('submits an English search query to the localized search page', () => {
@@ -17,5 +18,6 @@ describe('SidebarSearchForm', () => {
 
     expect(markup).toContain('action="/en/search"');
     expect(markup).toContain('placeholder="Search posts"');
+    expect(markup).not.toContain('<h2');
   });
 });

@@ -3,6 +3,15 @@ import { describe, expect, it } from 'vitest';
 
 const globalStyles = readFileSync(new URL('./globals.css', import.meta.url), 'utf8');
 
+describe('theme accent colors', () => {
+  it('uses accessible pink accents in light and dark color schemes', () => {
+    expect(globalStyles).toContain('--color-link: #db2777;');
+    expect(globalStyles).toContain('--color-link: #f9a8d4;');
+    expect(globalStyles).not.toContain('--color-link: #2563eb;');
+    expect(globalStyles).not.toContain('--color-link: #93c5fd;');
+  });
+});
+
 describe('liquid glass surface styles', () => {
   it('provides a solid fallback when backdrop filtering is unavailable', () => {
     expect(globalStyles).toContain('@supports not ((backdrop-filter: blur(1px))');
@@ -15,13 +24,19 @@ describe('liquid glass surface styles', () => {
     expect(globalStyles).toContain('@media (forced-colors: active)');
   });
 
-  it('uses the page background for navigation surfaces without a decorative control gradient', () => {
+  it('uses translucent solid fills without decorative gradients', () => {
     const barRule = getCssRule(globalStyles, "[data-liquid-glass='bar']");
     const controlRule = getCssRule(globalStyles, "[data-liquid-glass='control']");
 
-    expect(barRule).toContain('background: var(--background);');
-    expect(controlRule).toContain('background: var(--background);');
+    expect(globalStyles).toContain('--liquid-glass-bar-fill: color-mix(in srgb, var(--background) 48%, transparent);');
+    expect(globalStyles).toContain(
+      '--liquid-glass-control-fill: color-mix(in srgb, var(--background) 68%, transparent);'
+    );
+    expect(barRule).toContain('background: var(--liquid-glass-bar-fill);');
+    expect(barRule).toContain('backdrop-filter: blur(18px) saturate(175%) contrast(108%);');
+    expect(controlRule).toContain('background: var(--liquid-glass-control-fill);');
     expect(barRule).not.toContain('gradient');
+    expect(controlRule).not.toContain('gradient');
     expect(globalStyles).not.toContain("[data-liquid-glass='control']::before");
   });
 

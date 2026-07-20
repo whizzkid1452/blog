@@ -32,7 +32,7 @@ export interface UiMessages {
 const UI_MESSAGES: Record<Locale, UiMessages> = {
   ko: {
     home: '홈',
-    posts: '글',
+    posts: 'Posts',
     topics: '주제',
     viewAllTopics: '전체보기',
     collapseTopics: '접기',
