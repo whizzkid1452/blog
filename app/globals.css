@@ -12,6 +12,7 @@
   --motion-duration-reduced: 120ms;
   --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --motion-ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+  --liquid-glass-shadow: color-mix(in srgb, #09090b 18%, transparent);
   --font-geist-sans: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-geist-mono: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
 }
@@ -26,6 +27,7 @@
     --color-border: #3f3f46;
     --color-link: #93c5fd;
     --color-link-hover: #d4d4d8;
+    --liquid-glass-shadow: color-mix(in srgb, #000000 38%, transparent);
   }
 }
 
@@ -59,6 +61,48 @@ a {
   text-decoration: none;
 }
 
+[data-liquid-glass] {
+  -webkit-backdrop-filter: blur(18px) saturate(145%);
+  backdrop-filter: blur(18px) saturate(145%);
+}
+
+[data-liquid-glass='bar'] {
+  background: var(--background);
+  box-shadow: 0 10px 32px var(--liquid-glass-shadow);
+}
+
+[data-liquid-glass='control'] {
+  background: var(--background);
+  box-shadow: 0 10px 30px var(--liquid-glass-shadow);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-liquid-glass] {
+    background: var(--background);
+    box-shadow: 0 8px 24px var(--liquid-glass-shadow);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  [data-liquid-glass] {
+    background: var(--background);
+    box-shadow: 0 8px 24px var(--liquid-glass-shadow);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+@media (forced-colors: active) {
+  [data-liquid-glass] {
+    border-color: ButtonText;
+    background: Canvas;
+    box-shadow: none;
+    color: CanvasText;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 [data-motion='pressable'] {
   transition: transform var(--motion-duration-fast) var(--motion-ease-out);
 }
@@ -90,6 +134,18 @@ a {
 [data-motion-overlay='right-drawer'][data-state='closed'] {
   animation-duration: var(--motion-duration-fast);
   animation-name: motion-drawer-exit;
+  animation-timing-function: var(--motion-ease-out);
+}
+
+[data-motion-overlay='left-drawer'] {
+  animation-duration: var(--motion-duration-standard);
+  animation-name: motion-left-drawer-enter;
+  animation-timing-function: var(--motion-ease-drawer);
+}
+
+[data-motion-overlay='left-drawer'][data-state='closed'] {
+  animation-duration: var(--motion-duration-fast);
+  animation-name: motion-left-drawer-exit;
   animation-timing-function: var(--motion-ease-out);
 }
 
@@ -141,6 +197,26 @@ a {
 
   to {
     transform: translateX(100%);
+  }
+}
+
+@keyframes motion-left-drawer-enter {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-left-drawer-exit {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
   }
 }
 

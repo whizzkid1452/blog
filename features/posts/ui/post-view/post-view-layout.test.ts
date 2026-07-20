@@ -33,11 +33,10 @@ describe('post table of contents layout', () => {
     expect(webkitScrollbarRule).toContain('height: 0;');
   });
 
-  it('uses a valid top padding after the desktop header is removed', () => {
+  it('keeps the desktop table of contents below the fixed site header', () => {
     const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
 
-    expect(navigationRule).toContain('padding: 56px 24px 72px;');
-    expect(navigationRule).not.toContain('var(--desktop-header-height)');
+    expect(navigationRule).toContain('padding: var(--site-content-top-padding) 24px 72px;');
   });
 
   it('reserves the right rail outside the post content width', () => {

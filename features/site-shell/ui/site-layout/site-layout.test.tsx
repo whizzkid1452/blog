@@ -18,7 +18,9 @@ describe('SiteLayout', () => {
     );
 
     expect(markup).toContain('aria-label="블로그 메뉴 열기"');
+    expect(markup).toContain('data-site-header="true"');
     expect(markup).toContain('data-mobile-navigation-trigger="true"');
+    expect(markup).toContain('data-liquid-glass="bar"');
     expect(markup).toContain('>앨리스의 토끼굴</p>');
   });
 
@@ -37,6 +39,18 @@ describe('SiteLayout', () => {
     );
 
     expect(markup).toContain('>Example post</p>');
+  });
+
+  it('기본 메뉴에 Series와 비공개 글 링크를 표시하지 않는다', () => {
+    currentPathname.value = '/';
+    const markup = renderToStaticMarkup(
+      <SiteLayout locale="ko" tags={[]} recentPosts={[]}>
+        <p>Content</p>
+      </SiteLayout>
+    );
+
+    expect(markup).not.toContain('href="/series"');
+    expect(markup).not.toContain('href="/private-posts"');
   });
 
   it('renders a profile-led information hierarchy inside the left sidebar', () => {

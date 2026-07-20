@@ -1,6 +1,6 @@
 import type { PostSummary } from '@/features/posts/model/post';
 import { describe, expect, it } from 'vitest';
-import { resolveMobileHeaderTitle } from './mobile-header-title';
+import { resolveSiteHeaderTitle } from './site-header-title';
 
 const posts: PostSummary[] = [
   {
@@ -12,10 +12,10 @@ const posts: PostSummary[] = [
   },
 ];
 
-describe('resolveMobileHeaderTitle', () => {
+describe('resolveSiteHeaderTitle', () => {
   it('글 경로에 해당하는 글 제목을 반환한다', () => {
     expect(
-      resolveMobileHeaderTitle({
+      resolveSiteHeaderTitle({
         locale: 'ko',
         pathname: '/posts/electron-multi-window-shared-data-ssot',
         posts,
@@ -25,7 +25,7 @@ describe('resolveMobileHeaderTitle', () => {
 
   it('영문 글 경로에서도 locale prefix를 제외한 slug로 글을 찾는다', () => {
     expect(
-      resolveMobileHeaderTitle({
+      resolveSiteHeaderTitle({
         locale: 'en',
         pathname: '/en/posts/electron-multi-window-shared-data-ssot',
         posts,
@@ -35,7 +35,7 @@ describe('resolveMobileHeaderTitle', () => {
 
   it('태그 경로의 URL encoding을 해제한다', () => {
     expect(
-      resolveMobileHeaderTitle({
+      resolveSiteHeaderTitle({
         locale: 'ko',
         pathname: '/tags/state%20management',
         posts,
@@ -44,12 +44,12 @@ describe('resolveMobileHeaderTitle', () => {
   });
 
   it('고정 페이지에 해당하는 현지화된 제목을 반환한다', () => {
-    expect(resolveMobileHeaderTitle({ locale: 'ko', pathname: '/private-posts', posts })).toBe('비공개 글');
-    expect(resolveMobileHeaderTitle({ locale: 'en', pathname: '/en/posts', posts })).toBe('Posts');
+    expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/private-posts', posts })).toBe('비공개 글');
+    expect(resolveSiteHeaderTitle({ locale: 'en', pathname: '/en/posts', posts })).toBe('Posts');
   });
 
   it('알 수 없는 경로나 일치하지 않는 글은 사이트 이름으로 fallback한다', () => {
-    expect(resolveMobileHeaderTitle({ locale: 'ko', pathname: '/posts/missing', posts })).toBe('앨리스의 토끼굴');
-    expect(resolveMobileHeaderTitle({ locale: 'ko', pathname: '/unknown', posts })).toBe('앨리스의 토끼굴');
+    expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/posts/missing', posts })).toBe('앨리스의 토끼굴');
+    expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/unknown', posts })).toBe('앨리스의 토끼굴');
   });
 });

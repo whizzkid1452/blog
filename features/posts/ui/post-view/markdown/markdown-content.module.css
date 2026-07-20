@@ -211,7 +211,7 @@
   overflow-y: auto;
   overscroll-behavior: contain;
   border-left: 1px solid var(--color-border);
-  padding: 56px 24px 72px;
+  padding: var(--site-content-top-padding) 24px 72px;
   background: var(--background);
   scrollbar-color: transparent transparent;
   scrollbar-width: none;

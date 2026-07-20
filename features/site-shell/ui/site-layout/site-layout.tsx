@@ -32,8 +32,6 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
   const primaryNavigationLinks: NavigationLink[] = [
     { href: createLocalizedPath(locale, '/'), label: messages.home },
     { href: createLocalizedPath(locale, '/posts'), label: messages.posts },
-    { href: createLocalizedPath(locale, '/series'), label: 'Series' },
-    { href: createLocalizedPath(locale, '/private-posts'), label: locale === 'ko' ? '비공개 글' : 'Private posts' },
   ];
   const visibleRecentPosts = recentPosts.slice(0, RECENT_POST_COUNT);
 

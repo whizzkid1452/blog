@@ -3,7 +3,7 @@ import { SITE_NAME } from '@/shared/config/site-config';
 import type { Locale } from '@/shared/i18n/i18n';
 import { getUiMessages } from '@/shared/i18n/i18n';
 
-interface ResolveMobileHeaderTitleParams {
+interface ResolveSiteHeaderTitleParams {
   locale: Locale;
   pathname: string | null;
   posts: PostSummary[];
@@ -14,7 +14,7 @@ const FIXED_PAGE_TITLES = {
   search: 'Search',
 } as const;
 
-export function resolveMobileHeaderTitle({ locale, pathname, posts }: ResolveMobileHeaderTitleParams): string {
+export function resolveSiteHeaderTitle({ locale, pathname, posts }: ResolveSiteHeaderTitleParams): string {
   if (pathname == null) {
     return SITE_NAME;
   }

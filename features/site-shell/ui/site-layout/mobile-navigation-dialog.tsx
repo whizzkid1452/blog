@@ -11,7 +11,7 @@ import type { ReactNode } from 'react';
 import { useState } from 'react';
 import { SidebarSearchForm } from './sidebar-search-form';
 import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags } from './sidebar-topics';
-import { resolveMobileHeaderTitle } from './mobile-header-title';
+import { resolveSiteHeaderTitle } from './site-header-title';
 import styles from './site-layout.module.css';
 
 interface MobileNavigationDialogProps {
@@ -54,11 +54,11 @@ export function MobileNavigationDialog({
   const pathname = usePathname();
   const messages = getUiMessages(locale);
   const alternateLocale = getAlternateLocale(locale);
-  const mobileHeaderTitle = resolveMobileHeaderTitle({ locale, pathname, posts });
+  const siteHeaderTitle = resolveSiteHeaderTitle({ locale, pathname, posts });
 
   return (
     <Dialog.Root open={isOpen} onOpenChange={setIsOpen}>
-      <header className={styles.mobileHeader}>
+      <header className={styles.siteHeader} data-liquid-glass="bar" data-site-header="true">
         <Dialog.Trigger
           className={styles.mobileNavigationTrigger}
           data-mobile-navigation-trigger="true"
@@ -68,13 +68,13 @@ export function MobileNavigationDialog({
         >
           <span className={styles.mobileNavigationTriggerIcon} aria-hidden="true" />
         </Dialog.Trigger>
-        <p className={styles.mobileHeaderTitle} title={mobileHeaderTitle}>
-          {mobileHeaderTitle}
+        <p className={styles.siteHeaderTitle} title={siteHeaderTitle}>
+          {siteHeaderTitle}
         </p>
       </header>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.mobileNavigationOverlay} data-motion-overlay="backdrop" />
-        <Dialog.Content className={styles.mobileNavigationContent} data-motion-overlay="right-drawer">
+        <Dialog.Content className={styles.mobileNavigationContent} data-motion-overlay="left-drawer">
           <header className={styles.mobileNavigationHeader}>
             <Dialog.Title className={styles.mobileNavigationTitle}>{messages.blogNavigationLabel}</Dialog.Title>
             <Dialog.Description className={styles.visuallyHidden}>
