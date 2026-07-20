@@ -22,7 +22,7 @@
 }
 
 .siteHeader[data-liquid-glass='bar'] {
-  box-shadow: 0 10px 32px -32px var(--liquid-glass-shadow);
+  box-shadow: none;
 }
 
 .siteHeader[data-site-header-visible='true'] {
