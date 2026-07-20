@@ -7,9 +7,7 @@ tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
 draft: false
 ---
 
-## 목차
-
-## 1. 문제 상황: 자동 저장 이후 최신 SRT 자막이 사라졌다
+## [sort1] 1. 문제 상황: 자동 저장 이후 최신 SRT 자막이 사라졌다
 
 > “SRT 자막을 수정하고 점심을 먹고 오니까 수정한 내용이 사라졌어요!”
 
@@ -43,7 +41,7 @@ _오래된 Renderer Snapshot이 로컬 파일을 덮어쓰는 흐름_
 
 ---
 
-## 2. 원인 분석: 저장 실패가 아니라 오래된 Snapshot의 저장이었다
+## [sort1] 2. 원인 분석: 저장 실패가 아니라 오래된 Snapshot의 저장이었다
 
 먼저 실제 값이 어떻게 달라졌는지부터 확인했습니다. 같은 SRT Row를 보고 있었지만, 각 Renderer가 가진 프로젝트 Store와 로컬 프로젝트 파일에는 서로 다른 값이 남아 있었습니다.
 
@@ -117,7 +115,7 @@ _동기화가 누락될 때마다 IPC 하나씩 추가하는 방식으로는 문
 
 ---
 
-## 3. Electron 멀티 윈도우에서 Store가 분리되는 이유
+## [sort1] 3. Electron 멀티 윈도우에서 Store가 분리되는 이유
 
 일반적인 React 애플리케이션에서는 Zustand나 Redux Store 하나를 만들고 여러 컴포넌트가 같은 값을 구독할 수 있습니다. 그래서 처음에는 Electron에서도 같은 Store 모듈을 import하면 하나의 상태를 공유할 수 있다고 생각했습니다.
 
@@ -175,11 +173,11 @@ _변경 전 Store 인스턴스와 프로세스 경계_
 
 ---
 
-## 4. 공유 데이터가 충족해야 할 조건
+## [sort1] 4. 공유 데이터가 충족해야 할 조건
 
 공유 데이터의 위치를 정하기 전에 기능 이름이 아니라 **데이터의 사용 방식과 보존 기간**을 기준으로 요구사항을 다시 정리했습니다.
 
-### 여러 화면이 함께 사용하는 프로젝트 데이터
+### [sort2] 여러 화면이 함께 사용하는 프로젝트 데이터
 
 | 데이터                    | 사용하는 위치                   | 필요한 규칙                                      |
 | ------------------------- | ------------------------------- | ------------------------------------------------ |
@@ -188,13 +186,13 @@ _변경 전 Store 인스턴스와 프로세스 경계_
 
 메인 창의 작업 페이지들은 한 번에 하나만 활성화됐습니다. 반면 SRT Script Panel은 별도의 `BrowserWindow`로 분리할 수 있어 Editor 또는 Admin과 동시에 열릴 수 있었습니다. 따라서 같은 프로젝트 데이터를 여러 Renderer가 동시에 읽고 변경하는 경우를 고려해야 했습니다.
 
-### 저장과 복구가 필요한 데이터
+### [sort2] 저장과 복구가 필요한 데이터
 
 프로젝트 정보, SRT 자막, 편집 결과는 애플리케이션을 종료한 뒤에도 복구해야 했습니다. 자동 저장은 현재 확정된 프로젝트 전체를 로컬 프로젝트 파일에 기록해야 했고, 애플리케이션을 다시 실행할 때는 이 파일로 초기 상태를 복원해야 했습니다.
 
 반면 실행 중에는 파일 쓰기가 완료되기 전에도 화면에 최신 변경을 보여줘야 했습니다. 따라서 실행 중인 최신 값과 앱 종료 후 복구할 값을 같은 것으로 취급하되, 각각 메모리와 파일에 보관할 필요가 있었습니다.
 
-### 화면 생명주기와 무관하게 유지해야 하는 데이터
+### [sort2] 화면 생명주기와 무관하게 유지해야 하는 데이터
 
 - 특정 창을 닫더라도 현재 프로젝트 데이터는 유지돼야 합니다.
 - 새로 열린 창이나 나중에 활성화된 화면도 최신 데이터를 확인할 수 있어야 합니다.
@@ -221,7 +219,7 @@ _변경 전 Store 인스턴스와 프로세스 경계_
 
 ---
 
-## 5. Local Project File을 SSOT로 사용할 수 없었던 이유
+## [sort1] 5. Local Project File을 SSOT로 사용할 수 없었던 이유
 
 Renderer Store를 서로 직접 동기화하는 방법은 2절에서 제외했습니다. 남은 후보는 모든 Renderer가 하나의 로컬 프로젝트 파일을 기준으로 삼는 방법이었습니다.
 
@@ -257,7 +255,7 @@ Renderer에서 변경
 
 ---
 
-## 6. Main Process에 SSOT를 둔 이유
+## [sort1] 6. Main Process에 SSOT를 둔 이유
 
 대안을 검토하면서 질문을 다음과 같이 바꿨습니다.
 
@@ -302,7 +300,7 @@ _Main Process의 ProjectSession을 SSOT로 둔 구조_
 
 Modal, Hover, 검색어처럼 특정 화면에서만 사용하는 상태는 계속 각 Renderer에서 관리했습니다.
 
-### SSOT의 의미
+### [sort2] SSOT의 의미
 
 Renderer가 화면을 렌더링하려면 로컬 상태가 필요합니다. 따라서 Main Process에 단일 진실 공급원(Single Source of Truth, SSOT)을 두기로 정했다고 해서 Renderer에 프로젝트 데이터가 없어야 하는 것은 아닙니다.
 
@@ -335,13 +333,13 @@ Local Project File
 
 ---
 
-## 7. ProjectSession 설계
+## [sort1] 7. ProjectSession 설계
 
 SSOT의 위치를 정한 뒤에는 Main Process에서 현재 프로젝트 데이터를 어떤 형태로 관리할지 결정해야 했습니다.
 
 Main Process에는 React 컴포넌트 트리가 없으므로 `useState`나 React Context처럼 렌더링을 전제로 하는 도구를 그대로 사용할 수 없습니다. Plain Object, Class private field, Vanilla Zustand를 검토했습니다.
 
-### Plain Object
+### [sort2] Plain Object
 
 현재 프로젝트 데이터 보관만 필요하다면 일반 객체로도 충분합니다.
 
@@ -358,7 +356,7 @@ let currentProject: ProjectSnapshot = initialProjectSnapshot;
 
 Plain Object만으로도 구현할 수 있지만, 외부 코드가 값을 직접 바꾸지 못하게 제한하고 모든 변경 규칙을 한 경로로 모으려면 별도의 API 경계가 필요했습니다. 결국 객체를 어디에 보관하느냐보다 **누가 어떤 메서드로 변경할 수 있는지**가 더 중요한 요구사항이었습니다.
 
-### Class
+### [sort2] Class
 
 Class를 사용하면 외부에 허용할 변경 메서드만 공개할 수 있습니다.
 
@@ -369,7 +367,7 @@ projectSession.dispatch(action);
 
 프로젝트 데이터는 private field로 감추고, 조회와 변경 요청을 공개 메서드로 제한할 수 있습니다. 이를 통해 IPC Handler, 자동 저장, Renderer 갱신 코드가 private field를 직접 바꾸지 않고 같은 변경 경로를 사용하게 할 수 있었습니다.
 
-### Vanilla Zustand
+### [sort2] Vanilla Zustand
 
 Zustand의 `createStore`는 React 없이 사용할 수 있는 Vanilla Store를 만듭니다. 생성된 Store는 `getState`, `setState`, `subscribe` API를 제공하므로 상태 보관과 Selector 기반 구독이 필요한 경우 사용할 수 있습니다. ([Zustand](https://zustand.docs.pmnd.rs/reference/apis/create-store 'createStore - Zustand'))
 
@@ -386,7 +384,7 @@ Zustand의 `createStore`는 React 없이 사용할 수 있는 Vanilla Store를 �
 
 Main 내부에서 서로 다른 모듈이 독립적인 Selector 구독이나 Middleware를 요구하게 된다면 Vanilla Zustand를 다시 검토할 수 있습니다. 다만 이것은 미래 확장 기준이며, 현재 선택의 근거는 아니었습니다.
 
-### ProjectSnapshot과 ProjectSession
+### [sort2] ProjectSnapshot과 ProjectSession
 
 Main Process에서 관리할 데이터는 크게 두 종류였습니다.
 
@@ -428,9 +426,9 @@ IPC Handler
 
 ---
 
-## 8. Renderer 동기화와 자동 저장 흐름
+## [sort1] 8. Renderer 동기화와 자동 저장 흐름
 
-### Version으로 변경 순서를 구분한다
+### [sort2] Version으로 변경 순서를 구분한다
 
 Renderer의 IPC 응답, Main의 Broadcast, 비동기 Snapshot 요청은 전송을 시작한 순서와 다른 순서로 도착할 수 있습니다. 값만 비교해서는 어느 결과가 나중에 확정됐는지 판단할 수 없으므로 `ProjectSession`이 변경을 확정할 때마다 단조 증가하는 `version`을 함께 기록했습니다. 즉, `ProjectSnapshot`은 프로젝트 내용과 Main이 확정한 순서를 함께 표현합니다.
 
@@ -468,7 +466,7 @@ class ProjectSession {
 
 예시에서 `applyProjectAction`은 요청을 검증하고 새 문서를 만드는 순수 함수이며, `createUpdateResult`는 확정된 Snapshot과 version을 응답 형태로 조립합니다. 변경 종류에 따라 forward patch와 inverse patch를 함께 만들면 Undo와 Redo도 각각 새로운 변경 요청으로 처리하고 History에 기록할 수 있습니다. 이 경우 되돌리기 전후의 순서 역시 새로운 version으로 구분합니다.
 
-### Renderer는 변경을 요청하고 Main이 확정한다
+### [sort2] Renderer는 변경을 요청하고 Main이 확정한다
 
 기존에는 각 Renderer가 자신의 Store를 수정했고, 해당 Store의 값이 자동 저장에 사용될 수 있었습니다.
 
@@ -518,7 +516,7 @@ _Main Process에서 확정한 Snapshot을 파일 저장과 Renderer 화면 갱�
 
 이제 자동 저장은 특정 Renderer의 Store를 기준으로 실행하지 않습니다. 항상 Main Process의 `ProjectSession`이 가진 Snapshot을 사용합니다.
 
-### 자동 저장은 ProjectSession의 Snapshot만 사용한다
+### [sort2] 자동 저장은 ProjectSession의 Snapshot만 사용한다
 
 자동 저장 구조에서 가장 중요한 규칙은 다음과 같습니다.
 
@@ -563,7 +561,7 @@ Debounce 동안 pending Snapshot을 최신 값으로 교체
 
 Queued sequential execution도 모든 프로젝트 변경을 직렬화한다는 뜻은 아닙니다. 메모리의 Snapshot과 version은 각 변경 요청을 처리할 때 확정하고, 같은 프로젝트 파일을 대상으로 한 비동기 쓰기만 대기열에서 하나씩 실행합니다.
 
-### Renderer Cache는 화면 렌더링에 사용한다
+### [sort2] Renderer Cache는 화면 렌더링에 사용한다
 
 Main Process의 Snapshot이 변경되면 Renderer 화면도 갱신돼야 합니다. 이 애플리케이션은 이미 프로젝트 조회 결과를 TanStack Query로 읽고 있었기 때문에, Renderer 전용 Store를 하나 더 만들지 않고 기존 Query Cache를 화면용 복사본으로 사용했습니다.
 
@@ -601,9 +599,9 @@ Renderer TanStack Query Cache
 
 ---
 
-## 9. 일시적인 UI 이벤트 처리
+## [sort1] 9. 일시적인 UI 이벤트 처리
 
-### 저장하지 않는 이벤트는 별도 채널로 분리한다
+### [sort2] 저장하지 않는 이벤트는 별도 채널로 분리한다
 
 프로젝트 데이터와 비슷해 보이지만 저장할 필요가 없는 이벤트도 있었습니다.
 
@@ -659,9 +657,9 @@ Main Process는 채널 연결만 담당하고, 해당 이벤트를 프로젝트 
 
 ---
 
-## 10. 변경 전후 비교와 회고
+## [sort1] 10. 변경 전후 비교와 회고
 
-### AS IS
+### [sort2] AS IS
 
 ```text
 각 Renderer
@@ -680,7 +678,7 @@ Main Process는 채널 연결만 담당하고, 해당 이벤트를 프로젝트 
 - 새로 열린 화면은 이전 변경 이벤트를 받을 수 없었습니다.
 - 저장되는 데이터와 일시적인 UI 이벤트가 같은 흐름에 섞여 있었습니다.
 
-### TO BE
+### [sort2] TO BE
 
 ```text
 Renderer
@@ -722,7 +720,7 @@ Main Process의 ProjectSession
 
 _역할을 분리한 뒤 자동 저장은 다시 사용자의 작업을 보호하는 기능이 됐습니다._
 
-### 회고
+### [sort2] 회고
 
 이번 프로젝트를 하며 웹환경이 아닌 일렉트론에서 처음 만나는 문제들이 있었습니다. 그 중 가장 인상깊었던 것이 이 스토어구조를 설계한 이야기었습니다. 처음에는 당연히 렌더러 프로세스 안에 스토어를 가지고 있는 구조로 생각을 했는데, 로컬 저장기능을 하게 되면서 기준점이 두개로 나뉘어지고, 결국 단일 진실 공급원을 어디에 둬야하는가로 자연스럽게 사고가 이어졌던 것 같습니다.
 

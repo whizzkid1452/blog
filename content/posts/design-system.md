@@ -6,28 +6,7 @@ tags: ['design-system', 'shadcn', 'frontend', 'architecture']
 draft: false
 ---
 
-## 목차
-
-1. 디자인 시스템이란 무엇인가?
-2. 왜 우리 회사에 디자인 시스템이 필요했는가
-3. 왜 배포 방식부터 결정했는가
-4. 왜 npm 패키지 방식이 매력적으로 보였는가
-5. 왜 micro SaaS에서는 패키지의 비용이 커졌는가
-6. shadcn Registry는 무엇이 다른가
-7. Registry 방식으로 무엇을 얻고 무엇을 포기하는가
-8. Registry 방식과 라이브러리 방식은 어떻게 다른가
-9. Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가
-10. 그중 왜 Vite를 선택했는가
-11. Registry를 선택하면 Vite의 역할은 어떻게 달라지는가
-12. shadcn을 사용한다는 말의 범위를 어떻게 정했는가
-13. 왜 Radix UI를 접근성 Primitive로 사용하는가
-14. 왜 Emotion은 유지하고 디자인 토큰은 CSS 변수로 두는가
-15. Figma와 코드의 이름을 왜 맞춰야 하는가
-16. Storybook을 어떤 검증 도구로 사용할 것인가
-17. 최종 구조를 어떻게 설계했는가
-18. npm 패키지 대신 Registry를 선택하며 배운 것
-
-## 1. 디자인 시스템이란 무엇인가?
+## [sort1] 1. 디자인 시스템이란 무엇인가?
 
 디자인 시스템은 여러 제품 화면에서 반복되는 UI 결정과 구현 기준을 함께 관리하는 체계다. 여기서 UI 결정은 색상, 간격, typography, radius 같은 기준 값, Button과 Dialog 같은 component, 접근성 기준, 문서화 방식, 배포 정책을 모두 포함한다. [Figma는 디자인 시스템을 재사용 가능한 component, guideline, tool의 집합](https://www.figma.com/resource-library/design-system-examples/)으로 설명한다. 일반적으로 디자인 시스템은 다음 흐름으로 만든다.
 
@@ -40,7 +19,7 @@ draft: false
 
 다만 실무의 순서가 항상 선형으로 흐르지는 않는다. 특히 배포 모델은 component의 소유권, versioning, migration 비용을 먼저 결정한다. 그래서 이 글은 디자인 시스템의 모든 제작 과정보다 **배포 모델을 먼저 정해야 했던 이유** 에 집중한다.
 
-## 2. 왜 우리 회사에 디자인 시스템이 필요했는가
+## [sort1] 2. 왜 우리 회사에 디자인 시스템이 필요했는가
 
 우리 회사에서 디자인 시스템이 필요했던 이유는 “예쁜 공통 UI를 만들기 위해서”가 아니었다. 직접적인 배경은 **제품 수가 늘어나면서 같은 UI 결정을 반복해서 다시 내리게 된 것** 이었다. 우리는 하나의 장기 운영 SaaS만 만드는 환경이 아니었다. Electron 기반 멀티미디어 편집기 데스크톱 앱을 중심으로, 빠르게 만들고 검증하는 micro SaaS 제품군이 함께 존재했다. 제품마다 화면 맥락은 달랐지만 Button, IconButton, TextField, Dialog, DropdownMenu, Tooltip 같은 기본 UI는 계속 반복되었다. 문제는 반복 자체가 아니라, 반복될 때마다 기준이 조금씩 달라지는 구조가 생겼다는 점이다. 대표적으로 `disabled` 상태를 색상만 바꾸는 상태로 볼지, cursor와 hover 동작까지 함께 막는 상태로 볼지 화면마다 해석이 달라질 수 있었다. TextField의 `error`, `focused`, `disabled` 상태도 제품마다 시각 규칙과 prop 이름이 달라지기 쉬웠다. 이런 차이는 초기에는 작은 구현 차이처럼 보이지만, 제품이 늘어나면 “이번에는 어떤 Button을 기준으로 삼아야 하는가”를 매번 다시 확인해야 하는 비용으로 바뀐다.
 
@@ -60,7 +39,7 @@ export function SaveButton() {
 
 그러나 Electron 기반 멀티미디어 편집기 데스크톱 앱과 그 주변 micro SaaS 제품군의 환경을 기준으로 다시 검토하자 다른 결론에 도달했다. 우리는 빠르게 만들고 배포하며, 검증 결과에 따라 운영을 종료하기도 하는 micro SaaS 프로젝트가 많다. 이런 환경에서는 모든 컴포넌트를 중앙에서 장기간 통제하는 방식보다, 검증된 초기 구현을 제공하고 각 프로젝트가 맥락에 맞게 수정하는 구조가 더 적합할 수 있었다. 이번 글에서는 디자인 시스템을 **npm 라이브러리 패키지** 가 아닌 **shadcn-style Registry** 로 배포하기로 한 판단 과정과 구현 경계를 정리한다.
 
-## 3. 왜 배포 방식부터 결정했는가
+## [sort1] 3. 왜 배포 방식부터 결정했는가
 
 디자인 시스템을 만든다는 말에는 여러 문제가 섞여 있다.
 
@@ -78,7 +57,7 @@ export function SaveButton() {
 2. Registry에서 소스 코드를 받아 프로젝트에 설치하는 방식
 ```
 
-## 4. 왜 npm 패키지 방식이 매력적으로 보였는가
+## [sort1] 4. 왜 npm 패키지 방식이 매력적으로 보였는가
 
 npm 패키지 방식은 익숙하다. [npm package](https://docs.npmjs.com/about-packages-and-modules/)는 재사용 가능한 코드를 배포하고 다른 프로젝트가 의존성으로 설치할 수 있게 하는 단위다. 디자인 시스템을 하나의 패키지로 배포하면 각 프로젝트는 이를 의존성으로 설치한다.
 
@@ -101,7 +80,7 @@ import { Button, TextField } from '@editor/design-system';
 
 장기간 운영하는 제품이 많고 여러 팀이 같은 UI 규칙을 유지해야 한다면 npm 패키지 방식은 강한 선택지다. 하지만 Electron 기반 멀티미디어 편집기 데스크톱 앱과 그 주변 micro SaaS 제품군을 함께 운영하는 환경에서는 이 장점이 운영 비용으로 바뀔 수 있었다.
 
-## 5. 왜 micro SaaS에서는 패키지의 비용이 커졌는가
+## [sort1] 5. 왜 micro SaaS에서는 패키지의 비용이 커졌는가
 
 우리에게는 “모든 앱이 같은 Button 구현을 계속 공유한다”는 목표보다 “쓸 만한 Button으로 빠르게 시작하고, 제품 맥락에 맞게 바로 고친다”는 목표가 더 중요했다. 예를 들어 한 프로젝트에서는 Button 클릭에 분석 이벤트가 필요하고, 다른 프로젝트에서는 로딩 아이콘의 위치가 달라야 하며, 또 다른 프로젝트에서는 특정 화면의 모서리 반경만 달라야 한다고 해보자. 공통 패키지에서 모든 요구를 수용하면 프로젝트별 예외가 공개 prop으로 올라오기 쉽다.
 
@@ -115,7 +94,7 @@ import { Button, TextField } from '@editor/design-system';
 
 > 중앙에서 장기간 관리할 컴포넌트와 프로젝트가 빠르게 소유해야 하는 컴포넌트는 배포 방식이 달라야 한다.
 
-## 6. shadcn Registry는 무엇이 다른가
+## [sort1] 6. shadcn Registry는 무엇이 다른가
 
 npm 패키지 방식에서는 컴포넌트 구현이 일반적으로 `node_modules` 안에 있고, 앱은 패키지가 공개한 API를 참조한다.
 
@@ -146,7 +125,7 @@ shadcn Registry
 -> 앱 저장소가 설치된 구현을 소유하고, 필요하면 직접 수정한다.
 ```
 
-## 7. Registry 방식으로 무엇을 얻고 무엇을 포기하는가
+## [sort1] 7. Registry 방식으로 무엇을 얻고 무엇을 포기하는가
 
 Registry 방식이 우리 환경에 제공하는 이점은 직접적이었다.
 
@@ -178,7 +157,7 @@ Registry 방식이 우리 환경에 제공하는 이점은 직접적이었다.
 
 Electron 기반 멀티미디어 편집기 데스크톱 앱과 그 주변 제품군의 운영 환경은 두 번째 조건에 더 가까웠다. 이것이 Registry를 선택한 필요조건은 아니지만, 선택의 주요 근거였다.
 
-## 8. Registry 방식과 라이브러리 방식은 어떻게 다른가
+## [sort1] 8. Registry 방식과 라이브러리 방식은 어떻게 다른가
 
 앞에서 npm 패키지 방식과 Registry 방식을 따로 봤지만, 실제 의사결정은 “어떤 도구가 더 좋은가”보다 “설치 후 컴포넌트 코드를 누가 소유하는가”에 가까웠다. 여기서 **라이브러리 방식** 은 UI component를 npm package로 배포하고, 소비 프로젝트가 `import`해서 사용하는 방식을 뜻한다. 라이브러리화는 컴포넌트 파일을 한 저장소에 모아두는 행위가 아니다. 소비 앱이 안정적으로 import할 수 있는 package entry point, `peerDependencies`, CSS 배포 경로, TypeScript 선언 파일, semver release 정책까지 포함하는 배포 계약이다. 반대로 Registry 방식은 완성된 bundle을 참조하게 만드는 것이 아니라, 검증된 소스 코드를 소비 앱 안으로 복사해 시작점을 제공한다.
 
@@ -193,7 +172,7 @@ Electron 기반 멀티미디어 편집기 데스크톱 앱과 그 주변 제품�
 
 따라서 “라이브러리 방식이 구식이고 Registry가 최신”이라는 판단은 아니다. 두 방식은 해결하는 문제가 다르다. 라이브러리 방식은 중앙에서 UI 구현을 오래 유지하는 데 강하고, Registry 방식은 검증된 초기 구현을 각 제품이 빠르게 자기 코드로 흡수하는 데 강하다.
 
-## 9. Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가
+## [sort1] 9. Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가
 
 회사에서 이미 Next.js와 Vite를 모두 사용하고 있었기 때문에, 디자인 시스템 원본을 만들 때도 두 도구를 먼저 비교했다. 여기에 package 배포를 더 강하게 전제하는 Rollup, tsdown, Rolldown 같은 bundler도 후보군으로 두었다. 이 비교에서 **Next.js** 는 React application framework로 보았다. [Next.js 공식 문서](https://nextjs.org/docs)는 Next.js를 full-stack web application을 만들기 위한 React framework로 설명한다. `next build` 역시 production application build를 만드는 명령이다. 따라서 docs site나 Registry JSON을 제공하는 웹 서버에는 잘 맞지만, component library artifact를 만드는 중심 도구로 보기는 어렵다. **Vite** 는 application 개발 서버와 production build를 제공하면서도 [Library Mode](https://vite.dev/guide/build.html#library-mode)를 별도로 제공한다. 즉 같은 도구로 playground를 실행하고, 필요하면 browser-oriented library bundle까지 만들 수 있다.
 
@@ -207,7 +186,7 @@ Rollup, tsdown, Rolldown은 더 직접적인 bundler 선택지다. [Rollup](http
 | tsdown/Rolldown     | library-oriented 또는 고성능 bundler          | TypeScript library bundle과 선언 파일 생성     | library 배포를 본격화할 때 분리 도입할 수 있다.                        |
 | Storybook/Chromatic | component 상태 문서화와 UI regression testing | component 검증과 리뷰                          | 배포 도구가 아니라 검증 도구로 분리한다.                               |
 
-## 10. 그중 왜 Vite를 선택했는가
+## [sort1] 10. 그중 왜 Vite를 선택했는가
 
 Vite를 선택한 이유는 “Vite가 Next.js보다 항상 낫다”가 아니다. 우리 조건에서는 **회사에서 이미 쓰는 선택지 중 library mode를 가진 도구가 Vite였기 때문** 이다. Next.js는 제품 앱과 문서 사이트를 만들 때 강한 선택지다. 하지만 이 작업에서 필요한 것은 application route, server rendering, deployment adapter가 아니라 component 원본을 빠르게 개발하고 필요할 경우 library artifact로도 내보낼 수 있는 빌드 경로였다. Vite는 이 요구에 더 직접적으로 맞았다.
 
@@ -221,7 +200,7 @@ Vite를 선택한 이유는 “Vite가 Next.js보다 항상 낫다”가 아니�
 
 이 판단은 현재 조건에 근거한 선택이다. 만약 처음부터 npm package 배포가 핵심 목표였고, declaration file bundle, multi-entry output, external dependency 정책이 더 중요했다면 tsdown이나 Rollup을 먼저 선택했을 가능성도 있다.
 
-## 11. Registry를 선택하면 Vite의 역할은 어떻게 달라지는가
+## [sort1] 11. Registry를 선택하면 Vite의 역할은 어떻게 달라지는가
 
 초기에는 Vite의 Library Mode 중심으로 npm package를 만드는 안도 검토했다. Vite Library Mode는 브라우저 지향 라이브러리를 배포 가능한 JavaScript 번들로 만들 때 사용하는 빌드 설정이다. 일반 앱 빌드와 라이브러리 빌드는 목표가 다르다.
 
@@ -243,7 +222,7 @@ Vite의 역할
 
 Vite는 npm 패키지를 만드는 중심 도구가 아니라 Registry 컴포넌트를 개발하고 검증하는 실행 환경이 된다.
 
-## 12. shadcn을 사용한다는 말의 범위를 어떻게 정했는가
+## [sort1] 12. shadcn을 사용한다는 말의 범위를 어떻게 정했는가
 
 “shadcn을 사용한다”는 말은 shadcn/ui의 시각 디자인과 Tailwind 기반 구현을 그대로 가져온다는 뜻으로 오해하기 쉽다. [shadcn/ui 공식 문서](https://ui.shadcn.com/docs)는 shadcn/ui를 component 모음이자 code distribution platform으로 설명한다. 이 글에서는 shadcn/ui의 기본 시각 디자인보다 Registry와 CLI 기반 소스 설치 흐름에 초점을 둔다. 하지만 Electron 기반 멀티미디어 편집기 데스크톱 앱 프로젝트는 Emotion을 사용한다. Tailwind class 중심의 컴포넌트를 그대로 섞으면 한 컴포넌트 계층에서 두 스타일링 체계를 함께 운영하게 된다.
 
@@ -268,7 +247,7 @@ Emotion 기반 프로젝트
 
 즉 shadcn은 Electron 기반 멀티미디어 편집기 데스크톱 앱의 디자인 언어가 아니라 **소스 코드 배포 메커니즘** 으로 사용한다.
 
-## 13. 왜 Radix UI를 접근성 Primitive로 사용하는가
+## [sort1] 13. 왜 Radix UI를 접근성 Primitive로 사용하는가
 
 Dialog, DropdownMenu, Tooltip 같은 컴포넌트는 `div`를 시각적으로 꾸미는 것만으로 완성되지 않는다. [Radix Primitives](https://www.radix-ui.com/primitives/docs/overview/introduction)는 낮은 수준의 접근성 UI primitive를 제공한다. 이 글에서는 Radix UI를 Dialog, DropdownMenu, Tooltip 같은 복잡한 상호작용의 base layer로 사용한다. Dialog를 구현하려면 다음 동작과 의미 구조를 함께 고려해야 한다.
 
@@ -306,7 +285,7 @@ CSS 변수
 
 이 구조는 Registry 방식과도 맞는다. 프로젝트는 설치된 컴포넌트 코드를 소유하고, 복잡한 접근성 동작은 Radix UI Primitive의 계약에 의존한다. 다만 Radix UI를 사용한다는 사실만으로 완성된 접근성이 보장되지는 않는다. Dialog의 제목과 설명을 제공하고, 설치 후 수정한 상호작용을 다시 검증하는 책임은 여전히 프로젝트에 있다.
 
-## 14. 왜 Emotion은 유지하고 디자인 토큰은 CSS 변수로 두는가
+## [sort1] 14. 왜 Emotion은 유지하고 디자인 토큰은 CSS 변수로 두는가
 
 Emotion은 React 컴포넌트의 스타일 구현에 사용한다.
 
@@ -342,7 +321,7 @@ const ButtonRoot = styled.button`
 
 이렇게 나누면 Emotion은 React 컴포넌트의 구현 도구가 되고, CSS 변수 이름과 값은 여러 프레임워크가 공유할 수 있는 디자인 토큰 계약이 된다.
 
-## 15. Figma와 코드의 이름을 왜 맞춰야 하는가
+## [sort1] 15. Figma와 코드의 이름을 왜 맞춰야 하는가
 
 코드 구현 전에 Figma의 표현 모델과 코드의 공개 API가 같은 의미를 가리키는지 확인해야 했다. 현재 디자인 파일을 검토하며 다음 정리 항목을 찾았다.
 
@@ -377,7 +356,7 @@ const ButtonRoot = styled.button`
 
 디자이너와의 합의는 구현 허락을 받는 절차가 아니다. Figma의 variant, state, token과 코드의 prop, CSS state, CSS 변수가 같은 개념을 표현하도록 계약을 맞추는 일이다. 이 계약이 어긋나면 단순한 색상 차이를 넘어 팀이 같은 컴포넌트를 서로 다른 상태 모델로 이해하게 된다.
 
-## 16. Storybook을 어떤 검증 도구로 사용할 것인가
+## [sort1] 16. Storybook을 어떤 검증 도구로 사용할 것인가
 
 Storybook은 디자인 시스템 자체가 아니다. [Storybook 공식 문서](https://storybook.js.org/docs)는 Storybook을 앱 전체를 실행하지 않고 UI component와 page를 독립적으로 만들고 테스트하는 frontend workshop으로 설명한다. 이 글에서는 앱 화면과 분리된 환경에서 UI 컴포넌트의 상태를 개발하고 문서화하며 테스트할 수 있게 돕는 도구로 사용한다. [Chromatic](https://www.chromatic.com/docs/)은 Storybook story를 사용해 visual, interaction, accessibility test를 실행하는 클라우드 기반 UI 검증 도구다. 즉 Storybook이 component 상태 예제를 만드는 환경이라면, Chromatic은 그 예제를 기준으로 변경을 검토하는 검증 경로에 가깝다. Registry 방식을 선택해도 독립 검증 환경은 필요하다. Button만 해도 다음 상태 조합을 확인해야 한다.
 
@@ -397,7 +376,7 @@ TextField도 마찬가지다.
 
 빠르게 변하는 micro SaaS에서는 앱 화면 안에서 확인한 상태만 구현하고 나머지 조합을 놓치기 쉽다. Story를 상태별 실행 예제로 두면 시각 검토뿐 아니라 상호작용 테스트와 접근성 테스트의 입력으로도 활용할 수 있다. 따라서 Storybook은 Registry의 배포 책임을 대신하지 않는다. 설치하기 전 원본 컴포넌트의 상태 조합을 반복해서 검증하는 경로를 제공한다.
 
-## 17. 최종 구조를 어떻게 설계했는가
+## [sort1] 17. 최종 구조를 어떻게 설계했는가
 
 최종적으로 다음 구조를 계획했다.
 
@@ -451,7 +430,7 @@ Radix UI 기반 Component
 
 처음부터 모든 컴포넌트를 만들면 시스템을 검증하기 전에 목록만 커질 수 있다. Button과 TextField를 먼저 만드는 이유는 variant, size, disabled, focus, error, icon slot, 디자인 토큰 연결을 작은 범위에서 함께 검증할 수 있기 때문이다.
 
-## 18. npm 패키지 대신 Registry를 선택하며 배운 것
+## [sort1] 18. npm 패키지 대신 Registry를 선택하며 배운 것
 
 이 글의 결론은 “npm 패키지는 틀렸고 shadcn Registry가 맞다”가 아니다.
 
