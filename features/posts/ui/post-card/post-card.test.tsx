@@ -13,31 +13,31 @@ const post: PostSummary = {
 };
 
 describe('PostCard', () => {
-  it('renders the localized generated preview when a cover image is not provided', () => {
-    const markup = renderToStaticMarkup(<PostCard locale="en" post={post} />);
-    const decodedMarkup = decodeURIComponent(markup);
-
-    expect(decodedMarkup).toContain('url=/en/posts/react-rendering/preview-image');
-    expect(markup).toContain('alt=""');
-  });
-
-  it('does not expose a generated preview path for an authenticated post', () => {
-    const markup = renderToStaticMarkup(<PostCard post={{ ...post, visibility: 'authenticated' }} />);
-    const decodedMarkup = decodeURIComponent(markup);
-
-    expect(decodedMarkup).toContain('src="/og-default.svg"');
-    expect(decodedMarkup).not.toContain('/posts/react-rendering/preview-image');
-  });
-
-  it('renders the configured cover image and alternative text', () => {
+  it('renders the post thumbnail', () => {
     const markup = renderToStaticMarkup(
-      <PostCard
-        post={{ ...post, coverImage: '/images/react-rendering.png', coverAlt: 'React rendering flow diagram' }}
-      />
+      <PostCard post={{ ...post, thumbnail: { src: '/images/content.png', alt: 'Content diagram' } }} />
     );
     const decodedMarkup = decodeURIComponent(markup);
 
-    expect(decodedMarkup).toContain('url=/images/react-rendering.png');
-    expect(markup).toContain('alt="React rendering flow diagram"');
+    expect(decodedMarkup).toContain('url=/images/content.png');
+    expect(markup).toContain('alt="Content diagram"');
+  });
+
+  it('renders only the text content when the post has no thumbnail', () => {
+    const markup = renderToStaticMarkup(<PostCard locale="en" post={post} />);
+    const decodedMarkup = decodeURIComponent(markup);
+
+    expect(decodedMarkup).not.toContain('/preview-image');
+    expect(markup).not.toContain('<img');
+    expect(markup).toContain('React rendering');
+  });
+
+  it('renders an external post thumbnail without the Next.js image optimizer', () => {
+    const markup = renderToStaticMarkup(
+      <PostCard post={{ ...post, thumbnail: { src: 'https://example.com/content.png', alt: 'External image' } }} />
+    );
+
+    expect(markup).toContain('src="https://example.com/content.png"');
+    expect(markup).not.toContain('/_next/image');
   });
 });

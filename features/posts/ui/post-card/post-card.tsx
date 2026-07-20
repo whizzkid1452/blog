@@ -5,6 +5,8 @@ import Image from 'next/image';
 import Link from 'next/link';
 import styles from './post-card.module.css';
 
+const POST_THUMBNAIL_SIZES = '(max-width: 640px) calc(100vw - 40px), 220px';
+
 interface PostCardProps {
   locale?: Locale;
   post: PostSummary;
@@ -13,8 +15,6 @@ interface PostCardProps {
 export function PostCard({ locale = 'ko', post }: PostCardProps) {
   const messages = getUiMessages(locale);
   const postPath = createLocalizedPath(locale, `/posts/${post.slug}`);
-  const generatedPreviewImage = post.visibility === 'public' ? `${postPath}/preview-image` : '/og-default.svg';
-  const previewImage = post.coverImage ?? generatedPreviewImage;
 
   return (
     <article className={styles.article}>
@@ -50,18 +50,29 @@ export function PostCard({ locale = 'ko', post }: PostCardProps) {
         </h2>
         {post.description == null ? null : <p className={styles.postDescription}>{post.description}</p>}
       </div>
-      <div className={styles.previewImageContainer}>
-        <Image
-          className={styles.previewImage}
-          src={previewImage}
-          alt={post.coverAlt ?? ''}
-          width={1200}
-          height={630}
-          sizes="(max-width: 640px) calc(100vw - 40px), 220px"
-        />
-      </div>
+      {post.thumbnail == null ? null : (
+        <div className={styles.previewImageContainer}>
+          <PostThumbnail src={post.thumbnail.src} alt={post.thumbnail.alt} />
+        </div>
+      )}
     </article>
   );
+}
+
+function PostThumbnail({ src, alt }: { src: string; alt: string }) {
+  if (!isPublicRootPath(src)) {
+    // 외부 이미지 호스트가 고정되어 있지 않아 Next.js 이미지 allowlist를 적용할 수 없다.
+    // eslint-disable-next-line @next/next/no-img-element
+    return <img className={styles.previewImage} src={src} alt={alt} width={1200} height={630} loading="lazy" />;
+  }
+
+  return (
+    <Image className={styles.previewImage} src={src} alt={alt} width={1200} height={630} sizes={POST_THUMBNAIL_SIZES} />
+  );
+}
+
+function isPublicRootPath(src: string): boolean {
+  return src.startsWith('/') && !src.startsWith('//');
 }
 
 function getSeriesOrderLabel(locale: Locale, order: number): string {
