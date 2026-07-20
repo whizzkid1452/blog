@@ -77,7 +77,7 @@ export function MarkdownImageViewer({ src, alt, title, size }: MarkdownImageView
 
 function RenderedMarkdownImage({ className, src, alt, title, size, sizes }: RenderedMarkdownImageProps) {
   if (size == null) {
-    return <img className={className} src={src} alt={alt} title={title} loading="lazy" decoding="async" />;
+    return <img className={className} src={src} alt={alt} title={title} loading="eager" decoding="async" />;
   }
 
   return (
@@ -89,6 +89,7 @@ function RenderedMarkdownImage({ className, src, alt, title, size, sizes }: Rend
       width={size.width}
       height={size.height}
       sizes={sizes}
+      loading="eager"
     />
   );
 }
