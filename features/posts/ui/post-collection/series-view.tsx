@@ -27,7 +27,7 @@ export function SeriesView({ locale = 'ko', series }: SeriesViewProps) {
                 <h2 className={styles.seriesTitle}>{postSeries.name}</h2>
                 <p className={styles.seriesCount}>{messages.postCount(postSeries.posts.length)}</p>
               </header>
-              <div className={styles.postList}>
+              <div className={styles.seriesPostList}>
                 {postSeries.posts.map(post => (
                   <PostCard key={post.slug} locale={locale} post={post} />
                 ))}

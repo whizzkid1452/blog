@@ -37,11 +37,16 @@
   line-height: 1.75;
 }
 
+.seriesPostList,
 .postList,
 .seriesList {
   display: flex;
   flex-direction: column;
   gap: 0;
+}
+
+.seriesPostList > article {
+  border-width: 0;
 }
 
 .seriesList {
