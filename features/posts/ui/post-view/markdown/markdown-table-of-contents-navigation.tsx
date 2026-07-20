@@ -25,7 +25,7 @@ interface MarkdownTableOfContentsNavigationProps {
 const REDUCED_MOTION_MEDIA_QUERY = '(prefers-reduced-motion: reduce)';
 
 export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTableOfContentsNavigationProps) {
-  const { activeHeadingId, setActiveHeadingId } = useActiveMarkdownHeading(items);
+  const { activeHeadingId, selectHeadingDuringProgrammaticScroll } = useActiveMarkdownHeading(items);
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
   const desktopNavigationRef = useRef<HTMLElement>(null);
   const mobileNavigationRef = useRef<HTMLDivElement>(null);
@@ -46,12 +46,12 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
     }
 
     event.preventDefault();
+    selectHeadingDuringProgrammaticScroll(headingId);
     scrollToTableOfContentsHeading({
       prefersReducedMotion: window.matchMedia(REDUCED_MOTION_MEDIA_QUERY).matches,
       scrollIntoView: options => heading.scrollIntoView(options),
     });
     window.history.pushState(null, '', `#${encodeURIComponent(headingId)}`);
-    setActiveHeadingId(headingId);
   };
 
   return (

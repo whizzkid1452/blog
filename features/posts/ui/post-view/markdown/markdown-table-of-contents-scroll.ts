@@ -7,6 +7,7 @@ interface FindActiveHeadingIdParams {
   activationOffset: number;
   headingPositions: HeadingPosition[];
   isDocumentEnd?: boolean;
+  retainedHeadingId?: string | null;
 }
 
 interface ScrollToTableOfContentsHeadingParams {
@@ -46,7 +47,12 @@ export function findActiveHeadingId({
   activationOffset,
   headingPositions,
   isDocumentEnd = false,
+  retainedHeadingId,
 }: FindActiveHeadingIdParams): string | null {
+  if (retainedHeadingId != null) {
+    return retainedHeadingId;
+  }
+
   const firstHeading = headingPositions[0];
 
   if (firstHeading == null) {
