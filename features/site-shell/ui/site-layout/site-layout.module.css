@@ -91,6 +91,10 @@
     transform var(--motion-duration-fast) var(--motion-ease-out);
 }
 
+.siteHeader[data-liquid-glass='bar'] {
+  box-shadow: 0 10px 32px -32px var(--liquid-glass-shadow);
+}
+
 .siteHeader[data-site-header-visible='true'] {
   opacity: 1;
   pointer-events: auto;

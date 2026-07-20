@@ -26,6 +26,12 @@ describe('site header styles', () => {
     expect(siteHeaderRules.every(rule => !rule.includes('border'))).toBe(true);
   });
 
+  it('keeps the header shadow from spreading beyond its horizontal edges', () => {
+    const glassHeaderRule = getCssRules(layoutStyles, ".siteHeader[data-liquid-glass='bar']")[0] ?? '';
+
+    expect(glassHeaderRule).toContain('box-shadow: 0 10px 32px -32px var(--liquid-glass-shadow);');
+  });
+
   it('moves the header outside the viewport until the scroll threshold is reached', () => {
     const hiddenHeaderRule = getCssRules(layoutStyles, '.siteHeader')[0] ?? '';
     const visibleHeaderRule = getCssRules(layoutStyles, ".siteHeader[data-site-header-visible='true']")[0] ?? '';
