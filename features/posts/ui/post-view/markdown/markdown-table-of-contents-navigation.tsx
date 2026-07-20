@@ -123,6 +123,7 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
       <Dialog.Root open={isMobileNavigationOpen} onOpenChange={setIsMobileNavigationOpen}>
         <Dialog.Trigger
           className={styles.mobileTableOfContentsTrigger}
+          data-liquid-glass="control"
           data-motion="pressable"
           type="button"
           aria-label={messages.openTableOfContentsLabel}

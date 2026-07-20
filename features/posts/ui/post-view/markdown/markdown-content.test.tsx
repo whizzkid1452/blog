@@ -27,6 +27,7 @@ describe('MarkdownContent', () => {
     expect(renderedMarkup).toContain('data-level="4"');
     expect(renderedMarkup).toContain('<h4 id="ipc-요청-처리">IPC 요청 처리</h4>');
     expect(renderedMarkup).toContain('aria-label="목차 열기"');
+    expect(renderedMarkup).toContain('data-liquid-glass="control"');
   });
 
   it('renders English table-of-contents controls for English posts', async () => {
