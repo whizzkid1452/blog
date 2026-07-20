@@ -5,13 +5,13 @@ const markdownContentStyles = readFileSync(new URL('./markdown/markdown-content.
 const postViewStyles = readFileSync(new URL('./post-view.module.css', import.meta.url), 'utf8');
 
 describe('post table of contents layout', () => {
-  it('aligns table-of-contents navigation with the heading start', () => {
+  it('keeps table-of-contents headings below the fixed site header', () => {
     const headingRule = getCssRule(
       markdownContentStyles,
       ['.content h1', '.content h2', '.content h3', '.content h4'].join(',\n')
     );
 
-    expect(headingRule).not.toContain('scroll-margin-top');
+    expect(headingRule).toContain('scroll-margin-top: var(--site-header-height);');
   });
 
   it('places the desktop table of contents in a fixed right rail', () => {
@@ -20,6 +20,12 @@ describe('post table of contents layout', () => {
     expect(navigationRule).toContain('position: fixed;');
     expect(navigationRule).toContain('right: 0;');
     expect(navigationRule).toContain('width: var(--desktop-table-of-contents-width);');
+  });
+
+  it('keeps the desktop table-of-contents divider transparent', () => {
+    const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
+
+    expect(navigationRule).toContain('border-left: 1px solid transparent;');
   });
 
   it('keeps the desktop table of contents scrollable without showing a scrollbar', () => {
@@ -37,6 +43,17 @@ describe('post table of contents layout', () => {
     const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
 
     expect(navigationRule).toContain('padding: var(--site-content-top-padding) 24px 72px;');
+  });
+
+  it('keeps the mobile table of contents scrollable without showing a scrollbar', () => {
+    const navigationRule = getCssRule(markdownContentStyles, '.mobileTableOfContentsContent');
+    const webkitScrollbarRule = getCssRule(markdownContentStyles, '.mobileTableOfContentsContent::-webkit-scrollbar');
+
+    expect(navigationRule).toContain('overflow-y: auto;');
+    expect(navigationRule).toContain('scrollbar-color: transparent transparent;');
+    expect(navigationRule).toContain('scrollbar-width: none;');
+    expect(webkitScrollbarRule).toContain('width: 0;');
+    expect(webkitScrollbarRule).toContain('height: 0;');
   });
 
   it('reserves the right rail outside the post content width', () => {

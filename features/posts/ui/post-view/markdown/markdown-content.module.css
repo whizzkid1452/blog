@@ -3,6 +3,7 @@
 }
 
 .content {
+  --markdown-heading-content-spacing: 32px;
   --markdown-image-block-spacing: 64px;
   --markdown-image-caption-gap: 4px;
 
@@ -27,25 +28,26 @@
   color: var(--color-text-primary);
   font-weight: 650;
   line-height: 1.3;
+  scroll-margin-top: var(--site-header-height);
 }
 
 .content h1 {
-  margin: 0 0 24px;
+  margin: 0 0 var(--markdown-heading-content-spacing);
   font-size: 30px;
 }
 
 .content h2 {
-  margin: 36px 0 14px;
+  margin: 36px 0 var(--markdown-heading-content-spacing);
   font-size: 24px;
 }
 
 .content h3 {
-  margin: 28px 0 12px;
+  margin: 28px 0 var(--markdown-heading-content-spacing);
   font-size: 20px;
 }
 
 .content h4 {
-  margin: 24px 0 10px;
+  margin: 24px 0 var(--markdown-heading-content-spacing);
   font-size: 18px;
 }
 
@@ -210,7 +212,7 @@
   height: 100dvh;
   overflow-y: auto;
   overscroll-behavior: contain;
-  border-left: 1px solid var(--color-border);
+  border-left: 1px solid transparent;
   padding: var(--site-content-top-padding) 24px 72px;
   background: var(--background);
   scrollbar-color: transparent transparent;
@@ -311,6 +313,18 @@
   overflow-y: auto;
   background: var(--background);
   padding: 22px 20px 32px;
+  scrollbar-color: transparent transparent;
+  scrollbar-width: none;
+}
+
+.mobileTableOfContentsContent::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.mobileTableOfContentsContent::-webkit-scrollbar-thumb,
+.mobileTableOfContentsContent::-webkit-scrollbar-track {
+  background: transparent;
 }
 
 .mobileTableOfContentsHeader {
