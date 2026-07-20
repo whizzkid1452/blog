@@ -57,10 +57,6 @@ _문제가 반복될 때마다 이번 디버깅이 나를 더 강하게 만들 �
 
 문제는 **다른 화면에 남아 있던 오래된 프로젝트 데이터가 정상적으로 저장되고 있었다는 것**이었습니다.
 
-![오래된 Renderer Snapshot이 최신 SRT 자막을 덮어쓰는 순서](/images/electron-multi-window-shared-data-ssot/stale-snapshot-overwrite-sequence.png)
-
-_오래된 Renderer Snapshot이 로컬 파일을 덮어쓰는 흐름_
-
 단순한 화면 갱신 오류가 아니었습니다.
 
 사용자가 작성한 결과가 이전 데이터로 덮어써지는 실제 데이터 유실 문제였습니다.
@@ -71,31 +67,9 @@ _오래된 Renderer Snapshot이 로컬 파일을 덮어쓰는 흐름_
 
 먼저 같은 SRT Row가 각 위치에서 어떤 값을 가지고 있는지 확인했습니다.
 
-```text
-1. 사용자가 SRT 자막을 수정한다.
+![오래된 Renderer Snapshot이 최신 SRT 자막을 덮어쓰는 순서](/images/electron-multi-window-shared-data-ssot/stale-snapshot-overwrite-sequence.png)
 
-SRT Script Panel Renderer
-└─ Project Store A
-   └─ “안녕하세요. 수정된 자막입니다.”
-
-
-2. 다른 화면의 Project Store에는 수정 전 값이 남아 있다.
-
-Editor Renderer
-└─ Project Store B
-   └─ “안녕하세요.”
-
-Admin Renderer
-└─ Project Store C
-   └─ “안녕하세요.”
-
-
-3. Editor 또는 Admin의 오래된 Snapshot으로 자동 저장이 실행된다.
-
-Local Project File
-└─ Project Snapshot D
-   └─ “안녕하세요.”
-```
+_오래된 Renderer Snapshot이 로컬 프로젝트 파일에 기록되는 흐름_
 
 구조를 단순화하면 같은 프로젝트 데이터의 복사본을 네 곳에서 독립적으로 관리하고 있었습니다.
 
@@ -195,21 +169,9 @@ React에서 말하는 전역 Store는 하나의 JavaScript 실행 환경 안에�
 
 Electron에서는 창마다 Renderer와 메모리가 분리되므로 Renderer 내부 Store를 애플리케이션 전체의 전역 상태로 사용할 수 없습니다.
 
-```text
-창이 분리된다.
-    ↓
-Renderer Process가 분리된다.
-    ↓
-Store 인스턴스도 분리된다.
-    ↓
-각 Store가 서로 다른 Snapshot을 가진다.
-    ↓
-오래된 Snapshot이 자동 저장될 수 있다.
-```
-
 ![여러 Renderer Store와 Electron 프로세스 경계를 보여주는 AS-IS 구조](/images/electron-multi-window-shared-data-ssot/as-is-renderer-stores.png)
 
-_변경 전 Store 인스턴스와 프로세스 경계_
+_변경 전 Renderer마다 독립된 Store 인스턴스와 프로세스 경계_
 
 이 글의 구조도에서는 데이터 흐름을 단순하게 표현하기 위해 Main과 Renderer 사이의 Preload Script를 생략했습니다.
 
@@ -222,7 +184,7 @@ _변경 전 Store 인스턴스와 프로세스 경계_
 
 ---
 
-## 4. 도구를 고르기 전에 데이터의 성격부터 정리했다
+## 4. 공유 데이터의 조건
 
 처음에는 Zustand, TanStack Query, `useSyncExternalStore` 중 어떤 도구를 사용할지부터 고민했습니다.
 
