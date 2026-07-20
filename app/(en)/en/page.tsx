@@ -12,7 +12,6 @@ export default function EnglishHomePage() {
     <PostListView
       locale="en"
       posts={posts}
-      eyebrow="Personal notes"
       description="Essays, engineering notes, and implementation logs available in English."
       emptyMessage="No English posts published yet."
     />

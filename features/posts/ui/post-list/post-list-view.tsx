@@ -18,16 +18,16 @@ interface PostListViewProps {
 export function PostListView({
   locale = 'ko',
   posts,
-  eyebrow = 'Personal notes',
+  eyebrow,
   title = SITE_NAME,
-  description = 'Essays, engineering notes, and implementation logs.',
+  description = '빠르게 훑고 지나가기보다, 앨리스가 흰 토끼를 따라 토끼굴로 들어가듯 끝까지 파고드는 개발을 지향합니다.',
   emptyMessage = 'No posts published yet.',
   headerActions,
 }: PostListViewProps) {
   return (
     <section className={styles.pageShell}>
       <header className={styles.header}>
-        <p className={styles.eyebrow}>{eyebrow}</p>
+        {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.description}>{description}</p>
         {headerActions}
