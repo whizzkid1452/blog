@@ -3,7 +3,8 @@
 /* eslint-disable @next/next/no-img-element */
 import * as Dialog from '@radix-ui/react-dialog';
 import Image from 'next/image';
-import styles from './markdown-content.module.css';
+import styles from './markdown-image-viewer.module.css';
+import accessibilityStyles from './visually-hidden.module.css';
 
 const MARKDOWN_IMAGE_SIZES = '(max-width: 768px) 100vw, 768px';
 const FULL_SCREEN_IMAGE_SIZES = '100vw';
@@ -33,6 +34,7 @@ export function MarkdownImageViewer({ src, alt, title, size }: MarkdownImageView
       <Dialog.Trigger asChild>
         <button
           className={styles.markdownImageZoomTrigger}
+          data-markdown-image-trigger
           type="button"
           aria-label={`${accessibleImageName} 전체 화면으로 보기`}
         >
@@ -49,8 +51,10 @@ export function MarkdownImageViewer({ src, alt, title, size }: MarkdownImageView
       <Dialog.Portal>
         <Dialog.Overlay className={styles.markdownImageZoomOverlay} data-motion-overlay="backdrop" />
         <Dialog.Content className={styles.markdownImageZoomContent} data-motion-overlay="centered-dialog">
-          <Dialog.Title className={styles.visuallyHidden}>{accessibleImageName} 전체 화면 보기</Dialog.Title>
-          <Dialog.Description className={styles.visuallyHidden}>
+          <Dialog.Title className={accessibilityStyles.visuallyHidden}>
+            {accessibleImageName} 전체 화면 보기
+          </Dialog.Title>
+          <Dialog.Description className={accessibilityStyles.visuallyHidden}>
             Esc 키 또는 닫기 버튼을 눌러 원래 화면으로 돌아갈 수 있습니다.
           </Dialog.Description>
           <RenderedMarkdownImage

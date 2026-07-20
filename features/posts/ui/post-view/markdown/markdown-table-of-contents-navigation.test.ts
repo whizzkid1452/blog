@@ -50,6 +50,16 @@ describe('findActiveHeadingId', () => {
   it('returns the final heading at the end of the document', () => {
     expect(findActiveHeadingId({ activationOffset: 96, headingPositions, isDocumentEnd: true })).toBe('third');
   });
+
+  it('retains the clicked heading while programmatic scrolling is in progress', () => {
+    expect(
+      findActiveHeadingId({
+        activationOffset: 96,
+        headingPositions,
+        retainedHeadingId: 'third',
+      })
+    ).toBe('third');
+  });
 });
 
 describe('findTableOfContentsScrollTop', () => {

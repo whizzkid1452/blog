@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const markdownStyles = readFileSync(new URL('./markdown-content.module.css', import.meta.url), 'utf8');
+const markdownStyles = readFileSync(
+  new URL('./markdown-table-of-contents-navigation.module.css', import.meta.url),
+  'utf8'
+);
 const mobileTableOfContentsContentStyles =
   markdownStyles.match(/\.mobileTableOfContentsContent\s*{([^}]*)}/)?.[1] ?? '';
 

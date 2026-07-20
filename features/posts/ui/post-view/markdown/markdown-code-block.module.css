@@ -1,0 +1,209 @@
+.codeBlock {
+  position: relative;
+  margin: 0 0 24px;
+}
+
+.codeBlock pre {
+  margin: 0;
+  padding-right: 84px;
+}
+
+.codeCopyButton {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 5px 8px;
+  background: color-mix(in srgb, var(--background) 90%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.codeCopyButton:hover:not(:disabled),
+.codeCopyButton:focus-visible {
+  border-color: var(--color-link);
+  color: var(--color-link);
+  outline: none;
+}
+
+.codeCopyButton:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.tooltipContent {
+  z-index: 50;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 8px;
+  background: var(--background);
+  color: var(--color-text-primary);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.2;
+  box-shadow: 0 8px 24px color-mix(in srgb, #000000 14%, transparent);
+  transform-origin: var(--radix-tooltip-content-transform-origin);
+}
+
+.tooltipContent[data-state='delayed-open'] {
+  animation: tooltipEnter var(--motion-duration-fast) var(--motion-ease-out) both;
+}
+
+.tooltipContent[data-state='instant-open'] {
+  animation: none;
+}
+
+.tooltipContent[data-state='closed'] {
+  animation: tooltipExit var(--motion-duration-reduced) var(--motion-ease-out) both;
+}
+
+.tooltipArrow {
+  fill: var(--background);
+}
+
+.toastViewport {
+  position: fixed;
+  z-index: 50;
+  right: 16px;
+  bottom: 16px;
+  display: flex;
+  width: min(320px, calc(100vw - 32px));
+  flex-direction: column;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.toastRoot {
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: var(--background);
+  box-shadow: 0 16px 40px color-mix(in srgb, #000000 16%, transparent);
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity var(--motion-duration-fast) var(--motion-ease-out),
+    transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+.toastRoot[data-state='closed'] {
+  opacity: 0;
+  transform: translateX(100%);
+}
+
+.toastRoot[data-swipe='move'] {
+  transform: translateX(var(--radix-toast-swipe-move-x));
+  transition: none;
+}
+
+.toastRoot[data-swipe='cancel'] {
+  transform: translateX(0);
+}
+
+.toastRoot[data-swipe='end'] {
+  opacity: 0;
+  transform: translateX(var(--radix-toast-swipe-end-x));
+}
+
+@starting-style {
+  .toastRoot {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+@keyframes tooltipEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes tooltipExit {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+}
+
+.toastTitle {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.toastDescription {
+  margin: 2px 0 0;
+  color: var(--color-text-secondary);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tooltipContent[data-state='delayed-open'] {
+    animation-name: tooltipReducedMotionEnter;
+    animation-duration: var(--motion-duration-reduced);
+    animation-timing-function: linear;
+  }
+
+  .tooltipContent[data-state='closed'] {
+    animation-name: tooltipReducedMotionExit;
+    animation-duration: var(--motion-duration-reduced);
+    animation-timing-function: linear;
+  }
+
+  .toastRoot {
+    transform: none;
+    transition-property: opacity;
+  }
+
+  .toastRoot[data-state='closed'] {
+    transform: none;
+  }
+
+  @starting-style {
+    .toastRoot {
+      opacity: 0;
+      transform: none;
+    }
+  }
+}
+
+@keyframes tooltipReducedMotionEnter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes tooltipReducedMotionExit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}

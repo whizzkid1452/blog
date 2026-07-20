@@ -2,6 +2,14 @@ import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
 const markdownContentStyles = readFileSync(new URL('./markdown/markdown-content.module.css', import.meta.url), 'utf8');
+const tableOfContentsStyles = readFileSync(
+  new URL('./markdown/markdown-table-of-contents-navigation.module.css', import.meta.url),
+  'utf8'
+);
+const markdownImageStyles = readFileSync(
+  new URL('./markdown/markdown-image-viewer.module.css', import.meta.url),
+  'utf8'
+);
 const postViewStyles = readFileSync(new URL('./post-view.module.css', import.meta.url), 'utf8');
 
 describe('post table of contents layout', () => {
@@ -15,7 +23,7 @@ describe('post table of contents layout', () => {
   });
 
   it('places the desktop table of contents in a fixed right rail', () => {
-    const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
+    const navigationRule = getCssRule(tableOfContentsStyles, '.tableOfContentsNavigation');
 
     expect(navigationRule).toContain('position: fixed;');
     expect(navigationRule).toContain('right: 0;');
@@ -23,14 +31,14 @@ describe('post table of contents layout', () => {
   });
 
   it('keeps the desktop table-of-contents divider transparent', () => {
-    const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
+    const navigationRule = getCssRule(tableOfContentsStyles, '.tableOfContentsNavigation');
 
     expect(navigationRule).toContain('border-left: 1px solid transparent;');
   });
 
   it('keeps the desktop table of contents scrollable without showing a scrollbar', () => {
-    const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
-    const webkitScrollbarRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation::-webkit-scrollbar');
+    const navigationRule = getCssRule(tableOfContentsStyles, '.tableOfContentsNavigation');
+    const webkitScrollbarRule = getCssRule(tableOfContentsStyles, '.tableOfContentsNavigation::-webkit-scrollbar');
 
     expect(navigationRule).toContain('overflow-y: auto;');
     expect(navigationRule).toContain('scrollbar-color: transparent transparent;');
@@ -40,14 +48,14 @@ describe('post table of contents layout', () => {
   });
 
   it('keeps the desktop table of contents below the fixed site header', () => {
-    const navigationRule = getCssRule(markdownContentStyles, '.tableOfContentsNavigation');
+    const navigationRule = getCssRule(tableOfContentsStyles, '.tableOfContentsNavigation');
 
     expect(navigationRule).toContain('padding: var(--site-content-top-padding) 24px 72px;');
   });
 
   it('keeps the mobile table of contents scrollable without showing a scrollbar', () => {
-    const navigationRule = getCssRule(markdownContentStyles, '.mobileTableOfContentsContent');
-    const webkitScrollbarRule = getCssRule(markdownContentStyles, '.mobileTableOfContentsContent::-webkit-scrollbar');
+    const navigationRule = getCssRule(tableOfContentsStyles, '.mobileTableOfContentsContent');
+    const webkitScrollbarRule = getCssRule(tableOfContentsStyles, '.mobileTableOfContentsContent::-webkit-scrollbar');
 
     expect(navigationRule).toContain('overflow-y: auto;');
     expect(navigationRule).toContain('scrollbar-color: transparent transparent;');
@@ -57,8 +65,8 @@ describe('post table of contents layout', () => {
   });
 
   it('highlights table-of-contents links without adding an underline', () => {
-    const linkRule = getCssRule(markdownContentStyles, '.tableOfContentsLink');
-    const hoverLinkRule = getCssRule(markdownContentStyles, '.tableOfContentsLink:hover');
+    const linkRule = getCssRule(tableOfContentsStyles, '.tableOfContentsLink');
+    const hoverLinkRule = getCssRule(tableOfContentsStyles, '.tableOfContentsLink:hover');
 
     expect(linkRule).toContain('--table-of-contents-highlight-duration: 320ms;');
     expect(linkRule).toContain('color var(--table-of-contents-highlight-duration) var(--motion-ease-out)');
@@ -72,14 +80,10 @@ describe('post table of contents layout', () => {
 
   it('preserves table-of-contents active highlighting in the explicit dark theme', () => {
     const explicitDarkLinkRule = getCssRule(
-      markdownContentStyles,
-      [
-        ":global(html[data-theme='dark']) .content",
-        ":global(html[data-theme='dark']) :where(.tableOfContentsLink)",
-        ":global(html[data-theme='dark']) .content .tableOfContents a",
-      ].join(',\n')
+      tableOfContentsStyles,
+      ":global(html[data-theme='dark']) .tableOfContentsLink"
     );
-    const activeLinkRule = getCssRule(markdownContentStyles, ".tableOfContentsLink[data-active='true']");
+    const activeLinkRule = getCssRule(tableOfContentsStyles, ".tableOfContentsLink[data-active='true']");
 
     expect(explicitDarkLinkRule).toContain('color: var(--color-text-primary);');
     expect(activeLinkRule).toContain('color: var(--color-link);');
@@ -97,7 +101,7 @@ describe('post table of contents layout', () => {
 
 describe('markdown image dialog layout', () => {
   it('keeps the dialog content boundary on the image so Radix can dismiss outside clicks', () => {
-    const dialogContentRule = getCssRule(markdownContentStyles, '.markdownImageZoomContent');
+    const dialogContentRule = getCssRule(markdownImageStyles, '.markdownImageZoomContent');
 
     expect(dialogContentRule).toContain('top: 50%;');
     expect(dialogContentRule).toContain('left: 50%;');
