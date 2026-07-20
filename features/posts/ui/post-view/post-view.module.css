@@ -69,11 +69,6 @@
   text-decoration: none;
 }
 
-.tagLink:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
-}
-
 .relatedSection {
   display: flex;
   flex-direction: column;

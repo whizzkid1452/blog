@@ -56,6 +56,35 @@ describe('post table of contents layout', () => {
     expect(webkitScrollbarRule).toContain('height: 0;');
   });
 
+  it('highlights table-of-contents links without adding an underline', () => {
+    const linkRule = getCssRule(markdownContentStyles, '.tableOfContentsLink');
+    const hoverLinkRule = getCssRule(markdownContentStyles, '.tableOfContentsLink:hover');
+
+    expect(linkRule).toContain('--table-of-contents-highlight-duration: 320ms;');
+    expect(linkRule).toContain('color var(--table-of-contents-highlight-duration) var(--motion-ease-out)');
+    expect(linkRule).toContain('text-decoration: none;');
+    expect(hoverLinkRule).not.toContain('text-decoration');
+  });
+
+  it('does not underline post tag links when hovered', () => {
+    expect(postViewStyles).not.toContain('.tagLink:hover');
+  });
+
+  it('preserves table-of-contents active highlighting in the explicit dark theme', () => {
+    const explicitDarkLinkRule = getCssRule(
+      markdownContentStyles,
+      [
+        ":global(html[data-theme='dark']) .content",
+        ":global(html[data-theme='dark']) :where(.tableOfContentsLink)",
+        ":global(html[data-theme='dark']) .content .tableOfContents a",
+      ].join(',\n')
+    );
+    const activeLinkRule = getCssRule(markdownContentStyles, ".tableOfContentsLink[data-active='true']");
+
+    expect(explicitDarkLinkRule).toContain('color: var(--color-text-primary);');
+    expect(activeLinkRule).toContain('color: var(--color-link);');
+  });
+
   it('reserves the right rail outside the post content width', () => {
     const pageShellRule = getCssRule(postViewStyles, ".pageShell[data-has-table-of-contents='true']");
 

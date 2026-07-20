@@ -44,8 +44,6 @@
 
 .seriesLink:hover {
   color: var(--color-link);
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }
 
 .tagList {
@@ -60,11 +58,6 @@
   color: var(--color-link);
   font-size: 14px;
   text-decoration: none;
-}
-
-.tagLink:hover {
-  text-decoration: underline;
-  text-underline-offset: 0.2em;
 }
 
 .postTitle {

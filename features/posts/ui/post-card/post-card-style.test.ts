@@ -27,6 +27,13 @@ describe('post card style', () => {
     expect(postCardStyles).not.toContain('.postLink:hover');
     expect(postCardStyles).not.toContain('color: var(--color-link-hover);');
   });
+
+  it('does not underline metadata links when hovered', () => {
+    const seriesLinkHoverRule = getCssRule(postCardStyles, '.seriesLink:hover');
+
+    expect(seriesLinkHoverRule).not.toContain('text-decoration: underline;');
+    expect(postCardStyles).not.toContain('.tagLink:hover');
+  });
 });
 
 function getCssRule(styles: string, selector: string): string {

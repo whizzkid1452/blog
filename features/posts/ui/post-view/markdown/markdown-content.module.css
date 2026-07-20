@@ -273,14 +273,20 @@
 }
 
 .tableOfContentsLink {
+  --table-of-contents-highlight-duration: 320ms;
+
   display: block;
   color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.5;
   text-decoration: none;
+  transition: color var(--table-of-contents-highlight-duration) var(--motion-ease-out);
 }
 
-.tableOfContentsLink:hover,
+.tableOfContentsLink:hover {
+  color: var(--color-link);
+}
+
 .tableOfContentsLink:focus-visible {
   color: var(--color-link);
   text-decoration: underline;
