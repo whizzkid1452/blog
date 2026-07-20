@@ -1,0 +1,181 @@
+[data-motion='pressable'] {
+  transition: transform var(--motion-duration-fast) var(--motion-ease-out);
+}
+
+[data-motion='pressable']:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+[data-motion-overlay] {
+  animation-fill-mode: both;
+}
+
+[data-motion-overlay='backdrop'] {
+  animation-duration: var(--motion-duration-fast);
+  animation-name: motion-backdrop-enter;
+  animation-timing-function: var(--motion-ease-out);
+}
+
+[data-motion-overlay='backdrop'][data-state='closed'] {
+  animation-name: motion-backdrop-exit;
+}
+
+[data-motion-overlay='right-drawer'] {
+  animation-duration: var(--motion-duration-standard);
+  animation-name: motion-drawer-enter;
+  animation-timing-function: var(--motion-ease-drawer);
+}
+
+[data-motion-overlay='right-drawer'][data-state='closed'] {
+  animation-duration: var(--motion-duration-fast);
+  animation-name: motion-drawer-exit;
+  animation-timing-function: var(--motion-ease-out);
+}
+
+[data-motion-overlay='left-drawer'] {
+  animation-duration: var(--motion-duration-standard);
+  animation-name: motion-left-drawer-enter;
+  animation-timing-function: var(--motion-ease-drawer);
+}
+
+[data-motion-overlay='left-drawer'][data-state='closed'] {
+  animation-duration: var(--motion-duration-fast);
+  animation-name: motion-left-drawer-exit;
+  animation-timing-function: var(--motion-ease-out);
+}
+
+[data-motion-overlay='centered-dialog'] {
+  animation-duration: var(--motion-duration-standard);
+  animation-name: motion-centered-dialog-enter;
+  animation-timing-function: var(--motion-ease-out);
+}
+
+[data-motion-overlay='centered-dialog'][data-state='closed'] {
+  animation-duration: var(--motion-duration-fast);
+  animation-name: motion-centered-dialog-exit;
+}
+
+@keyframes motion-backdrop-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-backdrop-exit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes motion-drawer-enter {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-drawer-exit {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes motion-left-drawer-enter {
+  from {
+    transform: translateX(-100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes motion-left-drawer-exit {
+  from {
+    transform: translateX(0);
+  }
+
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+@keyframes motion-centered-dialog-enter {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@keyframes motion-centered-dialog-exit {
+  from {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+}
+
+@keyframes motion-reduced-enter {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes motion-reduced-exit {
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-motion='pressable'] {
+    transition: none;
+  }
+
+  [data-motion='pressable']:active:not(:disabled) {
+    transform: none;
+  }
+
+  [data-motion-overlay] {
+    animation-duration: var(--motion-duration-reduced);
+    animation-name: motion-reduced-enter;
+    animation-timing-function: linear;
+  }
+
+  [data-motion-overlay][data-state='closed'] {
+    animation-duration: var(--motion-duration-reduced);
+    animation-name: motion-reduced-exit;
+  }
+}

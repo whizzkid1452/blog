@@ -1,7 +1,11 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const globalStyles = readFileSync(new URL('./globals.css', import.meta.url), 'utf8');
+const globalStyles = [
+  readFileSync(new URL('./globals.css', import.meta.url), 'utf8'),
+  readFileSync(new URL('./styles/theme.css', import.meta.url), 'utf8'),
+  readFileSync(new URL('./styles/liquid-glass.css', import.meta.url), 'utf8'),
+].join('\n');
 
 describe('root scroll behavior', () => {
   it('disables horizontal overscroll on the document', () => {

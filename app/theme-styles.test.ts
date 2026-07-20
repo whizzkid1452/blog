@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const globalStyles = readFileSync(new URL('./globals.css', import.meta.url), 'utf8');
+const globalStyles = readFileSync(new URL('./styles/theme.css', import.meta.url), 'utf8');
 
 describe('explicit color themes', () => {
   it('uses the system dark theme only when no explicit theme is selected', () => {
