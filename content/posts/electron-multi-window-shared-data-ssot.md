@@ -26,6 +26,10 @@ draft: false
 
 이 제보가 문제의 시작이었습니다.
 
+<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg" alt="별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈" /></p>
+
+_로그를 열기 전까지는 아무도 “어?”라고 하지 않기로 했습니다._
+
 당시 Electron으로 SubRip Subtitle(SRT) 형식의 자막과 음성을 함께 편집하는 멀티미디어 에디터를 개발하고 있었습니다. Editor는 SRT 자막과 연결된 편집 정보를 다루는 메인 화면이었고, Admin은 현재 프로젝트와 SRT 데이터를 조회하거나 수정하는 화면이었습니다. SRT Script Panel은 자막 한 줄에 해당하는 SRT Row를 실시간으로 수정하는 도구로, 별도의 `BrowserWindow`로 분리할 수 있었습니다.
 
 사용자는 Editor와 SRT Script Panel을 동시에 열어 둔 채 같은 프로젝트의 SRT 자막을 수정할 수 있었습니다.
@@ -37,10 +41,6 @@ _BrowserWindow로 실행되는 Editor와 SRT Script Panel_
 프로젝트에는 자동 저장 기능도 적용되어 있었습니다. 사용자가 저장 버튼을 누르지 않아도 변경된 프로젝트 데이터를 로컬 프로젝트 파일에 계속 기록하는 방식이었습니다.
 
 수정 직후에는 SRT Script Panel에 최신 문장이 정상적으로 표시됐습니다. 그러나 프로젝트를 다시 확인하면 SRT 자막이 수정 전 내용으로 돌아가 있었습니다.
-
-<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg" alt="별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈" /></p>
-
-_로그를 열기 전까지는 아무도 “어?”라고 하지 않기로 했습니다._
 
 저장 요청 자체가 누락됐다면 마지막으로 저장된 값이 남아 있어야 합니다. 하지만 이번 문제에서는 이미 반영된 최신 내용이 과거 데이터로 되돌아가고 있었습니다.
 
