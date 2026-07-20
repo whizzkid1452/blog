@@ -13,6 +13,32 @@ describe('PostIndex', () => {
     expect(index.getPostSummaries().map(post => post.slug)).toEqual(['newer-post', 'older-post']);
   });
 
+  it('does not use a configured cover image when the post content has no image', () => {
+    const index = new PostIndex([
+      createPost({
+        coverImage: '/images/cover.png',
+        coverAlt: 'Configured cover',
+      }),
+    ]);
+
+    expect(index.getPostSummaries()[0]?.thumbnail).toBeUndefined();
+  });
+
+  it('uses the first content image as the thumbnail when a cover image is not configured', () => {
+    const index = new PostIndex([createPost({ content: '![Content image](/images/content.png)' })]);
+
+    expect(index.getPostSummaries()[0]?.thumbnail).toEqual({
+      src: '/images/content.png',
+      alt: 'Content image',
+    });
+  });
+
+  it('omits the thumbnail when neither a cover image nor a content image exists', () => {
+    const index = new PostIndex([createPost()]);
+
+    expect(index.getPostSummaries()[0]?.thumbnail).toBeUndefined();
+  });
+
   it('does not expose draft posts through slug, tag, or tag list lookups', () => {
     const index = new PostIndex([
       createPost({ slug: 'published-post', tags: ['nextjs'] }),

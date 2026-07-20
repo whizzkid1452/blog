@@ -1,4 +1,5 @@
 import type { Post, PostSummary } from './post';
+import { getFirstPostContentImage } from './post-thumbnail';
 
 const RELATED_POSTS_LIMIT = 3;
 
@@ -83,6 +84,8 @@ export function getPostPublishedDateTime(post: Pick<Post, 'date' | 'publishedAt'
 }
 
 function toPostSummary(post: Post): PostSummary {
+  const thumbnail = getFirstPostContentImage(post.content);
+
   return {
     slug: post.slug,
     title: post.title,
@@ -93,6 +96,7 @@ function toPostSummary(post: Post): PostSummary {
     visibility: post.visibility,
     coverImage: post.coverImage,
     coverAlt: post.coverAlt,
+    ...(thumbnail == null ? {} : { thumbnail }),
     series: post.series,
   };
 }

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { PostThumbnail } from './post-thumbnail';
 
 const POST_VISIBILITIES = ['public', 'authenticated'] as const;
 
@@ -16,6 +17,7 @@ export interface PostSummary {
   visibility: PostVisibility;
   coverImage?: string;
   coverAlt?: string;
+  thumbnail?: PostThumbnail;
   series?: SeriesMetadata;
 }
 
@@ -24,7 +26,7 @@ export interface SeriesMetadata {
   order: number;
 }
 
-export interface Post extends PostSummary {
+export interface Post extends Omit<PostSummary, 'thumbnail'> {
   content: string;
   draft: boolean;
   visibility: PostVisibility;
