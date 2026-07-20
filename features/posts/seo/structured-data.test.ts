@@ -108,7 +108,8 @@ describe('createSiteJsonLd', () => {
         '@type': 'WebSite',
         '@id': 'https://example.com/#website',
         name: '앨리스의 토끼굴',
-        description: '개발 과정에서 얻은 설계, 성능, 구현 경험을 기록하는 기술 블로그입니다.',
+        description:
+          '빠르게 훑고 지나가기보다, 앨리스가 흰 토끼를 따라 토끼굴로 들어가듯 끝까지 파고드는 개발을 지향합니다.',
         url: 'https://example.com/',
         inLanguage: 'ko-KR',
         publisher: {
