@@ -22,6 +22,11 @@ describe('post card style', () => {
     expect(postCardStyles).not.toContain('.article:has(.postLink:hover)');
     expect(postCardStyles).not.toContain('box-shadow');
   });
+
+  it('does not darken the post title when hovered', () => {
+    expect(postCardStyles).not.toContain('.postLink:hover');
+    expect(postCardStyles).not.toContain('color: var(--color-link-hover);');
+  });
 });
 
 function getCssRule(styles: string, selector: string): string {

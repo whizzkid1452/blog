@@ -87,10 +87,6 @@
   content: '';
 }
 
-.postLink:hover {
-  color: var(--color-link-hover);
-}
-
 .postLink:focus-visible {
   outline: none;
 }
