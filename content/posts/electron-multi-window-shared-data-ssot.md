@@ -7,18 +7,7 @@ tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
 draft: false
 ---
 
-# Electron에서는 공유 데이터를 어디에 둬야 할까?
-
-## 오래된 Renderer 상태가 최신 SRT 자막을 덮어쓴 원인과 Main Process를 SSOT로 설계한 과정
-
-`#electron` `#state-management` `#zustand` `#ssot` `#autosave`
-
-> **요약**  
-> Electron 멀티 윈도우 환경에서 각 Renderer가 프로젝트 데이터의 복사본을 독립적으로 관리하면서, 오래된 Snapshot이 자동 저장을 통해 최신 SRT 자막을 덮어쓰는 문제가 발생했습니다. 이 글에서는 원인을 추적한 과정과 Main Process의 `ProjectSession`을 공유 데이터의 SSOT로 두고, `Renderer Cache`와 `Local Project File`의 역할을 분리한 설계를 설명합니다.
-
 ## 목차
-
----
 
 ## 1. 문제 상황: 자동 저장 이후 최신 SRT 자막이 사라졌다
 
