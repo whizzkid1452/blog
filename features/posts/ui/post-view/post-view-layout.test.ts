@@ -78,14 +78,16 @@ describe('post table of contents layout', () => {
     expect(postViewStyles).not.toContain('.tagLink:hover');
   });
 
-  it('preserves table-of-contents active highlighting in the explicit dark theme', () => {
+  it('keeps explicit dark theme defaults lower-specificity than table-of-contents interaction states', () => {
     const explicitDarkLinkRule = getCssRule(
       tableOfContentsStyles,
-      ":global(html[data-theme='dark']) .tableOfContentsLink"
+      ":global(html[data-theme='dark']) :where(.tableOfContentsLink)"
     );
+    const hoverLinkRule = getCssRule(tableOfContentsStyles, '.tableOfContentsLink:hover');
     const activeLinkRule = getCssRule(tableOfContentsStyles, ".tableOfContentsLink[data-active='true']");
 
     expect(explicitDarkLinkRule).toContain('color: var(--color-text-primary);');
+    expect(hoverLinkRule).toContain('color: var(--color-link);');
     expect(activeLinkRule).toContain('color: var(--color-link);');
   });
 
