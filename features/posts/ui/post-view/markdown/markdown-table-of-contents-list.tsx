@@ -17,7 +17,7 @@ export function MarkdownTableOfContentsList({ activeHeadingId, items, onClick }:
         const isActive = item.id === activeHeadingId;
 
         return (
-          <li className={styles.tableOfContentsListItem} data-level={item.level} key={item.id}>
+          <li className={styles.tableOfContentsListItem} data-depth={item.depth} key={item.id}>
             <a
               aria-current={isActive ? 'location' : undefined}
               className={styles.tableOfContentsLink}

@@ -8,14 +8,14 @@ import {
   MarkdownTable,
 } from './markdown-block-renderers';
 import { MarkdownHeading } from './markdown-heading';
-import { createMarkdownHeadingIdResolver, type MarkdownTableOfContentsItem } from './markdown-table-of-contents';
+import { createMarkdownHeadingIdResolver } from './markdown-table-of-contents';
 
 interface CreateMarkdownComponentsParams {
-  tableOfContentsItems: MarkdownTableOfContentsItem[];
+  headingIds: string[];
 }
 
-export function createMarkdownComponents({ tableOfContentsItems }: CreateMarkdownComponentsParams): Components {
-  const headingIdResolver = createMarkdownHeadingIdResolver({ tableOfContentsItems });
+export function createMarkdownComponents({ headingIds }: CreateMarkdownComponentsParams): Components {
+  const headingIdResolver = createMarkdownHeadingIdResolver({ headingIds });
 
   return {
     a: MarkdownAnchor,

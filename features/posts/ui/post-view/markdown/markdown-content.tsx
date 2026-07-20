@@ -31,7 +31,7 @@ export async function MarkdownContent({ content, locale = 'ko', title }: Markdow
   const preparedContent = prepareMarkdownContent({ content, title });
   const renderedContent = await MarkdownAsync({
     children: preparedContent.content,
-    components: createMarkdownComponents({ tableOfContentsItems: preparedContent.tableOfContentsItems }),
+    components: createMarkdownComponents({ headingIds: preparedContent.headingIds }),
     rehypePlugins: [rehypeRaw, [rehypePrettyCode, REHYPE_PRETTY_CODE_OPTIONS]],
     remarkPlugins: [remarkGfm],
   });

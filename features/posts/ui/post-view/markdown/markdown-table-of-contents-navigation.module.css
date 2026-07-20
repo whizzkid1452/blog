@@ -64,11 +64,11 @@
   padding: 0;
 }
 
-.tableOfContentsListItem[data-level='3'] {
+.tableOfContentsListItem[data-depth='2'] {
   padding-left: 14px;
 }
 
-.tableOfContentsListItem[data-level='4'] {
+.tableOfContentsListItem[data-depth='3'] {
   padding-left: 28px;
 }
 

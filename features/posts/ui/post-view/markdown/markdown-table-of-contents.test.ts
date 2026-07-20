@@ -6,145 +6,100 @@ import {
 } from './markdown-table-of-contents';
 
 describe('prepareMarkdownContent', () => {
-  it('extracts an ordered table of contents and removes it from markdown content', () => {
+  it('creates table-of-contents items only from explicitly tagged headings', () => {
     const preparedContent = prepareMarkdownContent({
       content: [
-        '## 목차',
+        '## [sort1] 1. 문제 상황',
         '',
-        '1. 디자인 시스템이란 무엇인가?',
-        '2. Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가',
+        '### 목차에서 제외할 설명',
         '',
-        '## 1. 디자인 시스템이란 무엇인가?',
+        '#### [sort2] 1-1. 원인 분석',
         '',
-        '본문',
+        '## [sort1] 2. 해결 결과',
       ].join('\n'),
     });
 
     expect(preparedContent.tableOfContentsItems).toEqual([
-      {
-        id: '디자인-시스템이란-무엇인가',
-        level: 2,
-        title: '디자인 시스템이란 무엇인가?',
-      },
-      {
-        id: 'next-js-vite-다른-라이브러리-빌드-도구를-어떻게-비교했는가',
-        level: 2,
-        title: 'Next.js, Vite, 다른 라이브러리 빌드 도구를 어떻게 비교했는가',
-      },
+      { depth: 1, id: '문제-상황', title: '1. 문제 상황' },
+      { depth: 2, id: '원인-분석', title: '1-1. 원인 분석' },
+      { depth: 1, id: '해결-결과', title: '2. 해결 결과' },
     ]);
-    expect(preparedContent.content).toBe('## 1. 디자인 시스템이란 무엇인가?\n\n본문');
+    expect(preparedContent.content).toBe(
+      ['## 1. 문제 상황', '', '### 목차에서 제외할 설명', '', '#### 1-1. 원인 분석', '', '## 2. 해결 결과'].join('\n')
+    );
   });
 
-  it('removes a duplicated markdown title before extracting the table of contents', () => {
+  it('uses the sort tag rather than the markdown heading level for table-of-contents depth', () => {
     const preparedContent = prepareMarkdownContent({
-      content: ['# 글 제목', '', '## 목차', '', '1. 본문 제목', '', '## 1. 본문 제목'].join('\n'),
+      content: ['#### [sort1] 대목차', '## [sort3] 소목차'].join('\n\n'),
+    });
+
+    expect(preparedContent.tableOfContentsItems).toEqual([
+      { depth: 1, id: '대목차', title: '대목차' },
+      { depth: 3, id: '소목차', title: '소목차' },
+    ]);
+  });
+
+  it('removes a duplicated markdown title before parsing tagged headings', () => {
+    const preparedContent = prepareMarkdownContent({
+      content: ['# 글 제목', '', '## [sort1] 1. 본문 제목'].join('\n'),
       title: '글 제목',
     });
 
     expect(preparedContent.content).toBe('## 1. 본문 제목');
     expect(preparedContent.tableOfContentsItems).toEqual([
       {
+        depth: 1,
         id: '본문-제목',
-        level: 2,
-        title: '본문 제목',
+        title: '1. 본문 제목',
       },
     ]);
   });
 
-  it('creates a hierarchical table of contents from headings after a standalone marker', () => {
+  it('assigns unique ids to repeated tagged headings in document order', () => {
     const preparedContent = prepareMarkdownContent({
-      content: [
-        '## 부제목',
-        '',
-        '## 목차',
-        '',
-        '## 구현',
-        '',
-        '### Renderer 요청과 Main 확정',
-        '',
-        '#### IPC 요청 처리',
-        '',
-        '본문',
-      ].join('\n'),
+      content: ['## [sort1] 반복 제목', '## [sort1] 반복 제목'].join('\n\n'),
     });
 
     expect(preparedContent.tableOfContentsItems).toEqual([
-      { id: '구현', level: 2, title: '구현' },
-      { id: 'renderer-요청과-main-확정', level: 3, title: 'Renderer 요청과 Main 확정' },
-      { id: 'ipc-요청-처리', level: 4, title: 'IPC 요청 처리' },
+      { depth: 1, id: '반복-제목', title: '반복 제목' },
+      { depth: 1, id: '반복-제목-2', title: '반복 제목' },
     ]);
-    expect(preparedContent.content).toBe(
-      '## 부제목\n\n\n## 구현\n\n### Renderer 요청과 Main 확정\n\n#### IPC 요청 처리\n\n본문'
-    );
+    expect(preparedContent.headingIds).toEqual(['반복-제목', '반복-제목-2']);
   });
 
-  it('links nested abbreviated table-of-contents labels to headings by document order', () => {
+  it('does not treat sort tag examples inside fenced code blocks as table-of-contents items', () => {
     const preparedContent = prepareMarkdownContent({
-      content: [
-        '## 목차',
-        '',
-        '1. 문제',
-        '   1. 수정한 스크립트 유실',
-        '   2. Snapshot',
-        '',
-        '## 문제',
-        '',
-        '### 점심을 먹고 돌아오면 수정한 스크립트가 사라졌다',
-        '',
-        '### Snapshot',
-      ].join('\n'),
+      content: ['```md', '## [sort1] 예시 제목', '```', '', '## 일반 제목'].join('\n'),
     });
 
-    expect(preparedContent.tableOfContentsItems).toEqual([
-      {
-        id: '문제',
-        level: 2,
-        title: '문제',
-      },
-      {
-        id: '점심을-먹고-돌아오면-수정한-스크립트가-사라졌다',
-        level: 3,
-        title: '수정한 스크립트 유실',
-      },
-      { id: 'snapshot', level: 3, title: 'Snapshot' },
-    ]);
-
-    const headingIdResolver = createMarkdownHeadingIdResolver({
-      tableOfContentsItems: preparedContent.tableOfContentsItems,
-    });
-
-    expect(headingIdResolver.resolveId('문제')).toBe('문제');
-    expect(headingIdResolver.resolveId('점심을 먹고 돌아오면 수정한 스크립트가 사라졌다')).toBe(
-      '점심을-먹고-돌아오면-수정한-스크립트가-사라졌다'
-    );
+    expect(preparedContent.tableOfContentsItems).toEqual([]);
+    expect(preparedContent.content).toContain('## [sort1] 예시 제목');
   });
 });
 
 describe('hasMarkdownTableOfContents', () => {
-  it('recognizes an English table-of-contents heading', () => {
-    expect(hasMarkdownTableOfContents('## Overview\n\n## Table of contents\n\n## Implementation')).toBe(true);
+  it('returns true only when a markdown heading has a sort tag', () => {
+    expect(hasMarkdownTableOfContents('## [sort1] 구현')).toBe(true);
+    expect(hasMarkdownTableOfContents('## 목차\n\n## 구현')).toBe(false);
+    expect(hasMarkdownTableOfContents('본문에서 [sort1]을 설명한다.')).toBe(false);
   });
 
-  it('returns true only when the markdown contains a table of contents heading', () => {
-    expect(hasMarkdownTableOfContents('## 개요\n\n## 목차\n\n## 본문')).toBe(true);
-    expect(hasMarkdownTableOfContents('## 개요\n\n목차를 설명하는 문장')).toBe(false);
+  it('ignores tagged heading examples inside fenced code blocks', () => {
+    expect(hasMarkdownTableOfContents(['```md', '## [sort1] 예시', '```'].join('\n'))).toBe(false);
   });
 });
 
 describe('createMarkdownHeadingIdResolver', () => {
-  it('matches numbered section headings to table of contents item ids', () => {
-    const preparedContent = prepareMarkdownContent({
-      content: ['## 목차', '', '1. 디자인 시스템이란 무엇인가?', '', '## 1. 디자인 시스템이란 무엇인가?'].join('\n'),
-    });
-    const headingIdResolver = createMarkdownHeadingIdResolver({
-      tableOfContentsItems: preparedContent.tableOfContentsItems,
-    });
+  it('uses prepared heading ids in document order', () => {
+    const headingIdResolver = createMarkdownHeadingIdResolver({ headingIds: ['first-heading', 'second-heading'] });
 
-    expect(headingIdResolver.resolveId('1. 디자인 시스템이란 무엇인가?')).toBe('디자인-시스템이란-무엇인가');
+    expect(headingIdResolver.resolveId('첫 번째 제목')).toBe('first-heading');
+    expect(headingIdResolver.resolveId('두 번째 제목')).toBe('second-heading');
   });
 
-  it('adds a numeric suffix when the same heading id is used more than once', () => {
-    const headingIdResolver = createMarkdownHeadingIdResolver({ tableOfContentsItems: [] });
+  it('creates unique fallback ids after prepared heading ids are exhausted', () => {
+    const headingIdResolver = createMarkdownHeadingIdResolver({ headingIds: [] });
 
     expect(headingIdResolver.resolveId('중복 제목')).toBe('중복-제목');
     expect(headingIdResolver.resolveId('중복 제목')).toBe('중복-제목-2');

@@ -4,137 +4,105 @@ import {
   EMPTY_MARKDOWN_HEADING_ID,
   normalizeMarkdownHeadingTitle,
 } from './markdown-heading-id';
-import type { MarkdownTableOfContentsItem } from './markdown-table-of-contents-types';
-
-interface MarkdownHeading {
-  level: 2 | 3 | 4;
-  title: string;
-}
+import type { MarkdownTableOfContentsDepth, MarkdownTableOfContentsItem } from './markdown-table-of-contents-types';
 
 interface PreparedMarkdownContent {
   content: string;
+  headingIds: string[];
   tableOfContentsItems: MarkdownTableOfContentsItem[];
 }
 
-const TABLE_OF_CONTENTS_HEADINGS = new Set(['## 목차', '## Table of contents']);
-const ORDERED_LIST_ITEM_PATTERN = /^\d+\.\s+(.+?)\s*$/;
-const MARKDOWN_HEADING_PATTERN = /^(#{2,4})\s+(.+?)\s*$/;
+interface MarkdownFence {
+  character: '`' | '~';
+  length: number;
+}
+
+const FENCED_CODE_BLOCK_PATTERN = /^\s{0,3}(`{3,}|~{3,})/;
+const MARKDOWN_HEADING_PATTERN = /^\s{0,3}#{2,4}[ \t]+(.+?)(?:[ \t]+#+)?[ \t]*$/;
+const TAGGED_MARKDOWN_HEADING_PATTERN = /^(\s{0,3}#{2,4}[ \t]+)\[sort([1-3])\][ \t]+(.+?)[ \t]*$/;
 
 export function hasMarkdownTableOfContents(content: string): boolean {
-  return content.split('\n').some(isTableOfContentsHeading);
+  return parseMarkdownTableOfContents(content).tableOfContentsItems.length > 0;
 }
 
 export function extractMarkdownTableOfContents(content: string): PreparedMarkdownContent {
-  const lines = content.split('\n');
-  const headingIndex = lines.findIndex(isTableOfContentsHeading);
+  return parseMarkdownTableOfContents(content);
+}
 
-  if (headingIndex === -1) {
-    return { content, tableOfContentsItems: [] };
-  }
+function parseMarkdownTableOfContents(content: string): PreparedMarkdownContent {
+  const headingIds: string[] = [];
+  const tableOfContentsItems: MarkdownTableOfContentsItem[] = [];
+  const usedIdCounts = new Map<string, number>();
+  let activeFence: MarkdownFence | null = null;
 
-  const listStartIndex = findNextContentLineIndex({ lines, startIndex: headingIndex + 1 });
+  const preparedLines = content.split('\n').map(line => {
+    const fence = findMarkdownFence(line);
 
-  if (listStartIndex == null) {
-    return {
-      content: removeTableOfContentsSource({ endIndex: headingIndex + 1, headingIndex, lines }),
-      tableOfContentsItems: [],
-    };
-  }
+    if (activeFence != null) {
+      if (isClosingMarkdownFence({ activeFence, fence })) {
+        activeFence = null;
+      }
 
-  const collectedList = collectOrderedListItems({ lines, startIndex: listStartIndex });
-  const sourceEndIndex = collectedList.titles.length > 0 ? collectedList.endIndex : headingIndex + 1;
-  const headings = collectMarkdownHeadings(lines.slice(collectedList.endIndex));
+      return line;
+    }
+
+    if (fence != null) {
+      activeFence = fence;
+      return line;
+    }
+
+    const taggedHeadingMatch = TAGGED_MARKDOWN_HEADING_PATTERN.exec(line);
+    const preparedLine = taggedHeadingMatch == null ? line : `${taggedHeadingMatch[1]}${taggedHeadingMatch[3]}`;
+    const headingMatch = MARKDOWN_HEADING_PATTERN.exec(preparedLine);
+
+    if (headingMatch == null) {
+      return preparedLine;
+    }
+
+    const title = headingMatch[1];
+    const fallbackId = `${EMPTY_MARKDOWN_HEADING_ID}-${headingIds.length + 1}`;
+    const baseId = createMarkdownHeadingSlug(normalizeMarkdownHeadingTitle(title)) ?? fallbackId;
+    const id = createUniqueMarkdownHeadingId({ baseId, usedIdCounts });
+    headingIds.push(id);
+
+    if (taggedHeadingMatch != null) {
+      tableOfContentsItems.push({
+        depth: Number(taggedHeadingMatch[2]) as MarkdownTableOfContentsDepth,
+        id,
+        title,
+      });
+    }
+
+    return preparedLine;
+  });
 
   return {
-    content: removeTableOfContentsSource({ endIndex: sourceEndIndex, headingIndex, lines }),
-    tableOfContentsItems: createTableOfContentsItems({ headings, titles: collectedList.titles }),
+    content: preparedLines.join('\n'),
+    headingIds,
+    tableOfContentsItems,
   };
 }
 
-function isTableOfContentsHeading(line: string): boolean {
-  return TABLE_OF_CONTENTS_HEADINGS.has(line.trim());
-}
+function findMarkdownFence(line: string): MarkdownFence | null {
+  const fenceMatch = FENCED_CODE_BLOCK_PATTERN.exec(line);
+  const fenceSequence = fenceMatch?.[1];
 
-function removeTableOfContentsSource({
-  endIndex,
-  headingIndex,
-  lines,
-}: {
-  endIndex: number;
-  headingIndex: number;
-  lines: string[];
-}): string {
-  return [...lines.slice(0, headingIndex), ...lines.slice(endIndex)].join('\n').trimStart();
-}
-
-function findNextContentLineIndex({ lines, startIndex }: { lines: string[]; startIndex: number }): number | null {
-  for (let lineIndex = startIndex; lineIndex < lines.length; lineIndex += 1) {
-    if (lines[lineIndex]?.trim() !== '') {
-      return lineIndex;
-    }
+  if (fenceSequence == null) {
+    return null;
   }
 
-  return null;
+  return {
+    character: fenceSequence[0] as MarkdownFence['character'],
+    length: fenceSequence.length,
+  };
 }
 
-function collectOrderedListItems({ lines, startIndex }: { lines: string[]; startIndex: number }): {
-  endIndex: number;
-  titles: string[];
-} {
-  const titles: string[] = [];
-  let currentIndex = startIndex;
-
-  while (currentIndex < lines.length) {
-    const itemMatch = ORDERED_LIST_ITEM_PATTERN.exec(lines[currentIndex]?.trim() ?? '');
-
-    if (itemMatch == null) {
-      break;
-    }
-
-    titles.push(itemMatch[1]);
-    currentIndex += 1;
-  }
-
-  return { endIndex: currentIndex, titles };
-}
-
-function collectMarkdownHeadings(lines: string[]): MarkdownHeading[] {
-  return lines.flatMap(line => {
-    const headingMatch = MARKDOWN_HEADING_PATTERN.exec(line.trim());
-
-    if (headingMatch == null) {
-      return [];
-    }
-
-    return [{ level: headingMatch[1].length as MarkdownHeading['level'], title: headingMatch[2] }];
-  });
-}
-
-function createTableOfContentsItems({
-  headings,
-  titles,
+function isClosingMarkdownFence({
+  activeFence,
+  fence,
 }: {
-  headings: MarkdownHeading[];
-  titles: string[];
-}): MarkdownTableOfContentsItem[] {
-  const usedIdCounts = new Map<string, number>();
-  const selectedHeadings =
-    titles.length > 0
-      ? titles.map((title, index) => ({
-          idSourceTitle: headings[index]?.title ?? title,
-          level: headings[index]?.level ?? 2,
-          title,
-        }))
-      : headings.map(heading => ({ ...heading, idSourceTitle: heading.title }));
-
-  return selectedHeadings.map(({ idSourceTitle, level, title }, index) => {
-    const fallbackId = `${EMPTY_MARKDOWN_HEADING_ID}-${index + 1}`;
-    const baseId = createMarkdownHeadingSlug(normalizeMarkdownHeadingTitle(idSourceTitle)) ?? fallbackId;
-
-    return {
-      id: createUniqueMarkdownHeadingId({ baseId, usedIdCounts }),
-      level,
-      title,
-    };
-  });
+  activeFence: MarkdownFence;
+  fence: MarkdownFence | null;
+}): boolean {
+  return fence?.character === activeFence.character && fence.length >= activeFence.length;
 }

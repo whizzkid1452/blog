@@ -1,7 +1,5 @@
-import type { MarkdownTableOfContentsItem } from './markdown-table-of-contents-types';
-
 interface CreateMarkdownHeadingIdResolverParams {
-  tableOfContentsItems: MarkdownTableOfContentsItem[];
+  headingIds: string[];
 }
 
 interface MarkdownHeadingIdResolver {
@@ -19,22 +17,30 @@ const SLUG_SEPARATOR_PATTERN = /^-+|-+$/g;
 export const EMPTY_MARKDOWN_HEADING_ID = 'section';
 
 export function createMarkdownHeadingIdResolver({
-  tableOfContentsItems,
+  headingIds,
 }: CreateMarkdownHeadingIdResolverParams): MarkdownHeadingIdResolver {
-  const idByComparableTitle = new Map(
-    tableOfContentsItems.map(item => [normalizeMarkdownHeadingTitle(item.title), item.id] as const)
-  );
+  const reservedHeadingIds = new Set(headingIds);
   const usedIdCounts = new Map<string, number>();
+  let headingIndex = 0;
 
   return {
     resolveId(headingText) {
-      const comparableTitle = normalizeMarkdownHeadingTitle(headingText);
-      const baseId =
-        idByComparableTitle.get(comparableTitle) ??
-        createMarkdownHeadingSlug(comparableTitle) ??
-        EMPTY_MARKDOWN_HEADING_ID;
+      const preparedHeadingId = headingIds[headingIndex];
+      headingIndex += 1;
 
-      return createUniqueMarkdownHeadingId({ baseId, usedIdCounts });
+      if (preparedHeadingId != null) {
+        return preparedHeadingId;
+      }
+
+      const comparableTitle = normalizeMarkdownHeadingTitle(headingText);
+      const baseId = createMarkdownHeadingSlug(comparableTitle) ?? EMPTY_MARKDOWN_HEADING_ID;
+      let headingId = createUniqueMarkdownHeadingId({ baseId, usedIdCounts });
+
+      while (reservedHeadingIds.has(headingId)) {
+        headingId = createUniqueMarkdownHeadingId({ baseId, usedIdCounts });
+      }
+
+      return headingId;
     },
   };
 }
