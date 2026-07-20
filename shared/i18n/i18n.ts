@@ -27,6 +27,9 @@ export interface UiMessages {
   openTableOfContentsLabel: string;
   closeTableOfContentsLabel: string;
   tagsLabel: string;
+  themeToggleLabel: string;
+  switchToDarkThemeLabel: string;
+  switchToLightThemeLabel: string;
 }
 
 const UI_MESSAGES: Record<Locale, UiMessages> = {
@@ -53,6 +56,9 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     openTableOfContentsLabel: '목차 열기',
     closeTableOfContentsLabel: '목차 닫기',
     tagsLabel: '태그',
+    themeToggleLabel: '색상 테마 변경',
+    switchToDarkThemeLabel: '다크 모드로 전환',
+    switchToLightThemeLabel: '라이트 모드로 전환',
   },
   en: {
     home: 'Home',
@@ -77,6 +83,9 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     openTableOfContentsLabel: 'Open table of contents',
     closeTableOfContentsLabel: 'Close table of contents',
     tagsLabel: 'Tags',
+    themeToggleLabel: 'Change color theme',
+    switchToDarkThemeLabel: 'Switch to dark mode',
+    switchToLightThemeLabel: 'Switch to light mode',
   },
 };
 

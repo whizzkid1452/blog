@@ -81,7 +81,7 @@
   display: grid;
   height: var(--site-header-height);
   align-items: center;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-columns: 40px minmax(0, 1fr) 40px;
   opacity: 0;
   padding: 0 24px;
   pointer-events: none;
@@ -99,6 +99,7 @@
 }
 
 .siteHeaderTitle {
+  grid-column: 2;
   overflow: hidden;
   margin: 0;
   color: var(--color-text-primary);

@@ -6,7 +6,8 @@ const globalStyles = readFileSync(new URL('./globals.css', import.meta.url), 'ut
 describe('theme accent colors', () => {
   it('uses accessible pink accents in light and dark color schemes', () => {
     expect(globalStyles).toContain('--color-link: #db2777;');
-    expect(globalStyles).toContain('--color-link: #f9a8d4;');
+    expect(globalStyles.match(/--color-link: #ff69b4;/g)).toHaveLength(2);
+    expect(globalStyles).not.toContain('--color-link: #f9a8d4;');
     expect(globalStyles).not.toContain('--color-link: #2563eb;');
     expect(globalStyles).not.toContain('--color-link: #93c5fd;');
   });

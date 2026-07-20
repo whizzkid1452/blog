@@ -753,6 +753,27 @@
   }
 }
 
+:global(html[data-theme='light']) .content code[data-theme*=' '],
+:global(html[data-theme='light']) .content code[data-theme*=' '] span {
+  color: var(--shiki-light);
+}
+
+:global(html[data-theme='dark']) .content,
+:global(html[data-theme='dark']) :where(.tableOfContentsLink),
+:global(html[data-theme='dark']) .content .tableOfContents a {
+  color: var(--color-text-primary);
+}
+
+:global(html[data-theme='dark']) .content .tableOfContents a:hover,
+:global(html[data-theme='dark']) .content .tableOfContents a:focus-visible {
+  color: var(--color-link);
+}
+
+:global(html[data-theme='dark']) .content code[data-theme*=' '],
+:global(html[data-theme='dark']) .content code[data-theme*=' '] span {
+  color: var(--shiki-dark);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .tooltipContent[data-state='delayed-open'] {
     animation-name: tooltipReducedMotionEnter;

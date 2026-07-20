@@ -1,0 +1,67 @@
+.themeToggle {
+  display: inline-flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid transparent;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--background) 76%, transparent);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  grid-column: 3;
+  padding: 0;
+}
+
+.themeToggle:focus-visible {
+  border-color: var(--color-link);
+  outline: 2px solid color-mix(in srgb, var(--color-link) 40%, transparent);
+  outline-offset: 2px;
+}
+
+.themeIcon {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.8;
+}
+
+.darkThemeIcon {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .lightThemeIcon {
+  display: none;
+}
+
+:global(html[data-theme='dark']) .darkThemeIcon {
+  display: initial;
+}
+
+@media (prefers-color-scheme: dark) {
+  :global(html:not([data-theme])) .lightThemeIcon {
+    display: none;
+  }
+
+  :global(html:not([data-theme])) .darkThemeIcon {
+    display: initial;
+  }
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .themeToggle:hover {
+    background: color-mix(in srgb, var(--color-border) 42%, transparent);
+    color: var(--color-text-primary);
+  }
+}
+
+@media (forced-colors: active) {
+  .themeToggle {
+    border-color: ButtonText;
+    background: ButtonFace;
+    color: ButtonText;
+  }
+}

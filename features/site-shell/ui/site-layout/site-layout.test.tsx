@@ -23,6 +23,7 @@ describe('SiteLayout', () => {
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('inert=""');
     expect(markup).toContain('data-mobile-navigation-trigger="true"');
+    expect(markup).toContain('data-theme-toggle="true"');
     expect(markup).toContain('data-liquid-glass="bar"');
     expect(markup).toContain('>앨리스의 토끼굴</p>');
   });
