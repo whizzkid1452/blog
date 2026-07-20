@@ -1,0 +1,109 @@
+.listArea {
+  min-height: 40px;
+}
+
+.statusMessage,
+.errorMessage {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.statusMessage {
+  color: var(--color-text-muted);
+}
+
+.errorState {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.errorMessage {
+  color: #b42318;
+}
+
+.retryButton {
+  flex: none;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 7px 11px;
+  background: transparent;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-link);
+  outline-offset: 2px;
+}
+
+.commentList {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.commentItem {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  border-bottom: 1px solid var(--color-border);
+  padding: 20px 0;
+}
+
+.commentItem:first-child {
+  padding-top: 0;
+}
+
+.commentItem:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+
+.commentMeta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 12px;
+}
+
+.authorName {
+  color: var(--color-text-primary);
+  font-size: 15px;
+  font-weight: 650;
+}
+
+.commentDate {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+
+.commentContent {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 15px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
+@media (prefers-color-scheme: dark) {
+  .errorMessage {
+    color: #fda29b;
+  }
+}
+
+:global(html[data-theme='light']) .errorMessage {
+  color: #b42318;
+}
+
+:global(html[data-theme='dark']) .errorMessage {
+  color: #fda29b;
+}

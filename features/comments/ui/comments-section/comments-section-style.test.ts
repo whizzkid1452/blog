@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const commentsSectionStyles = readFileSync(new URL('./comments-section.module.css', import.meta.url), 'utf8');
+const commentsSectionStyles = readFileSync(new URL('./comment-form.module.css', import.meta.url), 'utf8');
 
 describe('comments section style', () => {
   it('uses the accent color for the submit button in light mode', () => {

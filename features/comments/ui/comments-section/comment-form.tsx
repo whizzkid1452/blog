@@ -3,7 +3,7 @@
 import { COMMENT_AUTHOR_NAME_MAX_LENGTH, COMMENT_CONTENT_MAX_LENGTH } from '../../model/comment-schema';
 import type { CommentMessages } from './comment-messages';
 import type { FormEvent } from 'react';
-import styles from './comments-section.module.css';
+import styles from './comment-form.module.css';
 
 interface CommentFormProps {
   authorName: string;

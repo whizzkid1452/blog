@@ -1,7 +1,7 @@
 import type { BlogComment } from '../../model/comment-types';
 import type { Locale } from '@/shared/i18n/i18n';
 import { COMMENT_DATE_FORMATTERS, type CommentMessages } from './comment-messages';
-import styles from './comments-section.module.css';
+import styles from './comment-list.module.css';
 
 interface CommentListProps {
   comments: BlogComment[];
