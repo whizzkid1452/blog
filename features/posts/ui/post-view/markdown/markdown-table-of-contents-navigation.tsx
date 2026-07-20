@@ -3,7 +3,7 @@
 import * as Dialog from '@radix-ui/react-dialog';
 import type { Locale } from '@/shared/i18n/i18n';
 import { getUiMessages } from '@/shared/i18n/i18n';
-import { useEffect, useState, type MouseEvent } from 'react';
+import { useEffect, useRef, useState, type MouseEvent, type RefObject } from 'react';
 import styles from './markdown-content.module.css';
 import type { MarkdownTableOfContentsItem } from './markdown-table-of-contents';
 
@@ -34,12 +34,22 @@ interface ScrollToTableOfContentsHeadingParams {
   scrollIntoView: (options: ScrollIntoViewOptions) => void;
 }
 
+interface FindTableOfContentsScrollTopParams {
+  containerBottom: number;
+  containerTop: number;
+  currentScrollTop: number;
+  itemBottom: number;
+  itemTop: number;
+}
+
 const HEADING_ACTIVATION_OFFSET = 96;
 const REDUCED_MOTION_MEDIA_QUERY = '(prefers-reduced-motion: reduce)';
 
 export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTableOfContentsNavigationProps) {
   const [activeHeadingId, setActiveHeadingId] = useState<string | null>(items[0]?.id ?? null);
   const [isMobileNavigationOpen, setIsMobileNavigationOpen] = useState(false);
+  const desktopNavigationRef = useRef<HTMLElement>(null);
+  const mobileNavigationRef = useRef<HTMLDivElement>(null);
   const messages = getUiMessages(locale);
 
   useEffect(() => {
@@ -84,6 +94,13 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
     };
   }, [items]);
 
+  useActiveTableOfContentsScroll({
+    activeHeadingId,
+    desktopNavigationRef,
+    isMobileNavigationOpen,
+    mobileNavigationRef,
+  });
+
   const handleTableOfContentsClick = (event: MouseEvent<HTMLAnchorElement>, headingId: string) => {
     const heading = document.getElementById(headingId);
 
@@ -111,7 +128,7 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
         </nav>
       </section>
 
-      <aside className={styles.tableOfContentsNavigation}>
+      <aside className={styles.tableOfContentsNavigation} ref={desktopNavigationRef}>
         <nav aria-labelledby="markdown-table-of-contents-title">
           <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">
             {messages.tableOfContentsLabel}
@@ -135,7 +152,11 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
         </Dialog.Trigger>
         <Dialog.Portal>
           <Dialog.Overlay className={styles.mobileTableOfContentsOverlay} data-motion-overlay="backdrop" />
-          <Dialog.Content className={styles.mobileTableOfContentsContent} data-motion-overlay="right-drawer">
+          <Dialog.Content
+            className={styles.mobileTableOfContentsContent}
+            data-motion-overlay="right-drawer"
+            ref={mobileNavigationRef}
+          >
             <header className={styles.mobileTableOfContentsHeader}>
               <Dialog.Title className={styles.mobileTableOfContentsTitle}>{messages.tableOfContentsLabel}</Dialog.Title>
               <Dialog.Description className={styles.visuallyHidden}>
@@ -179,6 +200,7 @@ function TableOfContentsList({ activeHeadingId, items, onClick }: TableOfContent
               aria-current={isActive ? 'location' : undefined}
               className={styles.tableOfContentsLink}
               data-active={isActive || undefined}
+              data-table-of-contents-heading-id={item.id}
               href={`#${item.id}`}
               onClick={event => onClick(event, item.id)}
             >
@@ -196,6 +218,19 @@ export function scrollToTableOfContentsHeading({
   scrollIntoView,
 }: ScrollToTableOfContentsHeadingParams) {
   scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+}
+
+export function findTableOfContentsScrollTop({
+  containerBottom,
+  containerTop,
+  currentScrollTop,
+  itemBottom,
+  itemTop,
+}: FindTableOfContentsScrollTopParams): number {
+  const containerCenter = (containerTop + containerBottom) / 2;
+  const itemCenter = (itemTop + itemBottom) / 2;
+
+  return Math.max(0, currentScrollTop + itemCenter - containerCenter);
 }
 
 export function findActiveHeadingId({
@@ -224,4 +259,70 @@ export function findActiveHeadingId({
   }
 
   return activeHeadingId;
+}
+
+interface UseActiveTableOfContentsScrollParams {
+  activeHeadingId: string | null;
+  desktopNavigationRef: RefObject<HTMLElement | null>;
+  isMobileNavigationOpen: boolean;
+  mobileNavigationRef: RefObject<HTMLElement | null>;
+}
+
+function useActiveTableOfContentsScroll({
+  activeHeadingId,
+  desktopNavigationRef,
+  isMobileNavigationOpen,
+  mobileNavigationRef,
+}: UseActiveTableOfContentsScrollParams) {
+  useEffect(() => {
+    if (activeHeadingId == null) {
+      return;
+    }
+
+    const prefersReducedMotion = window.matchMedia(REDUCED_MOTION_MEDIA_QUERY).matches;
+
+    for (const containerRef of [desktopNavigationRef, mobileNavigationRef]) {
+      scrollActiveTableOfContentsItem({
+        activeHeadingId,
+        behavior: prefersReducedMotion ? 'auto' : 'smooth',
+        container: containerRef.current,
+      });
+    }
+  }, [activeHeadingId, desktopNavigationRef, isMobileNavigationOpen, mobileNavigationRef]);
+}
+
+interface ScrollActiveTableOfContentsItemParams {
+  activeHeadingId: string;
+  behavior: ScrollBehavior;
+  container: HTMLElement | null;
+}
+
+function scrollActiveTableOfContentsItem({
+  activeHeadingId,
+  behavior,
+  container,
+}: ScrollActiveTableOfContentsItemParams) {
+  if (container == null) {
+    return;
+  }
+
+  const activeItem = Array.from(container.querySelectorAll<HTMLElement>('[data-table-of-contents-heading-id]')).find(
+    item => item.dataset.tableOfContentsHeadingId === activeHeadingId
+  );
+
+  if (activeItem == null) {
+    return;
+  }
+
+  const containerBounds = container.getBoundingClientRect();
+  const itemBounds = activeItem.getBoundingClientRect();
+  const scrollTop = findTableOfContentsScrollTop({
+    containerBottom: containerBounds.bottom,
+    containerTop: containerBounds.top,
+    currentScrollTop: container.scrollTop,
+    itemBottom: itemBounds.bottom,
+    itemTop: itemBounds.top,
+  });
+
+  container.scrollTo({ behavior, top: scrollTop });
 }
