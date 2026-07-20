@@ -1,6 +1,7 @@
 import type { Locale } from '@/shared/i18n/i18n';
 import { createLocalizedPath } from '@/shared/i18n/i18n';
-import styles from './site-layout.module.css';
+import styles from './sidebar-search-form.module.css';
+import accessibilityStyles from './visually-hidden.module.css';
 
 interface SidebarSearchFormProps {
   locale: Locale;
@@ -12,7 +13,7 @@ export function SidebarSearchForm({ locale }: SidebarSearchFormProps) {
   return (
     <form className={styles.sidebarSearchForm} role="search" action={createLocalizedPath(locale, '/search')}>
       <label className={styles.sidebarSearchLabel}>
-        <span className={styles.visuallyHidden}>{messages.label}</span>
+        <span className={accessibilityStyles.visuallyHidden}>{messages.label}</span>
         <input
           className={styles.sidebarSearchInput}
           type="search"

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const layoutStyles = readFileSync(new URL('./site-layout.module.css', import.meta.url), 'utf8');
+const layoutStyles = readFileSync(new URL('./sidebar-topics-section.module.css', import.meta.url), 'utf8');
 
 function getRuleDeclarations(selector: string): string {
   return layoutStyles.match(new RegExp(`\\.${selector}\\s*\\{([^}]*)}`))?.[1] ?? '';

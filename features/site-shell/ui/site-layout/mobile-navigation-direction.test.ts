@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const globalStyles = readFileSync(new URL('../../../../app/globals.css', import.meta.url), 'utf8');
-const layoutStyles = readFileSync(new URL('./site-layout.module.css', import.meta.url), 'utf8');
+const globalStyles = readFileSync(new URL('../../../../app/styles/motion.css', import.meta.url), 'utf8');
+const layoutStyles = readFileSync(new URL('./mobile-navigation-dialog.module.css', import.meta.url), 'utf8');
 const mobileNavigationDialog = readFileSync(new URL('./mobile-navigation-dialog.tsx', import.meta.url), 'utf8');
 const mobileNavigationContentStyles = layoutStyles.match(/\.mobileNavigationContent\s*{([^}]*)}/)?.[1] ?? '';
 

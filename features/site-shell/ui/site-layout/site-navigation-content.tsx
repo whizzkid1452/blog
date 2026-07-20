@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { SidebarProfile } from './sidebar-profile';
 import { SidebarSearchForm } from './sidebar-search-form';
 import { SidebarTopicsSection } from './sidebar-topics-section';
-import styles from './site-layout.module.css';
+import styles from './site-navigation-content.module.css';
 
 interface SiteNavigationContentProps {
   locale: Locale;

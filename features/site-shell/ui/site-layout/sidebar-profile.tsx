@@ -3,7 +3,7 @@ import type { Locale } from '@/shared/i18n/i18n';
 import { createLocalizedPath } from '@/shared/i18n/i18n';
 import Image from 'next/image';
 import Link from 'next/link';
-import styles from './site-layout.module.css';
+import styles from './sidebar-profile.module.css';
 
 interface SidebarProfileProps {
   locale: Locale;

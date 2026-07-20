@@ -11,7 +11,8 @@ import { SiteNavigationContent } from './site-navigation-content';
 import { resolveSiteHeaderTitle } from './site-header-title';
 import { useSiteHeaderVisibility } from './site-header-visibility';
 import { ThemeToggle } from '../theme-toggle/theme-toggle';
-import styles from './site-layout.module.css';
+import styles from './mobile-navigation-dialog.module.css';
+import accessibilityStyles from './visually-hidden.module.css';
 
 interface MobileNavigationDialogProps {
   locale: Locale;
@@ -74,8 +75,8 @@ export function MobileNavigationDialog({
           onClickCapture={closeAfterNavigation}
         >
           <header className={styles.mobileNavigationHeader}>
-            <Dialog.Title className={styles.visuallyHidden}>{messages.blogNavigationLabel}</Dialog.Title>
-            <Dialog.Description className={styles.visuallyHidden}>
+            <Dialog.Title className={accessibilityStyles.visuallyHidden}>{messages.blogNavigationLabel}</Dialog.Title>
+            <Dialog.Description className={accessibilityStyles.visuallyHidden}>
               {messages.blogNavigationDescription}
             </Dialog.Description>
             <Dialog.Close

@@ -1,7 +1,10 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 
-const layoutStyles = readFileSync(new URL('./site-layout.module.css', import.meta.url), 'utf8');
+const layoutStyles = [
+  readFileSync(new URL('./site-layout.module.css', import.meta.url), 'utf8'),
+  readFileSync(new URL('./mobile-navigation-dialog.module.css', import.meta.url), 'utf8'),
+].join('\n');
 
 describe('site header styles', () => {
   it('uses a compact width for the desktop sidebar', () => {

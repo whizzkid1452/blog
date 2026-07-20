@@ -6,7 +6,8 @@ import * as Collapsible from '@radix-ui/react-collapsible';
 import Link from 'next/link';
 import { useState } from 'react';
 import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
-import styles from './site-layout.module.css';
+import navigationStyles from './site-navigation-content.module.css';
+import styles from './sidebar-topics-section.module.css';
 
 interface SidebarTopicsSectionProps {
   locale?: Locale;
@@ -20,8 +21,8 @@ export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSecti
   const additionalTopicTags = getAdditionalSidebarTopicTags(tags);
 
   return (
-    <section className={styles.sidebarSection}>
-      <h2 className={styles.sidebarTitle}>{messages.topics}</h2>
+    <section className={navigationStyles.sidebarSection}>
+      <h2 className={navigationStyles.sidebarTitle}>{messages.topics}</h2>
 
       {tags.length > 0 ? (
         <div className={styles.sidebarTopics}>
@@ -39,7 +40,7 @@ export function SidebarTopicsSection({ locale = 'ko', tags }: SidebarTopicsSecti
           ) : null}
         </div>
       ) : (
-        <p className={styles.emptyText}>{messages.noTopics}</p>
+        <p className={navigationStyles.emptyText}>{messages.noTopics}</p>
       )}
     </section>
   );
