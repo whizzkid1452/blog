@@ -3,6 +3,16 @@ import { describe, expect, it } from 'vitest';
 
 const globalStyles = readFileSync(new URL('./globals.css', import.meta.url), 'utf8');
 
+describe('root scroll behavior', () => {
+  it('disables horizontal overscroll on the document', () => {
+    const htmlRule = getCssRule(globalStyles, 'html');
+    const bodyRule = getCssRule(globalStyles, 'body');
+
+    expect(htmlRule).toContain('overscroll-behavior-x: none;');
+    expect(bodyRule).toContain('overscroll-behavior-x: none;');
+  });
+});
+
 describe('theme accent colors', () => {
   it('uses accessible pink accents in light and dark color schemes', () => {
     expect(globalStyles).toContain('--color-link: #db2777;');

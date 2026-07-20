@@ -64,6 +64,7 @@
 
 html {
   min-height: 100%;
+  overscroll-behavior-x: none;
   overscroll-behavior-y: none;
   background: var(--background);
 }
@@ -71,6 +72,7 @@ html {
 body {
   min-height: 100%;
   margin: 0;
+  overscroll-behavior-x: none;
   overscroll-behavior-y: none;
   background: var(--background);
   color: var(--foreground);
