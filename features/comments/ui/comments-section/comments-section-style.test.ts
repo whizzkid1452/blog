@@ -11,12 +11,19 @@ describe('comments section style', () => {
     expect(submitButtonRule).toContain('color: var(--background);');
   });
 
-  it('uses a dark surface for the submit button in dark mode', () => {
+  it('uses the accent color for the submit button in system dark mode', () => {
     const darkModeStyles = getDarkModeStyles(commentsSectionStyles);
     const submitButtonRule = getCssRule(darkModeStyles, '.submitButton');
 
-    expect(submitButtonRule).toContain('background: var(--color-border);');
-    expect(submitButtonRule).toContain('color: var(--color-text-primary);');
+    expect(submitButtonRule).toContain('background: var(--color-link);');
+    expect(submitButtonRule).toContain('color: var(--background);');
+  });
+
+  it('uses the accent color for the submit button in explicit dark mode', () => {
+    const submitButtonRule = getCssRule(commentsSectionStyles, ":global(html[data-theme='dark']) .submitButton");
+
+    expect(submitButtonRule).toContain('background: var(--color-link);');
+    expect(submitButtonRule).toContain('color: var(--background);');
   });
 });
 
