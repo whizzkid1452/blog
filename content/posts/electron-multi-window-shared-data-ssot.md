@@ -105,7 +105,7 @@ Editor           ↔ Admin
 
 <p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/temporary-fix-meme.jpg" alt="코드의 오류를 손바닥으로 막고 있는 임시방편을 표현한 밈" /></p>
 
-_동기화가 누락될 때마다 IPC 하나씩 추가하는 방식은 기준점이 없는 문제를 해결하지 못했습니다._
+_동기화가 누락될 때마다 IPC 하나씩 추가하는 방식으로는 문제에서 손을 땔 수 없었습니다._
 
 당시 구조의 핵심 문제는 명확했습니다.
 
