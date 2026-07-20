@@ -38,27 +38,13 @@ _BrowserWindow로 실행되는 Editor와 SRT Script Panel_
 
 수정 직후에는 SRT Script Panel에 최신 문장이 정상적으로 표시됐습니다. 그러나 프로젝트를 다시 확인하면 SRT 자막이 수정 전 내용으로 돌아가 있었습니다.
 
-<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/unexpected-reaction-meme.jpg" alt="별로 놀랄 일도 아닌 일에 어라고 말하지 말라는 개발자 밈" /></p>
+<p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/self-gaslighting-hardship-meme.jpg" alt="거울을 보며 힘든 상황을 이겨내기 위해 스스로를 가스라이팅하는 모습을 표현한 밈" /></p>
 
-_로그를 열기 전까지는 아무도 “어?”라고 하지 않기로 했습니다._
+_문제가 반복될 때마다 이번 디버깅이 나를 더 강하게 만들 거라고 되뇌었습니다._
 
 저장 요청 자체가 누락됐다면 마지막으로 저장된 값이 남아 있어야 합니다. 하지만 이번 문제에서는 이미 반영된 최신 내용이 과거 데이터로 되돌아가고 있었습니다.
 
 로그를 확인한 결과 자동 저장은 중단되거나 실패하지 않았습니다. 문제는 다른 화면에 남아 있던 수정 전 데이터가 자동 저장되면서, **사용자가 방금 수정한 최신 내용을 로컬 프로젝트 파일에서 덮어썼다는 점**이었습니다.
-
-```text
-SRT Script Panel에서 SRT 자막 수정
-        ↓
-SRT Script Panel에는 최신 값이 표시됨
-        ↓
-다른 화면에는 수정 전 값이 남아 있음
-        ↓
-수정 전 값을 기준으로 자동 저장 실행
-        ↓
-로컬 프로젝트 파일이 이전 내용으로 덮어써짐
-        ↓
-프로젝트를 다시 불러오며 화면도 이전 상태로 돌아감
-```
 
 ![오래된 Renderer Snapshot이 최신 SRT 자막을 덮어쓰는 순서](/images/electron-multi-window-shared-data-ssot/stale-snapshot-overwrite-sequence.png)
 
@@ -167,17 +153,6 @@ Electron 멀티 윈도우 애플리케이션
 ```
 
 Electron 애플리케이션에는 Main Process와 Renderer Process가 있습니다. Main Process는 애플리케이션 진입점과 창의 생명주기를 관리하고, 각 `BrowserWindow`는 별도의 Renderer Process에서 웹 페이지를 실행합니다. 각 Renderer는 독립된 JavaScript 실행 환경과 메모리를 사용합니다. ([Electron](https://electronjs.org/docs/latest/tutorial/process-model 'Process Model'))
-
-```text
-Main Process
- ├─ Editor Window
- │    └─ Renderer Process A
- │         └─ Project Store A
- │
- └─ SRT Script Panel Window
-      └─ Renderer Process B
-           └─ Project Store B
-```
 
 같은 Store 모듈을 import했다는 것은 각 JavaScript 실행 환경이 같은 생성 코드를 실행한다는 뜻입니다. Renderer 사이에서 메모리나 동일한 Store 인스턴스를 공유한다는 뜻은 아닙니다.
 
@@ -548,19 +523,6 @@ ipcMain.handle('project:dispatch', (_event, action: ProjectAction) => {
 
 `baseVersion`은 Renderer가 어느 version을 기준으로 변경을 만들었는지 나타냅니다. Main의 현재 version과 다르다는 사실만으로 요청을 무조건 거절해야 하는 것은 아닙니다. 요청을 거절할지, 항목 단위로 충돌을 비교할지, 나중에 도착한 요청을 적용할지는 제품의 충돌 정책으로 별도로 정해야 합니다.
 
-```text
-Renderer의 변경 요청
-        ↓
-ProjectSession dispatch
-        ↓
-검증 · ProjectSnapshot 갱신 · version 증가
-        ↓
-확정된 ProjectUpdateResult
-   ┌──────────┴───────────┐
-   ↓                      ↓
-Autosave Coordinator   Renderer Broadcast
-```
-
 ![Main Process에서 확정한 Snapshot을 파일 저장과 Renderer 화면 갱신에 사용하는 흐름](/images/electron-multi-window-shared-data-ssot/project-document-update-save-broadcast.png)
 
 _Main Process에서 확정한 Snapshot을 파일 저장과 Renderer 화면 갱신에 사용하는 흐름_
@@ -650,66 +612,7 @@ Renderer TanStack Query Cache
 
 ---
 
-## 9. 늦게 열린 화면과 일시적인 UI 이벤트 처리
-
-### 늦게 열린 화면은 현재 Snapshot을 다시 요청한다
-
-현재 열려 있는 Renderer에는 Main Process가 변경된 Snapshot을 Broadcast하면 됩니다. 하지만 Admin 탭이 나중에 열리거나 Renderer가 새로 로드됐다면 이전에 발생한 Broadcast를 받을 수 없습니다.
-
-```text
-SRT 데이터 변경
-    ↓
-Editor와 SRT Script Panel은 Broadcast 수신
-    ↓
-이후 Admin 탭 진입
-    ↓
-Admin은 이전 Broadcast를 받지 못함
-```
-
-이때 로컬 프로젝트 파일을 다시 읽는 방식은 적절하지 않았습니다. 이는 단순히 “파일 저장이 느릴 수도 있다”는 방어적 가정 때문이 아니었습니다. 앞에서 설명한 자동 저장은 Main의 Snapshot을 먼저 확정하고, Debouncing과 파일 쓰기 대기열을 거쳐 로컬 프로젝트 파일을 갱신합니다. 따라서 변경 확정과 파일 쓰기 완료 사이에는 두 값이 실제로 다른 구간이 생깁니다.
-
-```text
-ProjectSession에서 version 13 확정
-        ↓
-Autosave Coordinator에서 Debounce 또는 앞선 쓰기 완료를 기다림
-        ↓
-Main Process의 Snapshot ─ version 13
-Local Project File       ─ version 10
-        ↓
-이 구간에 Admin 탭이 활성화돼 파일을 읽으면 version 10을 받음
-```
-
-Admin 탭이 항상 이 구간에 활성화된다는 뜻은 아닙니다. 다만 두 시점이 겹치면 로컬 프로젝트 파일은 최신 값을 보장할 수 없습니다. 반면 `ProjectSession`에는 파일 쓰기 완료 여부와 관계없이 Main이 마지막으로 확정한 Snapshot이 있습니다.
-
-실행 중인 SSOT를 Main Process로 정했다면 화면 재검증도 Main을 기준으로 해야 합니다. 따라서 새 창이 열리거나 탭이 활성화될 때 `ProjectSession`의 현재 Snapshot을 다시 요청하도록 했습니다.
-
-```ts
-const snapshot = await window.project.getSnapshot();
-
-applyConfirmedSnapshot(snapshot);
-```
-
-전체 흐름은 다음과 같습니다.
-
-```text
-현재 열려 있는 화면
-└─ Main의 Broadcast로 갱신
-
-새로 열린 창 또는 활성화된 탭
-└─ Main의 현재 Snapshot 다시 요청
-```
-
-비동기 Snapshot 요청과 Broadcast의 도착 순서가 뒤바뀔 수 있으므로 `version`을 비교해 오래된 Snapshot이 최신 값을 덮어쓰지 못하도록 처리했습니다.
-
-```text
-현재 version이 12일 때
-
-12 이하 수신  → 이미 적용했거나 오래된 결과이므로 무시
-13 수신       → 다음 update이므로 적용
-14 이상 수신  → 중간 event 누락으로 판단하고 Main Snapshot 재요청
-```
-
-이 규칙은 중복 전달, 순서 역전, event 누락을 구분합니다. 같은 SRT Row를 서로 다른 의도로 수정한 의미적 충돌까지 해결하지는 않으므로, 그 경우에는 `baseVersion`과 별도의 충돌 정책이 필요합니다.
+## 9. 일시적인 UI 이벤트 처리
 
 ### 저장하지 않는 이벤트는 별도 채널로 분리한다
 
