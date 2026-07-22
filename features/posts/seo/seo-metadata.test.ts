@@ -41,17 +41,13 @@ describe('createPostPageMetadata', () => {
     ]);
   });
 
-  it('creates English canonical and language alternate metadata', () => {
+  it('does not advertise removed language alternate metadata', () => {
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://example.com');
 
-    const metadata = createPostPageMetadata(createPost(), { locale: 'en', hasAlternateLocale: true });
+    const metadata = createPostPageMetadata(createPost());
 
     expect(metadata.alternates).toEqual({
-      canonical: 'https://example.com/en/posts/nextjs-static-output',
-      languages: {
-        'ko-KR': 'https://example.com/posts/nextjs-static-output',
-        'en-US': 'https://example.com/en/posts/nextjs-static-output',
-      },
+      canonical: 'https://example.com/posts/nextjs-static-output',
     });
   });
 });

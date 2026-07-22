@@ -67,24 +67,6 @@ describe('createPostJsonLd', () => {
     });
     expect(parsedJsonLd.publisher['@id']).toBe('https://example.com/#person');
   });
-
-  it('uses English URLs and content language for an English post', () => {
-    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://example.com');
-
-    const parsedJsonLd = JSON.parse(createPostJsonLd(createPost(), 'en')) as {
-      url: string;
-      inLanguage: string;
-      isPartOf: { '@id': string };
-    };
-
-    expect(parsedJsonLd).toMatchObject({
-      url: 'https://example.com/en/posts/json-ld-escape',
-      inLanguage: 'en-US',
-      isPartOf: {
-        '@id': 'https://example.com/en#website',
-      },
-    });
-  });
 });
 
 describe('createSiteJsonLd', () => {

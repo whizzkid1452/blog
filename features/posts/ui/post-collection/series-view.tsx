@@ -48,11 +48,6 @@ const SERIES_MESSAGES = {
     empty: '등록된 시리즈가 없습니다.',
     postCount: (count: number) => `${count}개 글`,
   },
-  en: {
-    description: 'Posts on connected topics, grouped in reading order.',
-    empty: 'No series are available.',
-    postCount: (count: number) => `${count} posts`,
-  },
 } satisfies Record<Locale, SeriesMessages>;
 
 interface SeriesMessages {

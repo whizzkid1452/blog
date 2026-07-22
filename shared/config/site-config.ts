@@ -1,19 +1,11 @@
-import type { Locale } from '@/shared/i18n/i18n';
-
 export const SITE_NAME = '앨리스의 토끼굴';
 export const SITE_AUTHOR_NAME = 'whizzkid1452';
 export const SITE_AUTHOR_URL = 'https://github.com/whizzkid1452';
 export const SITE_DESCRIPTION =
   '빠르게 훑고 지나가기보다, 앨리스가 흰 토끼를 따라 토끼굴로 들어가듯 끝까지 파고드는 개발을 지향합니다.';
-export const ENGLISH_SITE_DESCRIPTION =
-  'A technical blog about software design, performance, and implementation lessons.';
 export const SITE_LANGUAGE = 'ko-KR';
 export const DEFAULT_OG_IMAGE_PATH = '/og-default.svg';
 export const RSS_FEED_PATH = '/feed.xml';
-
-export function getSiteDescription(locale: Locale): string {
-  return locale === 'ko' ? SITE_DESCRIPTION : ENGLISH_SITE_DESCRIPTION;
-}
 
 const LOCAL_SITE_URL = 'http://localhost:3000';
 const PRODUCTION_NODE_ENV = 'production';

@@ -19,7 +19,7 @@ describe('SiteNavigationContent', () => {
     expect(markup).toContain('profile-avatar.png');
     expect(markup).toContain('>GitHub</a>');
     expect(markup).toContain('>About</a>');
-    expect(markup).toContain('>English</a>');
+    expect(markup).not.toContain('>English</a>');
     expect(markup).toContain('role="search"');
     expect(markup).toContain('>주제</h2>');
     expect(markup).toContain('href="/tags/react"');

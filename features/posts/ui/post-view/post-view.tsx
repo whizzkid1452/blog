@@ -11,10 +11,9 @@ interface PostViewProps {
   locale?: Locale;
   post: Post;
   relatedPosts: PostSummary[];
-  translationHref?: string;
 }
 
-export function PostView({ locale = 'ko', post, relatedPosts, translationHref }: PostViewProps) {
+export function PostView({ locale = 'ko', post, relatedPosts }: PostViewProps) {
   const messages = getUiMessages(locale);
   const hasTableOfContents = hasMarkdownTableOfContents(post.content);
 
@@ -27,11 +26,6 @@ export function PostView({ locale = 'ko', post, relatedPosts, translationHref }:
           </time>
           <h1 className={styles.title}>{post.title}</h1>
           {post.description == null ? null : <p className={styles.description}>{post.description}</p>}
-          {translationHref == null ? null : (
-            <Link className={styles.translationLink} href={translationHref} hrefLang={locale === 'ko' ? 'en' : 'ko'}>
-              {messages.languageLinkLabel}
-            </Link>
-          )}
           <div className={styles.tagList} aria-label={messages.tagsLabel}>
             {post.tags.map(tag => (
               <Link

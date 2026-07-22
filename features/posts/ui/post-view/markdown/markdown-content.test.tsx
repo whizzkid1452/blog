@@ -32,16 +32,6 @@ describe('MarkdownContent', () => {
     expect(renderedMarkup).toContain('data-liquid-glass="control"');
   });
 
-  it('renders English table-of-contents controls for English posts', async () => {
-    const markdownContent = '## [sort1] Implementation';
-
-    const markdownElement = await MarkdownContent({ content: markdownContent, locale: 'en' });
-    const renderedMarkup = renderToStaticMarkup(markdownElement);
-
-    expect(renderedMarkup).toContain('aria-label="Open table of contents"');
-    expect(renderedMarkup).toContain('>Contents</span>');
-  });
-
   it('keeps repeated table-of-contents links aligned with repeated heading ids', async () => {
     const markdownContent = ['## [sort1] 반복 제목', '## [sort1] 반복 제목'].join('\n\n');
 

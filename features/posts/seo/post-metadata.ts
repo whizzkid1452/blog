@@ -1,17 +1,15 @@
 import type { Metadata } from 'next';
-import { createLocalizedPath } from '@/shared/i18n/i18n';
 import { SITE_AUTHOR_NAME, createAbsoluteUrl } from '@/shared/config/site-config';
 import type { Post } from '../model/post';
 import { getPostPublishedDateTime } from '../server/post-repository';
 import { createPostDescription } from './post-description';
-import { createAlternateLanguages, createSeoImage, type LocalizedMetadataOptions } from './seo-metadata-helpers';
+import { createSeoImage } from './seo-metadata-helpers';
 
-export function createPostPageMetadata(post: Post, options: LocalizedMetadataOptions = {}): Metadata {
-  const { locale = 'ko', hasAlternateLocale = false } = options;
+export function createPostPageMetadata(post: Post): Metadata {
   const description = createPostDescription({ description: post.description, content: post.content });
   const pathname = `/posts/${post.slug}`;
-  const url = createAbsoluteUrl(createLocalizedPath(locale, pathname));
-  const imagePath = post.coverImage ?? createLocalizedPath(locale, `/posts/${post.slug}/opengraph-image`);
+  const url = createAbsoluteUrl(pathname);
+  const imagePath = post.coverImage ?? `/posts/${post.slug}/opengraph-image`;
   const image = createSeoImage(imagePath, post.coverAlt ?? post.title);
 
   return {
@@ -19,7 +17,6 @@ export function createPostPageMetadata(post: Post, options: LocalizedMetadataOpt
     description,
     alternates: {
       canonical: url,
-      languages: hasAlternateLocale ? createAlternateLanguages(pathname) : undefined,
     },
     openGraph: {
       type: 'article',

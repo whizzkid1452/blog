@@ -28,7 +28,7 @@ export function PostCard({ locale = 'ko', post }: PostCardProps) {
               className={styles.seriesLink}
               href={`${createLocalizedPath(locale, '/series')}#${encodeURIComponent(post.series.name)}`}
             >
-              {post.series.name} {getSeriesOrderLabel(locale, post.series.order)}
+              {post.series.name} {getSeriesOrderLabel(post.series.order)}
             </Link>
           )}
           <div className={styles.tagList} aria-label={messages.tagsLabel}>
@@ -75,6 +75,6 @@ function isPublicRootPath(src: string): boolean {
   return src.startsWith('/') && !src.startsWith('//');
 }
 
-function getSeriesOrderLabel(locale: Locale, order: number): string {
-  return locale === 'ko' ? `${order}편` : `Part ${order}`;
+function getSeriesOrderLabel(order: number): string {
+  return `${order}편`;
 }

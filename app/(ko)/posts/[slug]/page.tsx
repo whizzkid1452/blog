@@ -1,7 +1,5 @@
 import { PostView } from '@/features/posts/ui/post-view/post-view';
 import { getViewablePost } from '@/features/authentication/server/post-access';
-import { createLocalizedPath } from '@/shared/i18n/i18n';
-import { hasEnglishPostTranslation } from '@/features/posts/server/post-translations';
 import { getPostIndex } from '@/features/posts/server/post-repository';
 import { createPostPageMetadata } from '@/features/posts/seo/seo-metadata';
 import { createPostBreadcrumbJsonLd, createPostJsonLd } from '@/features/posts/seo/structured-data';
@@ -43,7 +41,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     };
   }
 
-  return createPostPageMetadata(post, { locale: 'ko', hasAlternateLocale: hasEnglishPostTranslation(slug) });
+  return createPostPageMetadata(post);
 }
 
 export default async function PostPage({ params }: PostPageProps) {
@@ -56,15 +54,11 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const relatedPosts = postIndex.getRelatedPostSummaries(post);
-  const translationHref = hasEnglishPostTranslation(slug)
-    ? createLocalizedPath('en', `/posts/${post.slug}`)
-    : undefined;
-
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostJsonLd(post) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostBreadcrumbJsonLd(post) }} />
-      <PostView post={post} relatedPosts={relatedPosts} translationHref={translationHref} />
+      <PostView post={post} relatedPosts={relatedPosts} />
     </>
   );
 }

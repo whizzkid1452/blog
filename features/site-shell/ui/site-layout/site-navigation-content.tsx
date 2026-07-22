@@ -1,6 +1,6 @@
 import type { PostSummary } from '@/features/posts/model/post';
 import type { Locale } from '@/shared/i18n/i18n';
-import { createLocalizedPath, getAlternateLocale, getUiMessages } from '@/shared/i18n/i18n';
+import { createLocalizedPath, getUiMessages } from '@/shared/i18n/i18n';
 import Link from 'next/link';
 import { SidebarProfile } from './sidebar-profile';
 import { SidebarSearchForm } from './sidebar-search-form';
@@ -23,8 +23,6 @@ export function SiteNavigationContent({
   recentPosts,
 }: SiteNavigationContentProps) {
   const messages = getUiMessages(locale);
-  const alternateLocale = getAlternateLocale(locale);
-
   return (
     <>
       <SidebarProfile locale={locale} />
@@ -51,13 +49,6 @@ export function SiteNavigationContent({
           >
             About
           </a>
-          <Link
-            className={styles.externalNavigationAnchor}
-            href={createLocalizedPath(alternateLocale, '/')}
-            hrefLang={alternateLocale}
-          >
-            {messages.languageLinkLabel}
-          </Link>
         </div>
       </nav>
 

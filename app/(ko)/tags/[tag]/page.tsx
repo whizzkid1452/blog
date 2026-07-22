@@ -1,6 +1,5 @@
 import { PostListView } from '@/features/posts/ui/post-list/post-list-view';
 import { getPostIndex } from '@/features/posts/server/post-repository';
-import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
 import { createTagPageMetadata } from '@/features/posts/seo/seo-metadata';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -29,10 +28,7 @@ export async function generateMetadata({ params }: TagPageProps): Promise<Metada
     return {};
   }
 
-  return createTagPageMetadata(tag, {
-    locale: 'ko',
-    hasAlternateLocale: getPostIndexForLocale('en').getTags().includes(tag),
-  });
+  return createTagPageMetadata(tag);
 }
 
 export default async function TagPage({ params }: TagPageProps) {

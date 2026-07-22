@@ -19,49 +19,36 @@ export function resolveSiteHeaderTitle({ locale, pathname, posts }: ResolveSiteH
     return SITE_NAME;
   }
 
-  const localizedPathname = removeLocalePrefix({ locale, pathname });
   const messages = getUiMessages(locale);
 
-  if (localizedPathname === '/') {
+  if (pathname === '/') {
     return SITE_NAME;
   }
 
-  if (localizedPathname === '/posts') {
+  if (pathname === '/posts') {
     return messages.posts;
   }
 
-  if (localizedPathname === '/private-posts') {
-    return locale === 'ko' ? '비공개 글' : 'Private posts';
+  if (pathname === '/private-posts') {
+    return '비공개 글';
   }
 
-  if (localizedPathname === '/series') {
+  if (pathname === '/series') {
     return FIXED_PAGE_TITLES.series;
   }
 
-  if (localizedPathname === '/search') {
+  if (pathname === '/search') {
     return FIXED_PAGE_TITLES.search;
   }
 
-  const postTitle = resolvePostTitle({ localizedPathname, posts });
+  const postTitle = resolvePostTitle({ localizedPathname: pathname, posts });
 
   if (postTitle != null) {
     return postTitle;
   }
 
-  const tagTitle = resolveTagTitle(localizedPathname);
+  const tagTitle = resolveTagTitle(pathname);
   return tagTitle ?? SITE_NAME;
-}
-
-function removeLocalePrefix({ locale, pathname }: { locale: Locale; pathname: string }): string {
-  if (locale !== 'en') {
-    return pathname;
-  }
-
-  if (pathname === '/en') {
-    return '/';
-  }
-
-  return pathname.startsWith('/en/') ? pathname.slice('/en'.length) : pathname;
 }
 
 function resolvePostTitle({

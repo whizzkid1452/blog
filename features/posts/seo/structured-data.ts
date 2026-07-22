@@ -1,11 +1,10 @@
-import type { Locale } from '@/shared/i18n/i18n';
-import { createLocalizedPath, getContentLanguage } from '@/shared/i18n/i18n';
 import {
   SITE_AUTHOR_NAME,
   SITE_AUTHOR_URL,
+  SITE_DESCRIPTION,
+  SITE_LANGUAGE,
   SITE_NAME,
   createAbsoluteUrl,
-  getSiteDescription,
 } from '@/shared/config/site-config';
 import type { Post } from '../model/post';
 import { getPostPublishedDateTime } from '../server/post-repository';
@@ -33,16 +32,16 @@ interface SchemaListItem {
   item: string;
 }
 
-export function createSiteJsonLd(locale: Locale = 'ko'): string {
+export function createSiteJsonLd(): string {
   const person = createAuthorSchema();
-  const homeUrl = createAbsoluteUrl(createLocalizedPath(locale, '/'));
+  const homeUrl = createAbsoluteUrl('/');
   const website = {
     '@type': 'WebSite',
     '@id': `${homeUrl}${WEBSITE_ID_SUFFIX}`,
     name: SITE_NAME,
-    description: getSiteDescription(locale),
+    description: SITE_DESCRIPTION,
     url: homeUrl,
-    inLanguage: getContentLanguage(locale),
+    inLanguage: SITE_LANGUAGE,
     publisher: createSchemaReference(person['@id']),
   };
 
@@ -52,13 +51,11 @@ export function createSiteJsonLd(locale: Locale = 'ko'): string {
   });
 }
 
-export function createPostJsonLd(post: Post, locale: Locale = 'ko'): string {
-  const homeUrl = createAbsoluteUrl(createLocalizedPath(locale, '/'));
-  const url = createAbsoluteUrl(createLocalizedPath(locale, `/posts/${post.slug}`));
+export function createPostJsonLd(post: Post): string {
+  const homeUrl = createAbsoluteUrl('/');
+  const url = createAbsoluteUrl(`/posts/${post.slug}`);
   const publishedTime = getPostPublishedDateTime(post);
-  const image = createAbsoluteUrl(
-    post.coverImage ?? createLocalizedPath(locale, `/posts/${post.slug}/opengraph-image`)
-  );
+  const image = createAbsoluteUrl(post.coverImage ?? `/posts/${post.slug}/opengraph-image`);
   const author = createAuthorSchema();
   const jsonLd = {
     '@context': 'https://schema.org',
@@ -70,7 +67,7 @@ export function createPostJsonLd(post: Post, locale: Locale = 'ko'): string {
     dateModified: publishedTime,
     image,
     url,
-    inLanguage: getContentLanguage(locale),
+    inLanguage: SITE_LANGUAGE,
     isPartOf: createSchemaReference(`${homeUrl}${WEBSITE_ID_SUFFIX}`),
     mainEntityOfPage: {
       '@type': 'WebPage',
@@ -84,17 +81,17 @@ export function createPostJsonLd(post: Post, locale: Locale = 'ko'): string {
   return escapeJsonLd(jsonLd);
 }
 
-export function createPostBreadcrumbJsonLd(post: Pick<Post, 'slug' | 'title'>, locale: Locale = 'ko'): string {
-  const url = createAbsoluteUrl(createLocalizedPath(locale, `/posts/${post.slug}`));
+export function createPostBreadcrumbJsonLd(post: Pick<Post, 'slug' | 'title'>): string {
+  const url = createAbsoluteUrl(`/posts/${post.slug}`);
   const jsonLd = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
     itemListElement: [
-      createListItem({ position: 1, name: SITE_NAME, item: createAbsoluteUrl(createLocalizedPath(locale, '/')) }),
+      createListItem({ position: 1, name: SITE_NAME, item: createAbsoluteUrl('/') }),
       createListItem({
         position: 2,
         name: 'Posts',
-        item: createAbsoluteUrl(createLocalizedPath(locale, '/posts')),
+        item: createAbsoluteUrl('/posts'),
       }),
       createListItem({ position: 3, name: post.title, item: url }),
     ],

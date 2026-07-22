@@ -1,57 +1,52 @@
 import type { Metadata } from 'next';
-import type { Locale } from '@/shared/i18n/i18n';
-import { createLocalizedPath, getOpenGraphLocale } from '@/shared/i18n/i18n';
 import {
   RSS_FEED_PATH,
   SITE_AUTHOR_NAME,
   SITE_AUTHOR_URL,
+  SITE_DESCRIPTION,
   SITE_NAME,
   createAbsoluteUrl,
-  getSiteDescription,
   getSiteUrl,
 } from '@/shared/config/site-config';
-import { createAlternateLanguages, createSeoImage } from './seo-metadata-helpers';
+import { createSeoImage } from './seo-metadata-helpers';
 
-export function createRootMetadata(locale: Locale = 'ko'): Metadata {
-  const description = getSiteDescription(locale);
-  const homeUrl = createAbsoluteUrl(createLocalizedPath(locale, '/'));
+export function createRootMetadata(): Metadata {
+  const homeUrl = createAbsoluteUrl('/');
   const image = createSeoImage();
 
   return {
     metadataBase: getSiteUrl(),
     title: { default: SITE_NAME, template: `%s | ${SITE_NAME}` },
-    description,
+    description: SITE_DESCRIPTION,
     authors: [{ name: SITE_AUTHOR_NAME, url: SITE_AUTHOR_URL }],
     creator: SITE_AUTHOR_NAME,
     publisher: SITE_AUTHOR_NAME,
     alternates: {
       canonical: homeUrl,
-      languages: createAlternateLanguages('/'),
-      types: locale === 'ko' ? { 'application/rss+xml': createAbsoluteUrl(RSS_FEED_PATH) } : undefined,
+      types: { 'application/rss+xml': createAbsoluteUrl(RSS_FEED_PATH) },
     },
     openGraph: {
       type: 'website',
       siteName: SITE_NAME,
       title: SITE_NAME,
-      description,
+      description: SITE_DESCRIPTION,
       url: homeUrl,
-      locale: getOpenGraphLocale(locale),
+      locale: 'ko_KR',
       images: [image],
     },
     twitter: {
       card: 'summary_large_image',
       title: SITE_NAME,
-      description,
+      description: SITE_DESCRIPTION,
       images: [image.url],
     },
   };
 }
 
-export function createHomeMetadata(locale: Locale = 'ko'): Metadata {
+export function createHomeMetadata(): Metadata {
   return {
     alternates: {
-      canonical: createAbsoluteUrl(createLocalizedPath(locale, '/')),
-      languages: createAlternateLanguages('/'),
+      canonical: createAbsoluteUrl('/'),
     },
   };
 }

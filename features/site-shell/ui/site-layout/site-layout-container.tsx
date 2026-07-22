@@ -1,5 +1,5 @@
 import type { Locale } from '@/shared/i18n/i18n';
-import { getPostIndexForLocale } from '@/features/posts/server/post-translations';
+import { getPostIndex } from '@/features/posts/server/post-repository';
 import type { ReactNode } from 'react';
 import { SiteLayout } from './site-layout';
 
@@ -9,7 +9,7 @@ interface SiteLayoutContainerProps {
 }
 
 export function SiteLayoutContainer({ children, locale }: SiteLayoutContainerProps) {
-  const postIndex = getPostIndexForLocale(locale);
+  const postIndex = getPostIndex();
   const posts = postIndex.getPostSummaries();
   const tags = postIndex.getTags();
 

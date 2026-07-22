@@ -23,16 +23,6 @@ describe('resolveSiteHeaderTitle', () => {
     ).toBe('Electron에서는 공유 데이터를 어디에 둬야 할까?');
   });
 
-  it('영문 글 경로에서도 locale prefix를 제외한 slug로 글을 찾는다', () => {
-    expect(
-      resolveSiteHeaderTitle({
-        locale: 'en',
-        pathname: '/en/posts/electron-multi-window-shared-data-ssot',
-        posts,
-      })
-    ).toBe('Electron에서는 공유 데이터를 어디에 둬야 할까?');
-  });
-
   it('태그 경로의 URL encoding을 해제한다', () => {
     expect(
       resolveSiteHeaderTitle({
@@ -46,7 +36,6 @@ describe('resolveSiteHeaderTitle', () => {
   it('고정 페이지에 해당하는 현지화된 제목을 반환한다', () => {
     expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/private-posts', posts })).toBe('비공개 글');
     expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/posts', posts })).toBe('Posts');
-    expect(resolveSiteHeaderTitle({ locale: 'en', pathname: '/en/posts', posts })).toBe('Posts');
   });
 
   it('알 수 없는 경로나 일치하지 않는 글은 사이트 이름으로 fallback한다', () => {

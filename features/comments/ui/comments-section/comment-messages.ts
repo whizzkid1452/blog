@@ -32,24 +32,8 @@ export const COMMENT_MESSAGES: Record<Locale, CommentMessages> = {
     submitError: '댓글을 저장하지 못했습니다.',
     submitting: '등록 중…',
   },
-  en: {
-    authorLabel: 'Name',
-    authorPlaceholder: 'Display name',
-    commentsTitle: 'Comments',
-    contentLabel: 'Comment',
-    contentPlaceholder: 'Share your thoughts.',
-    empty: 'No comments yet. Be the first to comment.',
-    loadError: 'Comments could not be loaded.',
-    loading: 'Loading comments…',
-    privacyNotice: 'Your display name and comment will be public.',
-    retry: 'Try again',
-    submit: 'Post comment',
-    submitError: 'Your comment could not be saved.',
-    submitting: 'Posting…',
-  },
 };
 
 export const COMMENT_DATE_FORMATTERS: Record<Locale, Intl.DateTimeFormat> = {
   ko: new Intl.DateTimeFormat('ko-KR', { dateStyle: 'medium', timeStyle: 'short' }),
-  en: new Intl.DateTimeFormat('en-US', { dateStyle: 'medium', timeStyle: 'short' }),
 };

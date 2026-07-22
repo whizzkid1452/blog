@@ -24,7 +24,7 @@ describe('PostCard', () => {
   });
 
   it('renders only the text content when the post has no thumbnail', () => {
-    const markup = renderToStaticMarkup(<PostCard locale="en" post={post} />);
+    const markup = renderToStaticMarkup(<PostCard post={post} />);
     const decodedMarkup = decodeURIComponent(markup);
 
     expect(decodedMarkup).not.toContain('/preview-image');

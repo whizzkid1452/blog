@@ -38,11 +38,6 @@ const SEARCH_FORM_MESSAGES = {
     placeholder: '글 검색',
     submit: '검색',
   },
-  en: {
-    label: 'Search term',
-    placeholder: 'Search posts',
-    submit: 'Search',
-  },
 } satisfies Record<Locale, SearchFormMessages>;
 
 interface SearchFormMessages {

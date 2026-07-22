@@ -47,22 +47,6 @@
   gap: 8px;
 }
 
-.translationLink {
-  width: fit-content;
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
-  padding: 7px 10px;
-  color: var(--color-text-secondary);
-  font-size: 14px;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.translationLink:hover {
-  border-color: var(--color-link);
-  color: var(--color-link);
-}
-
 .tagLink {
   color: var(--color-link);
   font-size: 14px;

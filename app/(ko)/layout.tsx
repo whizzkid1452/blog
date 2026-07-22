@@ -5,7 +5,7 @@ import { THEME_INITIALIZATION_SCRIPT } from '@/features/site-shell/model/theme-i
 import type { Metadata } from 'next';
 import '../globals.css';
 
-export const metadata: Metadata = createRootMetadata('ko');
+export const metadata: Metadata = createRootMetadata();
 
 export default function KoreanRootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
@@ -14,7 +14,7 @@ export default function KoreanRootLayout({ children }: Readonly<{ children: Reac
         <script dangerouslySetInnerHTML={{ __html: THEME_INITIALIZATION_SCRIPT }} />
       </head>
       <body>
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createSiteJsonLd('ko') }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createSiteJsonLd() }} />
         <SiteLayoutContainer locale="ko">{children}</SiteLayoutContainer>
       </body>
     </html>

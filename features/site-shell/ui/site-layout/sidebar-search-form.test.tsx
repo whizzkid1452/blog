@@ -12,12 +12,4 @@ describe('SidebarSearchForm', () => {
     expect(markup).toContain('placeholder="글 검색"');
     expect(markup).not.toContain('<h2');
   });
-
-  it('submits an English search query to the localized search page', () => {
-    const markup = renderToStaticMarkup(<SidebarSearchForm locale="en" />);
-
-    expect(markup).toContain('action="/en/search"');
-    expect(markup).toContain('placeholder="Search posts"');
-    expect(markup).not.toContain('<h2');
-  });
 });

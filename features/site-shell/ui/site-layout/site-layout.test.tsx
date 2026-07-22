@@ -82,7 +82,7 @@ describe('SiteLayout', () => {
     expect(sidebarMarkup).not.toContain('>글</a>');
     expect(sidebarMarkup).toContain('>GitHub</a>');
     expect(sidebarMarkup).toContain('>About</a>');
-    expect(sidebarMarkup).toContain('>English</a>');
+    expect(sidebarMarkup).not.toContain('>English</a>');
     expect(sidebarMarkup.indexOf('>앨리스의 토끼굴</p>')).toBeLessThan(sidebarMarkup.indexOf('>블로그 메뉴</h2>'));
     expect(sidebarMarkup).not.toContain('>검색</h2>');
     expect(sidebarMarkup.indexOf('>블로그 메뉴</h2>')).toBeLessThan(sidebarMarkup.indexOf('role="search"'));

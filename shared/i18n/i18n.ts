@@ -1,8 +1,4 @@
-export const SUPPORTED_LOCALES = ['ko', 'en'] as const;
-
-export type Locale = (typeof SUPPORTED_LOCALES)[number];
-
-export const DEFAULT_LOCALE: Locale = 'ko';
+export type Locale = 'ko';
 
 export interface UiMessages {
   home: string;
@@ -14,7 +10,6 @@ export interface UiMessages {
   noTopics: string;
   noPosts: string;
   relatedPosts: string;
-  languageLinkLabel: string;
   primaryNavigationLabel: string;
   blogNavigationLabel: string;
   blogNavigationDescription: string;
@@ -43,7 +38,6 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     noTopics: '등록된 주제가 없습니다.',
     noPosts: '등록된 글이 없습니다.',
     relatedPosts: '관련 글',
-    languageLinkLabel: 'English',
     primaryNavigationLabel: '주요 메뉴',
     blogNavigationLabel: '블로그 메뉴',
     blogNavigationDescription: '주요 메뉴, 주제, 최근 글을 탐색합니다.',
@@ -60,61 +54,12 @@ const UI_MESSAGES: Record<Locale, UiMessages> = {
     switchToDarkThemeLabel: '다크 모드로 전환',
     switchToLightThemeLabel: '라이트 모드로 전환',
   },
-  en: {
-    home: 'Home',
-    posts: 'Posts',
-    topics: 'Topics',
-    viewAllTopics: 'View all',
-    collapseTopics: 'Show less',
-    recent: 'Recent',
-    noTopics: 'No topics yet.',
-    noPosts: 'No posts yet.',
-    relatedPosts: 'Related posts',
-    languageLinkLabel: '한국어',
-    primaryNavigationLabel: 'Primary navigation',
-    blogNavigationLabel: 'Blog navigation',
-    blogNavigationDescription: 'Browse primary links, topics, and recent posts.',
-    menuLabel: 'Menu',
-    closeLabel: 'Close',
-    openBlogNavigationLabel: 'Open blog navigation',
-    closeBlogNavigationLabel: 'Close blog navigation',
-    tableOfContentsLabel: 'Contents',
-    tableOfContentsDescription: 'Navigate to a section in the current post.',
-    openTableOfContentsLabel: 'Open table of contents',
-    closeTableOfContentsLabel: 'Close table of contents',
-    tagsLabel: 'Tags',
-    themeToggleLabel: 'Change color theme',
-    switchToDarkThemeLabel: 'Switch to dark mode',
-    switchToLightThemeLabel: 'Switch to light mode',
-  },
 };
 
 export function getUiMessages(locale: Locale): UiMessages {
   return UI_MESSAGES[locale];
 }
 
-export function createLocalizedPath(locale: Locale, pathname: string): string {
-  const normalizedPathname = pathname.startsWith('/') ? pathname : `/${pathname}`;
-
-  if (locale === DEFAULT_LOCALE) {
-    return normalizedPathname;
-  }
-
-  return normalizedPathname === '/' ? '/en' : `/en${normalizedPathname}`;
-}
-
-export function getAlternateLocale(locale: Locale): Locale {
-  return locale === 'ko' ? 'en' : 'ko';
-}
-
-export function getHtmlLanguage(locale: Locale): string {
-  return locale === 'ko' ? 'ko' : 'en';
-}
-
-export function getContentLanguage(locale: Locale): string {
-  return locale === 'ko' ? 'ko-KR' : 'en-US';
-}
-
-export function getOpenGraphLocale(locale: Locale): string {
-  return locale === 'ko' ? 'ko_KR' : 'en_US';
+export function createLocalizedPath(_locale: Locale, pathname: string): string {
+  return pathname.startsWith('/') ? pathname : `/${pathname}`;
 }

@@ -49,13 +49,6 @@ const SEARCH_MESSAGES = {
     totalCount: (count: number) => `전체 ${count}개`,
     resultCount: (count: number) => `검색 결과 ${count}개`,
   },
-  en: {
-    description: 'Search post titles, descriptions, tags, and series names.',
-    resultsLabel: 'Search results',
-    empty: 'No posts match this search term.',
-    totalCount: (count: number) => `${count} posts`,
-    resultCount: (count: number) => `${count} results`,
-  },
 } satisfies Record<Locale, SearchMessages>;
 
 interface SearchMessages {
