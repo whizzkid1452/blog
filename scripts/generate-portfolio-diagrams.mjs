@@ -202,7 +202,6 @@ class Diagram {
     this.subtitle = subtitle;
     this.primitives = [];
     this.pill({ x: 965, y: 42, width: 180, height: 34, text: project, fill: FILLS.purple, stroke: PURPLE });
-    this.text({ x: 55, y: 642, width: 1090, text: subtitle, fontSize: 14, color: MUTED, align: 'center' });
   }
 
   rectangle({ x, y, width, height, fill = FILLS.white, stroke = INK, radius = 18, opacity = 1 }) {

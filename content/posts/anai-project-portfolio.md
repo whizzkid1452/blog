@@ -47,6 +47,8 @@ Web Worker, WebCodecs, FFmpeg, Sentry
 
 ![Electron Main Process의 프로젝트 상태와 여러 편집 창의 Command·Selector 흐름](/images/anai-project-portfolio/editor-state-command-flow.svg)
 
+_Command는 Electron Process 경계를 통과하고, Selector는 각 Renderer의 갱신 범위를 제한합니다._
+
 #### Local-first 저장과 Cloud Revision 관리
 
 **AS-IS**
@@ -60,6 +62,8 @@ Web Worker, WebCodecs, FFmpeg, Sentry
 Revision ID는 UUID를 사용하고 부모 Revision ID를 함께 기록했습니다. **이를 통해 네트워크 연결 없이 편집을 지속할 수 있게 했고, 이전 요청의 덮어쓰기와 Revision ID 충돌 위험을 낮췄습니다. 변경 이력과 동시 수정 분기도 추적할 수 있게 됐습니다.**
 
 ![IndexedDB Local-first 저장과 세션·Revision 검사 및 UUID 부모 Revision chain](/images/anai-project-portfolio/editor-local-first-revision-chain.svg)
+
+_로컬 저장을 먼저 완료하고, 응답의 Session과 Revision이 일치할 때만 Cloud 결과를 반영합니다._
 
 #### 썸네일·타임라인·미디어 가져오기 성능 개선
 
@@ -77,7 +81,11 @@ Revision ID는 UUID를 사용하고 부모 Revision ID를 함께 기록했습니
 
 ![첫 썸네일 표시 시간, Main Thread busy 비율, React actualDuration 전후 비교](/images/anai-project-portfolio/editor-performance-comparison.svg)
 
+_Thumbnail 지표는 브라우저 작업을 포함하고, React actualDuration은 React 렌더링 시간만 측정합니다._
+
 ![Web Worker 썸네일 처리, requestAnimationFrame 드래그, FFmpeg Fallback 흐름](/images/anai-project-portfolio/editor-media-processing-flow.svg)
+
+_Thumbnail Decode, Drag 피드백, 미디어 가져오기는 서로 다른 처리 방식을 사용합니다._
 
 #### 대규모 오디오 처리의 응답성과 안정성 개선
 
@@ -93,7 +101,11 @@ IPC 호출 횟수와 동시 실행량을 함께 줄여야 했습니다. 여러 �
 
 ![676개 오디오 데이터의 처리 시간, Long Task, 오류 건수, 메모리 Peak 전후 비교](/images/anai-project-portfolio/editor-audio-processing-comparison.svg)
 
+_같은 676개 데이터로 적용 전후를 비교했습니다._
+
 ![Bulk IPC, 동시 작업 수 제한, 작업 큐, 버퍼 재사용 처리 흐름](/images/anai-project-portfolio/editor-audio-processing-flow.svg)
+
+_Bulk 전송, 동시 작업 수 제한, 작업 Queue, Buffer 재사용이 서로 다른 비용을 줄입니다._
 
 #### OS 환경을 고려한 Export 안정화
 
@@ -109,6 +121,8 @@ WAV와 AAF의 Export 경로를 하나로 관리하고 Production Build 전에 �
 
 ![분할 Blob 기반 WAV 인코딩과 macOS AAF 패키징 및 검증 과정](/images/anai-project-portfolio/editor-export-stability-flow.svg)
 
+_WAV는 큰 연속 할당을 피하고, AAF는 macOS Runtime 포함 여부와 서명을 실제 파일로 검증합니다._
+
 #### 장애 관측·격리·복구 구조 구축
 
 **AS-IS**
@@ -122,6 +136,8 @@ Sentry에 오류 위치, 실행 환경, 화면 경로를 기록했습니다. Err
 배포 코드에는 난독화를 적용했습니다. 이는 코드 분석을 차단하는 수단은 아니지만, **핵심 로직을 그대로 읽고 복제하는 난이도를 높여 기술 자산 노출 위험을 줄였습니다.**
 
 ![Sentry 관측, 탭 단위 Error Boundary, TanStack Query 오류 복구 흐름](/images/anai-project-portfolio/editor-observability-recovery-flow.svg)
+
+_Telemetry는 재현 조건을 좁히고, 탭 단위 Boundary는 화면 장애 범위를 제한합니다._
 
 ## [sort1] 2. Kit + Tool
 
@@ -157,6 +173,8 @@ Preview와 Final을 하나의 생성 작업 상태로 통합하고, 서버 작�
 
 ![IndexedDB 요청 복구, 멱등성 식별자, Preview와 Final 생성 작업 상태 변화](/images/anai-project-portfolio/kit-generation-recovery-state.svg)
 
+_멱등성 Key는 중복 요청을 같은 작업으로 처리하고, Server 작업 처리 중에만 Polling합니다._
+
 #### 미디어 재생 상태와 리소스 생명주기 통합
 
 **AS-IS**
@@ -170,6 +188,8 @@ Preview와 Final을 하나의 생성 작업 상태로 통합하고, 서버 작�
 모바일에서는 사용자 입력 이후에 재생을 시작하고, 실제 재생 성공 후 UI 상태를 변경했습니다. **이를 통해 매체별 재생 위치 불일치를 줄이고 반복 재생과 파일 변경 시 남던 브라우저 리소스를 정리했습니다.**
 
 ![오디오, 비디오, 멀티트랙의 통합 재생 상태와 브라우저 리소스 생명주기](/images/anai-project-portfolio/kit-playback-resource-lifecycle.svg)
+
+_파일과 화면 생명주기에 맞춰 Resource를 정리하고, Mobile은 사용자 입력과 실제 재생 성공을 기다립니다._
 
 #### 결제·구독 상태 전이와 실패 복구
 
@@ -185,6 +205,8 @@ Preview와 Final을 하나의 생성 작업 상태로 통합하고, 서버 작�
 
 ![즉시 변경, 예약 변경, 예약 취소, 비례 정산과 주문 복구 흐름](/images/anai-project-portfolio/kit-subscription-payment-flow.svg)
 
+_적용 시점이 다른 전이를 구분하고, 진행 중인 같은 주문의 중복 실행을 막습니다._
+
 #### 공유·다운로드 호환성과 중복 실행 개선
 
 **AS-IS**
@@ -199,7 +221,11 @@ Web Share API의 지원 범위와 파일 크기 제한이 브라우저와 기기
 
 ![파일 공유 가능 여부에 따라 링크 공유와 다운로드로 이어지는 Fallback](/images/anai-project-portfolio/kit-share-fallback-flow.svg)
 
+_MIME Type과 파일 크기를 먼저 검사하고, 지원하지 않는 환경에는 링크 공유와 다운로드를 제공합니다._
+
 ![공유 중복 실행의 네트워크 요청 감소율과 캐시된 파일 준비 시간 비교](/images/anai-project-portfolio/kit-share-performance-comparison.svg)
+
+_Network 개선은 하한값이고, Cache된 파일 준비 시간은 측정값입니다._
 
 #### 생성·미디어 장애 관측 체계 구축
 
@@ -212,6 +238,8 @@ Web Share API의 지원 범위와 파일 크기 제한이 브라우저와 기기
 GA4에는 생성 단계와 미디어 실패 이벤트를 기록하고, Sentry에는 오류 위치, 브라우저 환경, 화면 경로를 기록했습니다. **두 기록을 함께 확인해 장애가 발생한 구간과 영향 범위를 파악하고 대응 우선순위를 정할 수 있는 기반을 마련했습니다.**
 
 ![GA4 생성·미디어 이벤트와 Sentry 오류 추적을 함께 사용하는 관측 흐름](/images/anai-project-portfolio/kit-observability-flow.svg)
+
+_GA4는 영향받은 여정 단계를, Sentry는 실패의 기술 Context를 기록합니다._
 
 ## [sort1] 3. AnAI Main
 
@@ -249,7 +277,11 @@ Nginx에는 Gzip, 정적 자산 캐시, HTML No-cache 정책을 구분해 적용
 
 ![다국어 URL, Meta Tag, Canonical URL, Redirect, JSON-LD 연결 관계](/images/anai-project-portfolio/main-multilingual-seo-structure.svg)
 
+_Routing, Canonical, Redirect, 구조화 데이터, 크롤링 파일이 공개 콘텐츠 모델을 함께 사용합니다._
+
 ![초기 콘텐츠 노출 시간과 HTML·JavaScript·CSS 전송량의 정규화 전후 비교](/images/anai-project-portfolio/main-delivery-performance-comparison.svg)
+
+_글에는 감소율만 있고 원시 시간·용량 값이 없어 적용 전 기준을 100으로 두었습니다._
 
 #### CMS 장애 격리와 뉴스 구조 개선
 
@@ -265,6 +297,8 @@ CMS 조회와 SEO Build Pipeline을 분리하고, Strapi 조회가 실패하면 
 
 ![CMS 장애 시 Build Pipeline 격리와 Strapi 데이터 Fallback 순서](/images/anai-project-portfolio/main-cms-fallback-flow.svg)
 
+_브랜드 페이지는 독립적으로 Build하고, 뉴스는 Strapi, 최근 데이터, Server Fallback 순으로 조회합니다._
+
 #### AWS 이미지 배포 자동화
 
 **AS-IS**
@@ -278,3 +312,5 @@ Next.js Standalone과 Docker로 설치, 빌드, 실행 환경을 고정했습니
 PR과 배포 결과는 자동으로 알렸습니다. **이를 통해 이미지 Build·Push의 반복 작업과 환경 선택 실수 위험을 줄이고, 코드 리뷰와 배포 상태를 별도로 전달하던 작업을 줄였습니다.**
 
 ![Next.js Standalone, Docker, GitHub Actions, AWS ECR 배포 및 알림 흐름](/images/anai-project-portfolio/main-aws-deployment-flow.svg)
+
+_Next.js Standalone으로 Runtime을 고정하고, 운영·개발 Image는 Amazon ECR에서 분리합니다._
