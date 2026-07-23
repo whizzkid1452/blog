@@ -868,6 +868,155 @@ const createAudioFlowDiagram = () => {
   return diagram;
 };
 
+const createAudioRegionPerformanceDiagram = () => {
+  const diagram = new Diagram({
+    name: 'editor-audio-region-performance-flow',
+    title: '676개 오디오 반영에서 1,518개 Region 편집까지',
+    subtitle: '오디오 반영은 676개 오디오를, 타임라인 편집은 18개 Track과 1,518개 Region을 기준으로 측정했습니다.',
+    project: 'Editor',
+  });
+
+  const audioBoxes = [
+    {
+      x: 55,
+      title: '676개 오디오',
+      detail: '실제 프로젝트',
+      fill: FILLS.gray,
+      stroke: MUTED,
+    },
+    {
+      x: 280,
+      title: 'Bulk IPC',
+      detail: '676회 → 1회',
+      fill: FILLS.blue,
+      stroke: BLUE,
+    },
+    {
+      x: 505,
+      title: '작업 Queue',
+      detail: '최대 4개 실행',
+      fill: FILLS.purple,
+      stroke: PURPLE,
+    },
+    {
+      x: 730,
+      title: 'Revision 검사',
+      detail: '최신 결과 / 복사 제거',
+      fill: FILLS.orange,
+      stroke: ORANGE,
+    },
+    {
+      x: 955,
+      title: '오디오 반영',
+      detail: '안정적으로 완료',
+      fill: FILLS.green,
+      stroke: GREEN,
+    },
+  ];
+
+  const regionBoxes = [
+    {
+      x: 955,
+      title: '1,518개 Region',
+      detail: '18개 Track',
+      fill: FILLS.gray,
+      stroke: MUTED,
+    },
+    {
+      x: 730,
+      title: '시간 Index',
+      detail: '목록 변경 시 생성',
+      fill: FILLS.blue,
+      stroke: BLUE,
+    },
+    {
+      x: 505,
+      title: '이진 조회',
+      detail: '화면 후보만 조회',
+      fill: FILLS.purple,
+      stroke: PURPLE,
+    },
+    {
+      x: 280,
+      title: '스크롤 신호',
+      detail: 'TrackRow 렌더 분리',
+      fill: FILLS.orange,
+      stroke: ORANGE,
+    },
+    {
+      x: 55,
+      title: 'Canvas 갱신',
+      detail: '편집 입력 유지',
+      fill: FILLS.green,
+      stroke: GREEN,
+    },
+  ];
+
+  diagram
+    .text({ x: 55, y: 100, width: 340, text: '1. 676개 오디오 반영', fontSize: 21, color: BLUE, weight: 700 })
+    .text({
+      x: 55,
+      y: 330,
+      width: 380,
+      text: '2. 1,518개 Region 편집',
+      fontSize: 21,
+      color: PURPLE,
+      weight: 700,
+    });
+
+  audioBoxes.forEach(box => diagram.box({ ...box, y: 150, width: 190, height: 115 }));
+  regionBoxes.forEach(box => diagram.box({ ...box, y: 385, width: 190, height: 115 }));
+
+  [245, 470, 695, 920].forEach((x, index) =>
+    diagram.arrow({
+      points: [
+        [x, 207],
+        [x + 35, 207],
+      ],
+      color: [BLUE, PURPLE, ORANGE, GREEN][index],
+    })
+  );
+
+  [955, 730, 505, 280].forEach((x, index) =>
+    diagram.arrow({
+      points: [
+        [x, 442],
+        [x - 35, 442],
+      ],
+      color: [BLUE, PURPLE, ORANGE, GREEN][index],
+    })
+  );
+
+  diagram
+    .arrow({
+      points: [
+        [1050, 265],
+        [1050, 385],
+      ],
+      label: 'Region\u00a0\u00a0반영',
+      color: TEAL,
+      labelX: 970,
+      labelY: 310,
+      labelWidth: 160,
+    })
+    .note({
+      x: 105,
+      y: 565,
+      width: 470,
+      text: '676개: 처리 16.1% 감소 / Long Task 82.8% 감소',
+      color: BLUE,
+    })
+    .note({
+      x: 625,
+      y: 565,
+      width: 470,
+      text: '1,518개: Long Task 73.9% 감소 / 입력 7.9%p 향상',
+      color: PURPLE,
+    });
+
+  return diagram;
+};
+
 const createExportDiagram = () => {
   const diagram = new Diagram({
     name: 'editor-export-stability-flow',
@@ -1975,6 +2124,7 @@ const buildDiagrams = () => [
   createMainPerformanceDiagram(),
   createCmsFallbackDiagram(),
   createDeploymentDiagram(),
+  createAudioRegionPerformanceDiagram(),
 ];
 
 const findPotentialTextOverflows = diagrams =>

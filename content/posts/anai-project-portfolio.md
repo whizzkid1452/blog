@@ -99,32 +99,9 @@ _Thumbnail Decode, Drag 피드백, 미디어 가져오기는 서로 다른 처�
 
 **개선 구조**
 
-```mermaid
-flowchart TB
-  A["676개 오디오 결과"]
+![676개 오디오 반영에서 1,518개 Region 편집까지 이어지는 처리 흐름](/images/anai-project-portfolio/editor-audio-region-performance-flow.svg)
 
-  subgraph Materialize["1. 오디오 반영 경로"]
-    B["Bulk IPC<br/>상태 변경·IPC 1회"]
-    C["제한된 작업 큐<br/>최대 4개 실행"]
-    D["버전 검사·버퍼 재사용"]
-    B -->|"처리 요청"| C
-    C -->|"완료 결과"| D
-  end
-
-  E["1,518개 Region"]
-
-  subgraph Timeline["2. 타임라인 편집 경로"]
-    F["Region 변경 시<br/>시간 인덱스 생성"]
-    G["스크롤 시<br/>후보 구간 이진 탐색"]
-    H["안정적인 스크롤 신호<br/>Canvas 갱신"]
-    F -->|"인덱스 재사용"| G
-    G -->|"화면 후보"| H
-  end
-
-  A -->|"일괄 전달"| B
-  D -->|"최신 결과만 반영"| E
-  E -->|"목록 변경"| F
-```
+_오디오 반영은 실제 프로젝트의 676개 오디오를 기준으로 측정했고, 타임라인 편집은 18개 Track과 1,518개 Region을 10초간 스크롤해 변경 전후를 각각 3회 실행한 중앙값으로 비교했습니다._
 
 **1. 오디오 반영 경로**
 
