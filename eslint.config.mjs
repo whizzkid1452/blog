@@ -31,6 +31,7 @@ const eslintConfig = defineConfig([
     'coverage/**',
     '.vercel/**',
     'next-env.d.ts',
+    'AGENTS/technical-writing/**',
   ]),
 ]);
 
