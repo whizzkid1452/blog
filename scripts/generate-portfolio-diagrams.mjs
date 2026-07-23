@@ -196,12 +196,11 @@ const createArrowElement = primitive => {
 };
 
 class Diagram {
-  constructor({ name, title, subtitle, project }) {
+  constructor({ name, title, subtitle }) {
     this.name = name;
     this.title = title;
     this.subtitle = subtitle;
     this.primitives = [];
-    this.pill({ x: 965, y: 42, width: 180, height: 34, text: project, fill: FILLS.purple, stroke: PURPLE });
   }
 
   rectangle({ x, y, width, height, fill = FILLS.white, stroke = INK, radius = 18, opacity = 1 }) {
@@ -299,11 +298,6 @@ class Diagram {
     return this;
   }
 
-  note({ x, y, width, text, color = PURPLE }) {
-    this.pill({ x, y, width, height: 38, text, fill: FILLS.purple, stroke: color, color });
-    return this;
-  }
-
   metric({ x, y, width, label, before, after, ratio, unit, color = BLUE }) {
     this.rectangle({ x, y, width, height: 205, fill: FILLS.white, stroke: '#adb5bd' });
     this.text({ x: x + 16, y: y + 20, width: width - 32, text: label, fontSize: 18, align: 'center', weight: 700 });
@@ -340,7 +334,6 @@ const createEditorStateDiagram = () => {
     name: 'editor-state-command-flow',
     title: '하나의 프로젝트 상태를 여러 편집 화면에서 사용',
     subtitle: 'Command는 Electron Process 경계를 통과하고, Selector는 각 Renderer의 갱신 범위를 제한합니다.',
-    project: 'Editor',
   });
   diagram
     .arrow({
@@ -444,7 +437,6 @@ const createLocalFirstDiagram = () => {
     name: 'editor-local-first-revision-chain',
     title: 'Local-first 저장과 Cloud Revision 동기화',
     subtitle: '로컬 저장을 먼저 완료하고, 응답의 Session과 Revision이 일치할 때만 Cloud 결과를 반영합니다.',
-    project: 'Editor',
   });
   diagram
     .arrow({
@@ -547,8 +539,7 @@ const createLocalFirstDiagram = () => {
     .ellipse({ x: 640, y: 465, width: 120, height: 90, fill: FILLS.teal, stroke: TEAL })
     .text({ x: 640, y: 484, width: 120, text: 'R2\n부모: R1', fontSize: 15, align: 'center', weight: 700 })
     .ellipse({ x: 925, y: 420, width: 150, height: 90, fill: FILLS.orange, stroke: ORANGE })
-    .text({ x: 925, y: 440, width: 150, text: 'R2-B\n부모: R1', fontSize: 15, align: 'center', weight: 700 })
-    .note({ x: 760, y: 555, width: 370, text: '늦게 도착한 응답은 새 Session을 덮어쓰지 못함' });
+    .text({ x: 925, y: 440, width: 150, text: 'R2-B\n부모: R1', fontSize: 15, align: 'center', weight: 700 });
   return diagram;
 };
 
@@ -557,7 +548,6 @@ const createEditorPerformanceDiagram = () => {
     name: 'editor-performance-comparison',
     title: 'Editor 상호작용 성능 전후 비교',
     subtitle: 'Thumbnail 지표는 브라우저 작업을 포함하고, React actualDuration은 React 렌더링 시간만 측정합니다.',
-    project: 'Editor',
   });
   diagram
     .metric({
@@ -622,8 +612,7 @@ const createEditorPerformanceDiagram = () => {
       detail: 'Overlay 갱신 후 최종 상태 반영',
       fill: FILLS.purple,
       stroke: PURPLE,
-    })
-    .note({ x: 335, y: 595, width: 530, text: '측정 범위가 달라 수치를 서로 직접 비교할 수 없음' });
+    });
   return diagram;
 };
 
@@ -632,7 +621,6 @@ const createEditorMediaFlowDiagram = () => {
     name: 'editor-media-processing-flow',
     title: '미디어 편집의 세 처리 경로를 분리',
     subtitle: 'Thumbnail Decode, Drag 피드백, 미디어 가져오기는 서로 다른 처리 방식을 사용합니다.',
-    project: 'Editor',
   });
   const rows = [175, 335, 495];
   const colors = [BLUE, PURPLE, ORANGE];
@@ -756,7 +744,6 @@ const createAudioPerformanceDiagram = () => {
     name: 'editor-audio-processing-comparison',
     title: 'Bulk 오디오 배치 처리의 측정 결과',
     subtitle: '같은 676개 데이터로 적용 전후를 비교했습니다.',
-    project: 'Editor',
   });
   diagram
     .metric({
@@ -813,8 +800,7 @@ const createAudioPerformanceDiagram = () => {
     .box({ x: 90, y: 425, width: 180, height: 90, title: '676개', fill: FILLS.gray, stroke: MUTED })
     .box({ x: 355, y: 425, width: 210, height: 90, title: 'Bulk IPC', fill: FILLS.blue, stroke: BLUE })
     .box({ x: 655, y: 425, width: 210, height: 90, title: '동시 작업 제한', fill: FILLS.teal, stroke: TEAL })
-    .box({ x: 950, y: 425, width: 180, height: 90, title: '반영 완료', fill: FILLS.green, stroke: GREEN })
-    .note({ x: 375, y: 570, width: 450, text: 'IPC 호출 수 감소 + 동시 작업 수 제한' });
+    .box({ x: 950, y: 425, width: 180, height: 90, title: '반영 완료', fill: FILLS.green, stroke: GREEN });
   return diagram;
 };
 
@@ -823,7 +809,6 @@ const createAudioFlowDiagram = () => {
     name: 'editor-audio-processing-flow',
     title: '개별 처리 경합을 제한된 Bulk 처리로 전환',
     subtitle: 'Bulk 전송, 동시 작업 수 제한, 작업 Queue, Buffer 재사용이 서로 다른 비용을 줄입니다.',
-    project: 'Editor',
   });
   const boxes = [
     { x: 55, title: '오디오 676개', detail: '배치 입력', fill: FILLS.gray, stroke: MUTED },
@@ -863,8 +848,7 @@ const createAudioFlowDiagram = () => {
       detail: '반복 할당 방지',
       fill: FILLS.teal,
       stroke: TEAL,
-    })
-    .note({ x: 325, y: 585, width: 550, text: '전송 비용, 작업 경합, 메모리 할당을 각각 줄임' });
+    });
   return diagram;
 };
 
@@ -873,7 +857,6 @@ const createAudioRegionPerformanceDiagram = () => {
     name: 'editor-audio-region-performance-flow',
     title: '676개 오디오 반영에서 1,518개 Region 편집까지',
     subtitle: '오디오 반영은 676개 오디오를, 타임라인 편집은 18개 Track과 1,518개 Region을 기준으로 측정했습니다.',
-    project: 'Editor',
   });
 
   const audioBoxes = [
@@ -987,32 +970,17 @@ const createAudioRegionPerformanceDiagram = () => {
     })
   );
 
-  diagram
-    .arrow({
-      points: [
-        [1050, 265],
-        [1050, 385],
-      ],
-      label: 'Region\u00a0\u00a0반영',
-      color: TEAL,
-      labelX: 970,
-      labelY: 310,
-      labelWidth: 160,
-    })
-    .note({
-      x: 105,
-      y: 565,
-      width: 470,
-      text: '676개: 처리 16.1% 감소 / Long Task 82.8% 감소',
-      color: BLUE,
-    })
-    .note({
-      x: 625,
-      y: 565,
-      width: 470,
-      text: '1,518개: Long Task 73.9% 감소 / 입력 7.9%p 향상',
-      color: PURPLE,
-    });
+  diagram.arrow({
+    points: [
+      [1050, 265],
+      [1050, 385],
+    ],
+    label: 'Region\u00a0\u00a0반영',
+    color: TEAL,
+    labelX: 970,
+    labelY: 310,
+    labelWidth: 160,
+  });
 
   return diagram;
 };
@@ -1022,7 +990,6 @@ const createExportDiagram = () => {
     name: 'editor-export-stability-flow',
     title: '메모리와 OS 경계를 고려한 Export 안정화',
     subtitle: 'WAV는 큰 연속 할당을 피하고, AAF는 macOS Runtime 포함 여부와 서명을 실제 파일로 검증합니다.',
-    project: 'Editor',
   });
   diagram
     .text({ x: 55, y: 150, width: 470, text: '장시간 WAV', fontSize: 22, color: BLUE, weight: 700 })
@@ -1061,7 +1028,6 @@ const createExportDiagram = () => {
       fill: FILLS.teal,
       stroke: TEAL,
     })
-    .note({ x: 955, y: 235, width: 190, text: '대형 ArrayBuffer 없음', color: TEAL })
     .line({
       points: [
         [55, 375],
@@ -1122,7 +1088,6 @@ const createRecoveryDiagram = () => {
     name: 'editor-observability-recovery-flow',
     title: '실패한 Editor 탭을 관측·격리·복구',
     subtitle: 'Telemetry는 재현 조건을 좁히고, 탭 단위 Boundary는 화면 장애 범위를 제한합니다.',
-    project: 'Editor',
   });
   diagram
     .arrow({
@@ -1204,8 +1169,7 @@ const createRecoveryDiagram = () => {
       fill: FILLS.blue,
       stroke: BLUE,
     })
-    .box({ x: 1070, y: 235, width: 90, height: 120, title: '탭', detail: '정상', fill: FILLS.green, stroke: GREEN })
-    .note({ x: 315, y: 530, width: 570, text: '한 탭을 복구하는 동안 다른 편집 탭은 계속 사용' });
+    .box({ x: 1070, y: 235, width: 90, height: 120, title: '탭', detail: '정상', fill: FILLS.green, stroke: GREEN });
   return diagram;
 };
 
@@ -1214,7 +1178,6 @@ const createGenerationRecoveryDiagram = () => {
     name: 'kit-generation-recovery-state',
     title: '저장된 생성 작업을 새로고침과 재시도 후에도 복구',
     subtitle: '멱등성 Key는 중복 요청을 같은 작업으로 처리하고, Server 작업 처리 중에만 Polling합니다.',
-    project: 'Kit + Tool',
   });
   diagram
     .arrow({
@@ -1265,7 +1228,6 @@ const createGenerationRecoveryDiagram = () => {
       fill: FILLS.purple,
       stroke: PURPLE,
     })
-    .note({ x: 965, y: 205, width: 180, text: '새로고침 → 복구' })
     .text({ x: 55, y: 380, width: 250, text: '통합 생성 작업 상태', fontSize: 22, weight: 700 })
     .arrow({
       points: [
@@ -1304,7 +1266,6 @@ const createPlaybackLifecycleDiagram = () => {
     name: 'kit-playback-resource-lifecycle',
     title: '모든 미디어 화면을 하나의 재생 상태로 제어',
     subtitle: '파일과 화면 생명주기에 맞춰 Resource를 정리하고, Mobile은 사용자 입력과 실제 재생 성공을 기다립니다.',
-    project: 'Kit + Tool',
   });
   diagram
     .arrow({
@@ -1388,8 +1349,7 @@ const createPlaybackLifecycleDiagram = () => {
       detail: 'Media Instance + Object URL + Event + Timer',
       fill: FILLS.red,
       stroke: RED,
-    })
-    .note({ x: 815, y: 525, width: 330, text: 'Mobile: 입력 → 재생 성공 → UI 반영' });
+    });
   return diagram;
 };
 
@@ -1398,7 +1358,6 @@ const createSubscriptionDiagram = () => {
     name: 'kit-subscription-payment-flow',
     title: '구독 변경을 명시적인 상태 전이로 분리',
     subtitle: '적용 시점이 다른 전이를 구분하고, 진행 중인 같은 주문의 중복 실행을 막습니다.',
-    project: 'Kit + Tool',
   });
   diagram
     .arrow({
@@ -1492,8 +1451,7 @@ const createSubscriptionDiagram = () => {
       detail: '감지 + 재동기화',
       fill: FILLS.red,
       stroke: RED,
-    })
-    .note({ x: 120, y: 525, width: 390, text: '현재 구독 상태와 결제 결과를 분리' });
+    });
   return diagram;
 };
 
@@ -1502,7 +1460,6 @@ const createShareFallbackDiagram = () => {
     name: 'kit-share-fallback-flow',
     title: '공유 가능 여부를 확인한 뒤 전달 경로를 선택',
     subtitle: 'MIME Type과 파일 크기를 먼저 검사하고, 지원하지 않는 환경에는 링크 공유와 다운로드를 제공합니다.',
-    project: 'Kit + Tool',
   });
   diagram
     .arrow({
@@ -1570,8 +1527,7 @@ const createShareFallbackDiagram = () => {
       detail: '링크 공유\n+ 다운로드',
       fill: FILLS.red,
       stroke: RED,
-    })
-    .note({ x: 305, y: 485, width: 590, text: '진행 중인 파일 준비 요청을 재사용해 중복 실행 방지' });
+    });
   return diagram;
 };
 
@@ -1580,14 +1536,12 @@ const createSharePerformanceDiagram = () => {
     name: 'kit-share-performance-comparison',
     title: '공유 파일 준비의 중복 작업 제거',
     subtitle: 'Network 개선은 하한값이고, Cache된 파일 준비 시간은 측정값입니다.',
-    project: 'Kit + Tool',
   });
   diagram
     .rectangle({ x: 80, y: 175, width: 470, height: 300, fill: FILLS.blue, stroke: BLUE })
     .text({ x: 105, y: 205, width: 420, text: '공유 중복 실행', fontSize: 24, align: 'center', weight: 700 })
     .text({ x: 105, y: 285, width: 420, text: 'Network 요청', fontSize: 18, color: MUTED, align: 'center' })
     .text({ x: 105, y: 325, width: 420, text: '-50% 이상', fontSize: 43, color: BLUE, align: 'center', weight: 700 })
-    .note({ x: 170, y: 410, width: 290, text: '진행 중인 요청 재사용' })
     .rectangle({ x: 650, y: 175, width: 470, height: 300, fill: FILLS.teal, stroke: TEAL })
     .text({ x: 675, y: 205, width: 420, text: 'Cache된 파일 준비', fontSize: 24, align: 'center', weight: 700 })
     .text({
@@ -1601,7 +1555,6 @@ const createSharePerformanceDiagram = () => {
       weight: 700,
     })
     .text({ x: 675, y: 350, width: 420, text: '-51.2%', fontSize: 30, color: TEAL, align: 'center', weight: 700 })
-    .note({ x: 740, y: 410, width: 290, text: '결과 ID 파일 Cache', color: TEAL })
     .text({
       x: 155,
       y: 545,
@@ -1619,7 +1572,6 @@ const createKitObservabilityDiagram = () => {
     name: 'kit-observability-flow',
     title: '제품 Event와 오류 기록으로 서로 다른 장애 질문에 답하기',
     subtitle: 'GA4는 영향받은 여정 단계를, Sentry는 실패의 기술 Context를 기록합니다.',
-    project: 'Kit + Tool',
   });
   diagram
     .arrow({
@@ -1695,8 +1647,7 @@ const createKitObservabilityDiagram = () => {
       fontSize: 21,
       align: 'center',
       weight: 700,
-    })
-    .note({ x: 420, y: 555, width: 360, text: '근거를 바탕으로 대응 우선순위 결정' });
+    });
   return diagram;
 };
 
@@ -1705,7 +1656,6 @@ const createSeoDiagram = () => {
     name: 'main-multilingual-seo-structure',
     title: '다국어 Route를 기준으로 SEO 구조 통합',
     subtitle: 'Routing, Canonical, Redirect, 구조화 데이터, 크롤링 파일이 공개 콘텐츠 모델을 함께 사용합니다.',
-    project: 'AnAI Main',
   });
   diagram
     .arrow({
@@ -1817,8 +1767,7 @@ const createSeoDiagram = () => {
       fill: FILLS.yellow,
       stroke: ORANGE,
       centerContent: true,
-    })
-    .note({ x: 100, y: 505, width: 470, text: '기존 뉴스 URL을 새 Route로 Redirect' });
+    });
   return diagram;
 };
 
@@ -1827,7 +1776,6 @@ const createMainPerformanceDiagram = () => {
     name: 'main-delivery-performance-comparison',
     title: '전송 성능을 정규화 지수로 비교',
     subtitle: '글에는 감소율만 있고 원시 시간·용량 값이 없어 적용 전 기준을 100으로 두었습니다.',
-    project: 'AnAI Main',
   });
   diagram
     .rectangle({ x: 90, y: 170, width: 470, height: 310, fill: FILLS.blue, stroke: BLUE })
@@ -1850,7 +1798,6 @@ const createMainPerformanceDiagram = () => {
       color: BLUE,
     })
     .text({ x: 390, y: 295, width: 140, text: '적용 후\n33', fontSize: 31, color: BLUE, align: 'center', weight: 700 })
-    .note({ x: 175, y: 410, width: 300, text: '67% 감소' })
     .rectangle({ x: 640, y: 170, width: 470, height: 310, fill: FILLS.teal, stroke: TEAL })
     .text({ x: 665, y: 205, width: 420, text: 'HTML + JS + CSS 전송량', fontSize: 24, align: 'center', weight: 700 })
     .text({
@@ -1880,7 +1827,6 @@ const createMainPerformanceDiagram = () => {
       align: 'center',
       weight: 700,
     })
-    .note({ x: 725, y: 410, width: 300, text: '62.6% 감소', color: TEAL })
     .text({
       x: 180,
       y: 545,
@@ -1898,7 +1844,6 @@ const createCmsFallbackDiagram = () => {
     name: 'main-cms-fallback-flow',
     title: 'CMS 장애를 기본 사이트 Build와 격리',
     subtitle: '브랜드 페이지는 독립적으로 Build하고, 뉴스는 Strapi, 최근 데이터, Server Fallback 순으로 조회합니다.',
-    project: 'AnAI Main',
   });
   diagram
     .text({ x: 55, y: 145, width: 250, text: 'Build 경로', fontSize: 21, color: BLUE, weight: 700 })
@@ -1992,8 +1937,7 @@ const createCmsFallbackDiagram = () => {
       detail: '최종 경로',
       fill: FILLS.red,
       stroke: RED,
-    })
-    .note({ x: 340, y: 570, width: 520, text: '응답 변환, Cache, SEO Mapping을 공통 흐름으로 관리' });
+    });
   return diagram;
 };
 
@@ -2002,7 +1946,6 @@ const createDeploymentDiagram = () => {
     name: 'main-aws-deployment-flow',
     title: 'Branch별 Image를 하나의 자동화 Pipeline으로 배포',
     subtitle: 'Next.js Standalone으로 Runtime을 고정하고, 운영·개발 Image는 Amazon ECR에서 분리합니다.',
-    project: 'AnAI Main',
   });
   diagram
     .arrow({
@@ -2100,8 +2043,7 @@ const createDeploymentDiagram = () => {
         [1060, 500],
       ],
       color: BLUE,
-    })
-    .note({ x: 115, y: 475, width: 390, text: 'PR과 배포 결과 자동 알림' });
+    });
   return diagram;
 };
 
