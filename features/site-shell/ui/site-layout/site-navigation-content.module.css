@@ -11,7 +11,7 @@
   padding-bottom: 2px;
 }
 
-.externalNavigationAnchor {
+.navigationAnchor {
   border-radius: 6px;
   padding: 9px 6px;
   color: var(--color-text-muted);
@@ -20,7 +20,7 @@
   text-decoration: none;
 }
 
-.externalNavigationAnchor:hover {
+.navigationAnchor:hover {
   background: color-mix(in srgb, var(--color-border) 35%, transparent);
   color: var(--color-text-primary);
 }

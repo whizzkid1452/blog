@@ -2,9 +2,10 @@
 
 ## Goal
 
-Supabase Auth에 Google OAuth를 연결하고, Google로 인증된 사용자만 `visibility: authenticated` 글을 볼 수 있게 설정한다.
+Supabase Auth에 Google OAuth를 연결하고, 허용된 Google 계정만 `visibility: authenticated` 글과 `draft: true` 초안을
+볼 수 있게 설정한다.
 
-현재 권한 정책은 특정 사용자만 허용하는 방식이 아니다. Google 인증에 성공한 모든 사용자를 허용한다.
+현재 권한 정책은 `GOOGLE_AUTHORIZED_EMAIL`에 등록한 단일 계정만 허용한다.
 
 ## Prerequisites
 
@@ -54,11 +55,13 @@ https://blog.example.com/auth/callback
 
 ```dotenv
 NEXT_PUBLIC_SITE_URL=http://localhost:3000
+GOOGLE_AUTHORIZED_EMAIL=your-google-account@example.com
 ```
 
 Supabase 프로젝트 URL과 Publishable key는
-[`environment.ts`](../lib/supabase/environment.ts)에 공개 상수로 저장되어 있다. 운영 환경의 `NEXT_PUBLIC_SITE_URL`에는
-HTTPS 운영 주소를 입력한다. Google Client Secret은 애플리케이션 환경 변수나 저장소에 넣지 않고 Supabase Provider
+[`environment.ts`](../shared/infrastructure/supabase/environment.ts)에 공개 상수로 저장되어 있다. 운영 환경의
+`NEXT_PUBLIC_SITE_URL`에는 HTTPS 운영 주소를 입력한다. `GOOGLE_AUTHORIZED_EMAIL`은 서버에서만 읽으며 공개 변수 접두사
+`NEXT_PUBLIC_`을 붙이지 않는다. Google Client Secret은 애플리케이션 환경 변수나 저장소에 넣지 않고 Supabase Provider
 설정에만 저장한다.
 
 ### 4. 비공개 글 표시하기
@@ -78,7 +81,8 @@ visibility: authenticated
 본문을 작성합니다.
 ```
 
-`draft: true`이면 인증 여부와 관계없이 글 목록과 상세 페이지에서 제외된다.
+`draft: true`이면 공개 목록, sitemap, RSS에서 제외된다. 허용된 Google 계정은 `/private-posts`와 직접 상세 주소에서
+초안을 볼 수 있다.
 
 ### Verify Final Result
 
@@ -92,8 +96,9 @@ pnpm build
 브라우저에서 다음 동작을 확인한다.
 
 1. 로그아웃 상태로 `/private-posts`에 접근하면 Google 로그인으로 이동한다.
-2. 로그인 후 비공개 글 목록과 상세 페이지가 열린다.
-3. 비공개 글은 일반 글 목록, `/feed.xml`, `/sitemap.xml`에 나타나지 않는다.
-4. 로그아웃 후 비공개 글 상세 주소에 다시 접근하면 Google 로그인으로 이동한다.
+2. 허용된 계정으로 로그인하면 비공개 글과 초안 목록 및 상세 페이지가 열린다.
+3. 허용되지 않은 Google 계정은 OAuth callback에서 세션이 폐기되고 `403` 응답을 받는다.
+4. 비공개 글과 초안은 일반 글 목록, `/feed.xml`, `/sitemap.xml`에 나타나지 않는다.
+5. 로그아웃 후 비공개 글 또는 초안 상세 주소에 다시 접근하면 Google 로그인으로 이동한다.
 
 공식 설정 기준은 [Supabase Google 로그인 문서](https://supabase.com/docs/guides/auth/social-login/auth-google)와 [Supabase Next.js 서버 인증 문서](https://supabase.com/docs/guides/auth/server-side/creating-a-client)를 따른다.

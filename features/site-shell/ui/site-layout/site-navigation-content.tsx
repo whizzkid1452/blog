@@ -32,7 +32,7 @@ export function SiteNavigationContent({
 
         <div className={styles.sidebarUtilityLinks}>
           <a
-            className={styles.externalNavigationAnchor}
+            className={styles.navigationAnchor}
             href={githubProfileUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -41,7 +41,7 @@ export function SiteNavigationContent({
             GitHub
           </a>
           <a
-            className={styles.externalNavigationAnchor}
+            className={styles.navigationAnchor}
             href={resumeUrl}
             target="_blank"
             rel="noopener noreferrer"
@@ -49,6 +49,12 @@ export function SiteNavigationContent({
           >
             About
           </a>
+          <Link
+            className={styles.navigationAnchor}
+            href={{ pathname: '/auth/login', query: { next: '/private-posts' } }}
+          >
+            Google 로그인
+          </Link>
         </div>
       </nav>
 

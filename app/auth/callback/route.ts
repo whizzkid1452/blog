@@ -1,4 +1,4 @@
-import { getAuthenticatedGoogleUser } from '@/features/authentication/server/google-user';
+import { getAuthenticatedGoogleUser, isAuthorizedGoogleUser } from '@/features/authentication/server/google-user';
 import { getSafeReturnPath } from '@/features/authentication/server/redirect';
 import { getSiteUrl } from '@/shared/config/site-config';
 import { createSupabaseServerClient } from '@/shared/infrastructure/supabase/server';
@@ -21,9 +21,9 @@ export async function GET(request: Request): Promise<Response> {
 
   const user = await getAuthenticatedGoogleUser(supabaseClient);
 
-  if (user == null) {
+  if (user == null || !isAuthorizedGoogleUser(user)) {
     await supabaseClient.auth.signOut();
-    return new Response('Google 계정 인증이 필요합니다.', { status: 403 });
+    return new Response('허용된 Google 계정이 아닙니다.', { status: 403 });
   }
 
   const returnPath = getSafeReturnPath(requestUrl.searchParams.get('next'));

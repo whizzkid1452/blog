@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getGoogleUserFromClaims } from './google-user';
+import { getGoogleUserFromClaims, isAuthorizedGoogleUser } from './google-user';
 
 describe('getGoogleUserFromClaims', () => {
   it('returns a user for a Google identity', () => {
@@ -32,5 +32,20 @@ describe('getGoogleUserFromClaims', () => {
 
   it('rejects claims without a subject', () => {
     expect(getGoogleUserFromClaims({ app_metadata: { provider: 'google' } })).toBeNull();
+  });
+});
+
+describe('isAuthorizedGoogleUser', () => {
+  it('accepts the configured Google email case-insensitively', () => {
+    expect(isAuthorizedGoogleUser({ id: 'user-1', email: 'Owner@Example.com' }, ' owner@example.com ')).toBe(true);
+  });
+
+  it('rejects a different Google email', () => {
+    expect(isAuthorizedGoogleUser({ id: 'user-1', email: 'reader@example.com' }, 'owner@example.com')).toBe(false);
+  });
+
+  it('fails closed when the configured email or claim email is missing', () => {
+    expect(isAuthorizedGoogleUser({ id: 'user-1', email: 'owner@example.com' }, undefined)).toBe(false);
+    expect(isAuthorizedGoogleUser({ id: 'user-1' }, 'owner@example.com')).toBe(false);
   });
 });

@@ -34,7 +34,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
     return {};
   }
 
-  if (post.visibility === 'authenticated') {
+  if (post.draft || post.visibility === 'authenticated') {
     return {
       title: post.title,
       robots: { index: false, follow: false, noarchive: true },

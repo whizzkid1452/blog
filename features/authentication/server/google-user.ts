@@ -1,5 +1,5 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import { redirect } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/shared/infrastructure/supabase/server';
 import { getSafeReturnPath } from './redirect';
 
@@ -43,6 +43,27 @@ export async function requireAuthenticatedGoogleUser(returnPath: string): Promis
   return user;
 }
 
+export function isAuthorizedGoogleUser(
+  user: GoogleUser,
+  configuredEmail = process.env.GOOGLE_AUTHORIZED_EMAIL
+): boolean {
+  if (user.email == null || configuredEmail == null) {
+    return false;
+  }
+
+  return normalizeEmail(user.email) === normalizeEmail(configuredEmail);
+}
+
+export async function requireAuthorizedGoogleUser(returnPath: string): Promise<GoogleUser> {
+  const user = await requireAuthenticatedGoogleUser(returnPath);
+
+  if (!isAuthorizedGoogleUser(user)) {
+    notFound();
+  }
+
+  return user;
+}
+
 function hasGoogleProvider(appMetadata: unknown): boolean {
   if (!isRecord(appMetadata)) {
     return false;
@@ -57,4 +78,8 @@ function hasGoogleProvider(appMetadata: unknown): boolean {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value != null;
+}
+
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
 }

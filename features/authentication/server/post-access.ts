@@ -1,6 +1,6 @@
 import type { PostIndex } from '@/features/posts/model/post-index';
 import type { Post } from '@/features/posts/model/post';
-import { requireAuthenticatedGoogleUser } from './google-user';
+import { requireAuthorizedGoogleUser } from './google-user';
 
 interface GetViewablePostParams {
   postIndex: PostIndex;
@@ -9,7 +9,7 @@ interface GetViewablePostParams {
 }
 
 interface PostAccessDependencies {
-  requireAuthenticatedViewer(returnPath: string): Promise<unknown>;
+  requireAuthorizedViewer(returnPath: string): Promise<unknown>;
 }
 
 type GetViewablePost = (params: GetViewablePostParams) => Promise<Post | null>;
@@ -22,18 +22,18 @@ export function createPostAccess(dependencies: PostAccessDependencies): GetViewa
       return publicPost;
     }
 
-    const authenticatedPost = postIndex.getPostBySlugForAuthenticatedViewer(slug);
+    const authorizedPost = postIndex.getPostBySlugForAuthorizedViewer(slug);
 
-    if (authenticatedPost == null) {
+    if (authorizedPost == null) {
       return null;
     }
 
-    await dependencies.requireAuthenticatedViewer(returnPath);
+    await dependencies.requireAuthorizedViewer(returnPath);
 
-    return authenticatedPost;
+    return authorizedPost;
   };
 }
 
 export const getViewablePost = createPostAccess({
-  requireAuthenticatedViewer: requireAuthenticatedGoogleUser,
+  requireAuthorizedViewer: requireAuthorizedGoogleUser,
 });

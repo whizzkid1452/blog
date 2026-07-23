@@ -117,7 +117,8 @@ export default nextConfig;
 
 Supabase에서는 `anon` 역할에 댓글 조회와 작성만 허용하고, PostgreSQL 테이블 권한과 RLS 정책을 함께 적용했다. API Route는 입력 검증과 HTTP 응답을 담당하지만 데이터베이스 권한을 대신하지 않는다.
 
-비공개 글은 `visibility: authenticated`로 구분한다. 공개 목록, sitemap, RSS에서 제외하고, 상세 페이지에서는 서버가 Google 로그인 Session을 확인한 뒤 본문을 반환한다. 이 글도 같은 설정을 사용한다. 현재 인가 기준은 특정 계정 allowlist가 아니라 Google로 로그인한 사용자 전체다.
+비공개 글은 `visibility: authenticated`로 구분한다. 공개 목록, sitemap, RSS에서 제외하고, 상세 페이지에서는 서버가
+Google 로그인 Session과 `GOOGLE_AUTHORIZED_EMAIL`을 확인한 뒤 본문을 반환한다. 이 글도 같은 설정을 사용한다.
 
 ## 6. SEO에는 어떤 영향이 있는가
 

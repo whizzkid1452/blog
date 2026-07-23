@@ -40,9 +40,11 @@ visibility: public
 
 `tags`는 하나 이상의 문자열을 담은 배열이어야 한다. 각 태그는 비어 있으면 안 되고 `/` 문자를 포함하면 안 된다.
 
-`draft`는 boolean 값이다. `true`이면 공개 글 목록과 상세 페이지에서 제외된다.
+`draft`는 boolean 값이다. `true`이면 공개 글 목록, sitemap, RSS에서 제외된다. 허용된 Google 계정은 비공개 글 목록과
+직접 상세 주소에서 초안을 볼 수 있다.
 
-`visibility`는 `public` 또는 `authenticated`다. 생략하면 `public`이다. `authenticated` 글은 공개 목록, sitemap, RSS에서 제외되며 Google 인증 후에만 상세 페이지를 볼 수 있다. 현재 정책은 특정 사용자 허용 목록이 아니라 Google 인증 사용자 전체를 허용한다.
+`visibility`는 `public` 또는 `authenticated`다. 생략하면 `public`이다. `authenticated` 글은 공개 목록, sitemap, RSS에서
+제외되며 `GOOGLE_AUTHORIZED_EMAIL`과 일치하는 Google 계정만 볼 수 있다.
 
 `coverImage`는 선택 필드다. 작성할 경우 `/`로 시작하는 `public` 기준 경로를 사용한다. `coverImage`를 작성하면 `coverAlt`도 함께 작성한다.
 

@@ -9,6 +9,6 @@
 - 글 목록 페이지를 제공한다.
 - 글 상세 페이지를 제공한다.
 - 태그별 글 목록을 제공한다.
-- draft 글은 공개 페이지와 sitemap에서 제외한다.
+- draft 글은 공개 페이지와 sitemap에서 제외하고 허용된 Google 계정에만 제공한다.
 - 글별 metadata, sitemap, robots, JSON-LD를 직접 구현한다.
 - Server Component 중심으로 렌더링한다.

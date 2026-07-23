@@ -60,16 +60,22 @@ describe('PostIndex', () => {
     expect(index.getPostBySlug('authenticated-post')).toBeNull();
   });
 
-  it('returns authenticated posts only through authenticated lookups', () => {
+  it('returns private and draft posts only through authorized lookups', () => {
     const index = new PostIndex([
       createPost({ slug: 'public-post' }),
       createPost({ slug: 'authenticated-post', visibility: 'authenticated' }),
       createPost({ slug: 'authenticated-draft', visibility: 'authenticated', draft: true }),
+      createPost({ slug: 'public-draft', draft: true }),
     ]);
 
-    expect(index.getAuthenticatedPostSummaries().map(post => post.slug)).toEqual(['authenticated-post']);
-    expect(index.getPostBySlugForAuthenticatedViewer('authenticated-post')?.slug).toBe('authenticated-post');
-    expect(index.getPostBySlugForAuthenticatedViewer('authenticated-draft')).toBeNull();
+    expect(index.getAuthorizedPostSummaries().map(post => post.slug)).toEqual([
+      'authenticated-draft',
+      'authenticated-post',
+      'public-draft',
+    ]);
+    expect(index.getPostBySlugForAuthorizedViewer('authenticated-post')?.slug).toBe('authenticated-post');
+    expect(index.getPostBySlugForAuthorizedViewer('authenticated-draft')?.slug).toBe('authenticated-draft');
+    expect(index.getPostBySlugForAuthorizedViewer('public-draft')?.slug).toBe('public-draft');
   });
 
   it('returns related posts by shared tag count, publish time, and slug', () => {
