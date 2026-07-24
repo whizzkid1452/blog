@@ -2,7 +2,7 @@
 title: '[Part 1.] 디자인 시스템을 npm 패키지 대신 shadcn Registry로 배포한 이유'
 description: 'micro SaaS 환경에서 npm 패키지 대신 shadcn Registry를 선택한 이유와 구현 기준을 정리합니다.'
 date: '2026-07-10'
-tags: ['design-system', 'shadcn', 'frontend', 'architecture']
+tags: ['design-system', 'shadcn', 'tokens-studio', 'frontend', 'architecture']
 draft: false
 ---
 
@@ -170,7 +170,65 @@ const ButtonRoot = styled.button`
 
 이렇게 나누면 React와 Vue가 같은 토큰 이름을 사용할 수 있다. 다만 실제로 두 프레임워크가 모든 토큰을 문제없이 공유하는지는 구현 과정에서 검증해야 한다.
 
-## [sort1] 7. Figma와 코드가 같은 이름을 쓰게 했다
+## [sort1] 7. Tokens Studio를 GitHub와 연결했다
+
+CSS 변수로 토큰을 만들었지만, 디자이너가 Figma에서 바꾼 값을 개발자가 다시 옮기는 과정은 남아 있었다. 이 수작업을 없애기 위해 Figma의 Tokens Studio와 GitHub 저장소를 연결했다.
+
+[Tokens Studio의 GitHub Sync Provider](https://docs.tokens.studio/token-storage/remote/sync-git-github)는 GitHub의 토큰 JSON을 Figma로 Pull하고, Figma에서 바꾼 값을 GitHub로 Push하는 양방향 동기화를 지원한다.
+
+여기서 사용하는 **GitHub Personal Access Token(PAT)**은 디자인 토큰이 아니다. Tokens Studio가 저장소를 읽고 쓰기 위해 사용하는 GitHub 인증 정보다.
+
+우리는 다음 기준으로 fine-grained PAT를 만들었다.
+
+```text
+Repository access
+→ AnAIAudio/AnAI-Designe-System만 선택
+
+Repository permissions
+→ Contents: Read and write
+```
+
+PAT는 비밀번호와 같은 인증 정보이므로 Figma 설명, 문서, 채팅, Git 커밋에 남기지 않는다. 또한 디자이너 개인 PAT와 GitHub Actions의 자동화용 secret은 역할이 다르다. 플러그인은 디자이너 PAT로 `tokens.json`을 Push하고, GitHub Actions는 저장소 관리자가 등록한 별도 secret으로 PR 생성과 병합을 수행한다.
+
+Tokens Studio에서는 작업용 Figma 복사본을 열고 다음 값을 등록했다.
+
+```text
+Settings
+  → Sync providers
+  → Add new
+  → GitHub
+
+Name: Dyna Tokens
+Repository: AnAIAudio/AnAI-Designe-System
+Branch: feature/tokens-studio-sync
+Token storage location: tokens.json
+Base URL: 비워두기
+```
+
+무료 버전에서는 Token Storage Location을 단일 파일인 `tokens.json`으로 설정했다. 공식 문서 기준으로 폴더 기반 multi-file sync는 Pro 기능이다. 단일 파일 방식은 모든 Token Set을 하나의 JSON에 저장한다.
+
+최초 연결에서는 GitHub의 `tokens.json`을 기준으로 `Pull`했다. 반대로 Push를 선택하면 Figma에 남아 있던 값이 저장소의 기준을 덮어쓸 수 있기 때문이다.
+
+이후 작업 순서는 단순해졌다.
+
+```text
+작업 시작 전 Pull
+  → Figma 복사본에서 토큰 값 변경
+  → Save
+  → Diff 확인
+  → 커밋 메시지 작성
+  → Push changes
+  → GitHub Actions 검증
+  → main 대상 PR 병합
+```
+
+[Tokens Studio의 Push/Pull 문서](https://docs.tokens.studio/token-storage/remote-push-pull-changes)에 따르면 Pull은 플러그인의 현재 토큰을 원격 저장소 값으로 교체한다. Push하지 않은 로컬 변경은 잃을 수 있으므로 작업 시작 전에 Pull하고, 변경 중에는 어느 쪽이 최신인지 먼저 확인한다.
+
+원본 Figma 파일은 수정하지 않았다. 작업용 복사본에서만 Tokens Studio의 `Apply`를 실행했다. 현재 자동화 범위도 토큰에 한정했다. Figma의 component, variant, layer 변경은 코드로 자동 변환되지 않는다.
+
+> GitHub 연결의 핵심은 Figma를 원본으로 만드는 것이 아니라, 버전 관리되는 `tokens.json`을 디자인과 코드가 함께 사용하는 기준으로 만드는 것이었다.
+
+## [sort1] 8. Figma와 코드가 같은 이름을 쓰게 했다
 
 Figma와 코드가 같은 컴포넌트를 서로 다른 이름으로 부르면 다시 확인하는 시간이 생긴다. 그래서 구현 전에 다음 항목을 맞추기로 했다.
 
@@ -195,7 +253,7 @@ Color=Primary, Size=Large, State=Hovered
 
 `Hovered`는 prop으로 받지 않고 `:hover`로 처리한다. Figma와 코드의 표현 방식은 달라도 같은 의미를 가리켜야 한다.
 
-## [sort1] 8. 작은 범위부터 검증하기로 했다
+## [sort1] 9. 작은 범위부터 검증하기로 했다
 
 처음부터 모든 컴포넌트를 만들지 않았다. 먼저 아래 범위로 시작하기로 했다.
 
@@ -229,7 +287,7 @@ Button과 TextField를 먼저 고른 이유는 작은 범위에서 variant, size
 - Registry로 설치한 파일과 의존성이 올바른 위치에 생기는가
 - 프로젝트가 수정한 뒤에도 접근성과 토큰 규칙이 유지되는가
 
-## [sort1] 9. 언제 이 결정을 다시 검토할 것인가
+## [sort1] 10. 언제 이 결정을 다시 검토할 것인가
 
 Registry는 현재 제품 운영 방식에 맞춘 선택이다. 다음 조건이 생기면 npm 패키지를 다시 검토할 수 있다.
 
@@ -240,7 +298,7 @@ Registry는 현재 제품 운영 방식에 맞춘 선택이다. 다음 조건이
 
 반대로 프로젝트별 실험과 수정이 계속 중요하다면 Registry 방식의 장점이 유지된다.
 
-## [sort1] 10. 마치며
+## [sort1] 11. 마치며
 
 처음에는 디자인 시스템을 만들면 npm 패키지부터 배포해야 한다고 생각했다. 하지만 우리에게 더 중요한 질문은 패키지 형식이 아니라 컴포넌트의 소유권이었다.
 
@@ -257,3 +315,5 @@ Registry는 현재 제품 운영 방식에 맞춘 선택이다. 다음 조건이
 - [shadcn/ui Registry 시작 방법](https://ui.shadcn.com/docs/registry/getting-started)
 - [Radix Primitives의 접근성 원칙](https://www.radix-ui.com/primitives/docs/overview/accessibility)
 - [Storybook 공식 문서](https://storybook.js.org/docs)
+- [Tokens Studio의 GitHub Sync Provider 설정](https://docs.tokens.studio/token-storage/remote/sync-git-github)
+- [Tokens Studio의 Push와 Pull 동작](https://docs.tokens.studio/token-storage/remote-push-pull-changes)
