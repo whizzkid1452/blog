@@ -1,11 +1,16 @@
 ---
-title: 'Electron에서는 공유 데이터를 어디에 둬야할까?'
+title: '[Part 2.] Electron에서는 공유 데이터를 어디에 둬야 할까?'
 description: '여러 Renderer가 가진 오래된 상태가 최신 SRT 자막을 덮어쓴 원인을 추적하고, Main Process의 ProjectSession을 공유 데이터의 SSOT로 재설계한 과정을 정리합니다.'
 date: '2026-07-15'
 publishedAt: '2026-07-15T09:00:00+09:00'
 tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
+series:
+  name: 'Electron 멀티 윈도우 공유 데이터'
+  order: 2
 draft: false
 ---
+
+이 글은 멀티 윈도우 공유 데이터의 원본을 Main Process에 둔 **판단 근거와 대안 비교**에 집중합니다. `ProjectSession`, IPC, Renderer Cache, 자동 저장을 실제로 연결하는 과정은 [[Part 1.] Electron 멀티 윈도우 공유 데이터 동기화 구현하기](/posts/electron-multi-window-shared-data-ssot)에서 단계별로 다룹니다.
 
 ## [sort1] 1. 자동 저장은 성공했는데 자막은 왜 사라졌을까
 
