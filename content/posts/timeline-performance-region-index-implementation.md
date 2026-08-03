@@ -14,7 +14,7 @@ visibility: public
 1. 화면 범위가 바뀔 때마다 모든 Region을 순회한다.
 2. Canvas를 다시 그리기 위한 값이 TrackRow의 React prop까지 바꾼다.
 
-왜 이 두 경로를 세로 Track 가상화보다 먼저 바꿨는지는 [1,518개 Region 타임라인에서 왜 조회와 갱신 경로부터 바꿨을까?](/posts/timeline-performance-region-index-decision)에서 설명했다.
+왜 이 두 경로를 세로 Track 가상화보다 먼저 바꿨는지는 [1,518개 Region 타임라인 최적화 우선순위](/posts/timeline-performance-region-index-decision)에서 설명했다.
 
 여기서는 다음 결과를 만든다.
 
