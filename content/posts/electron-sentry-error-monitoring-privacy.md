@@ -60,6 +60,12 @@ Sentry는 오류가 발생한 코드 위치와 실행 환경을 수집하고, �
 
 [Sentry의 Logging Best Practices](https://blog.sentry.io/logging-best-practices/)도 Token, API Key, 전체 요청·응답 대신 문제 해결에 필요한 비민감 필드를 선택적으로 기록할 것을 권합니다.
 
+클라이언트의 이벤트 정제와 별도로 Sentry 프로젝트에서도 Server-side Data Scrubbing, Default Scrubbers, IP 주소 저장 방지를 활성화했습니다. 서버 설정은 `beforeSend`를 대체하지 않고, 전송된 이벤트를 한 번 더 정제하는 방어선으로 사용했습니다.
+
+![Sentry 프로젝트에서 Server-side Data Scrubbing과 IP 주소 저장 방지를 활성화한 설정 화면](/images/electron-sentry-error-monitoring-privacy/02-sentry-server-privacy-settings.png)
+
+_클라이언트 허용 목록과 Sentry 서버의 Data Scrubbing을 함께 적용했습니다._
+
 따라서 이번 작업에서는 두 문제를 분리했습니다.
 
 1. 오류를 분석할 수 있는가
@@ -261,6 +267,10 @@ React의 `componentStack`에는 오류를 던진 컴포넌트와 부모 컴포�
 
 다만 `componentStack`에도 로컬 경로가 포함될 수 있었습니다. 이 프로젝트에서는 경로를 `[redacted-path]`로 치환한 뒤 Context에 저장했습니다.
 
+![Sentry React Context에서 로컬 경로가 redacted-path로 치환된 Component Stack](/images/electron-sentry-error-monitoring-privacy/05-react-component-stack.png)
+
+_Component Stack은 유지하되 로컬 파일 경로는 `[redacted-path]`로 치환했습니다._
+
 편집 화면에는 `studio`, 관리 화면에는 `admin`이라는 `feature` Tag를 전달했습니다.
 
 ```text
@@ -268,6 +278,10 @@ React의 `componentStack`에는 오류를 던진 컴포넌트와 부모 컴포�
 ├─ feature=studio
 └─ feature=admin
 ```
+
+![Sentry React 오류 이벤트에 process, window_role, feature, error_source Tag가 기록된 화면](/images/electron-sentry-error-monitoring-privacy/04-react-error-tags.png)
+
+_실행 Process와 화면 역할, 기능 영역, 오류 출처를 Tag로 분류했습니다._
 
 이제 같은 종류의 렌더링 오류도 어느 기능 영역에서 발생했는지 나눠서 검색할 수 있습니다.
 
@@ -308,11 +322,19 @@ Query 실행
       └─ 실패: result=failure
 ```
 
+![자동 재시도까지 실패한 Query 오류가 Sentry Issue로 수집된 화면](/images/electron-sentry-error-monitoring-privacy/06-query-error-event.png)
+
+_자동 재시도까지 실패해 오류 상태가 된 Query를 Sentry Event로 수집했습니다._
+
 따라서 개별 자동 재시도마다 오류 이벤트를 남기는 구조는 아닙니다.
 
 오류 상태가 된 Query와 이후 같은 `queryHash`로 실행된 결과를 연결했습니다. 이후 실행은 사용자의 다시 시도나 별도 Refetch로 발생할 수 있습니다.
 
 `original_event_id`는 애플리케이션에서 추가한 상관관계 필드입니다. Sentry Trace의 부모·자식 관계를 만드는 값은 아닙니다.
+
+![같은 Query가 이후 실행에서 성공해 Recovery Event로 수집된 화면](/images/electron-sentry-error-monitoring-privacy/08-query-recovery-event.png)
+
+_오류가 발생했던 Query의 이후 실행 결과를 별도 Recovery Event로 기록했습니다._
 
 ### [sort2] 6-2. Query와 HTTP 정보에서 동적 값을 제거했다
 
@@ -333,6 +355,10 @@ HTTP Method와 서비스 분류, HTTP 상태는 남겼습니다. 반면 Header, 
 | `service`       | Body          |
 | `path_template` | 실제 URL      |
 | `http_status`   | 프로젝트 ID   |
+
+![Sentry HTTP Context에 method, service, path_template만 남은 화면](/images/electron-sentry-error-monitoring-privacy/07-http-context.png)
+
+_실제 프로젝트 ID 대신 정규화한 `path_template`과 요청 분류 정보만 남겼습니다._
 
 요청을 분류하는 정보는 남기고 실제 식별자와 요청 내용은 전송하지 않는 기준이었습니다.
 
