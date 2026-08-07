@@ -1,20 +1,20 @@
 ---
-title: 'Region 시간 인덱스와 Canvas 갱신 신호 구현하기'
-description: '타임라인의 선형 Region 조회를 시간 인덱스로 바꾸고, 스크롤에 따른 Canvas 갱신을 React 렌더링에서 분리하는 구현과 테스트를 단계별로 설명합니다.'
+title: '이진 탐색 기반 Region 시간 인덱스와 rAF Signal 구현하기'
+description: 'Viewport 내 Region만 조회하는 시간 인덱스와 React 실행에서 Canvas draw를 분리하는 rAF 기반 Signal 구독 패턴을 단계별로 구현합니다.'
 date: '2026-07-24'
 tags: ['react', 'performance', 'timeline', 'canvas', 'typescript']
 draft: false
 visibility: public
 ---
 
-## [sort1] 1. 들어가며
+## [sort1] 1. 구현 목표와 범위
 
-이 글은 1,518개 Region 타임라인에서 확인한 두 반복 경로를 구현 수준에서 다룬다.
+이 글은 타임라인 스크롤 경로의 두 작업을 분리해 구현한다.
 
 1. 화면 범위가 바뀔 때마다 모든 Region을 순회한다.
 2. Canvas를 다시 그리기 위한 값이 TrackRow의 React prop까지 바꾼다.
 
-왜 이 두 경로를 세로 Track 가상화보다 먼저 바꿨는지는 [1,518개 Region 타임라인 최적화 우선순위](/posts/timeline-performance-region-index-decision)에서 설명했다.
+왜 이진 탐색 기반 시간 인덱스와 rAF 기반 Signal 구독 패턴을 선택했는지는 [1,518개 Region 타임라인: 두 가지 최적화 적용 후 Long Task 73.9% 감소](/posts/timeline-performance-region-index-decision)에서 설명했다.
 
 여기서는 다음 결과를 만든다.
 
@@ -25,10 +25,10 @@ Region 목록 변경
 가로 스크롤
 → 시간 인덱스에서 후보 조회
 → 같은 frame의 Canvas 갱신 요청을 한 번으로 합침
-→ React 렌더링을 거치지 않고 Canvas invalidation
+→ TrackRow를 다시 실행하지 않고 Canvas draw 함수 호출
 ```
 
-예제는 핵심 메커니즘을 독립적으로 실행할 수 있도록 프로젝트 내부 이름과 부가 로직을 제거해 재구성했다. 실제 제품 코드의 전체 복사본은 아니다.
+예제는 핵심 메커니즘을 독립적으로 실행할 수 있도록 프로젝트 내부 이름과 부가 로직을 제거해 재구성했다. 따라서 실제 제품 코드의 전체 복사본은 아니다.
 
 ## [sort1] 2. 준비 사항과 불변 조건
 
@@ -38,6 +38,17 @@ Region 목록 변경
 - React 함수 컴포넌트
 - Vitest 또는 Jest와 호환되는 테스트 환경
 - Region의 `start`와 `end`가 같은 시간 단위를 사용
+
+예제 코드는 다음 파일로 나눈다.
+
+```text
+visible-region-index.ts
+find-visible-regions.test.ts
+visible-region-index.test.ts
+scroll-frame-signal.ts
+scroll-frame-signal.test.ts
+timeline.tsx
+```
 
 Region 모델은 다음과 같다.
 
@@ -83,6 +94,7 @@ export function findVisibleRegions(regions: TimelineRegion[], viewport: TimeRang
 
 ```ts
 import { describe, expect, it } from 'vitest';
+import { findVisibleRegions } from './visible-region-index';
 
 describe('findVisibleRegions', () => {
   it('화면 경계와 맞닿은 Region을 포함한다', () => {
@@ -259,7 +271,7 @@ export function queryVisibleRegions(index: VisibleRegionIndex, viewport: TimeRan
 결과 순서 복원: O(V log V)
 ```
 
-`C`는 탐색으로 좁힌 후보 수, `V`는 실제 반환 수다. 이 구조가 유리하려면 Region 목록 변경보다 화면 범위 조회가 충분히 자주 발생해야 한다.
+`C`는 탐색으로 좁힌 후보 수, `V`는 실제 반환 수다. 이 구조가 유리하려면 Region 목록 변경보다 화면 범위 조회가 충분히 자주 발생해야 한다. Region을 한 건씩 자주 삽입하거나 삭제해야 한다면 동적 interval tree 같은 자료구조를 다시 비교해야 한다.
 
 ## [sort1] 6. 긴 Region과 경계 조건을 테스트했다
 
@@ -267,6 +279,7 @@ export function queryVisibleRegions(index: VisibleRegionIndex, viewport: TimeRan
 
 ```ts
 import { describe, expect, it } from 'vitest';
+import { createVisibleRegionIndex, queryVisibleRegions } from './visible-region-index';
 
 describe('queryVisibleRegions', () => {
   it('화면보다 먼저 시작한 긴 Region을 반환한다', () => {
@@ -318,12 +331,18 @@ describe('queryVisibleRegions', () => {
 
 `NaN`과 무한대 허용 여부는 제품 정책이므로 이 예제에서 임의로 결정하지 않았다.
 
-## [sort1] 7. Region 목록이 바뀔 때만 인덱스를 다시 만들었다
+## [sort1] 7. Region 배열 참조가 바뀔 때 인덱스를 다시 만들었다
 
-React에서는 Region 배열이 바뀔 때 인덱스를 만들고, 스크롤 중에는 같은 인덱스를 조회한다.
+React에서는 `regions` 배열 참조가 바뀔 때 인덱스를 만들고, 스크롤 중에는 같은 인덱스를 조회한다.
 
 ```tsx
 import { useMemo } from 'react';
+import {
+  createVisibleRegionIndex,
+  queryVisibleRegions,
+  type TimelineRegion,
+  type TimeRange,
+} from './visible-region-index';
 
 interface TimelineRegionsProps {
   regions: TimelineRegion[];
@@ -335,14 +354,18 @@ export function TimelineRegions({ regions, viewport }: TimelineRegionsProps) {
     return createVisibleRegionIndex(regions);
   }, [regions]);
 
+  const { start: viewportStart, end: viewportEnd } = viewport;
   const visibleRegions = useMemo(() => {
-    return queryVisibleRegions(visibleRegionIndex, viewport);
-  }, [visibleRegionIndex, viewport]);
+    return queryVisibleRegions(visibleRegionIndex, {
+      start: viewportStart,
+      end: viewportEnd,
+    });
+  }, [visibleRegionIndex, viewportEnd, viewportStart]);
 
   return (
     <>
       {visibleRegions.map(region => (
-        <Region key={region.id} region={region} />
+        <div key={region.id}>{region.id}</div>
       ))}
     </>
   );
@@ -355,11 +378,11 @@ export function TimelineRegions({ regions, viewport }: TimelineRegionsProps) {
 
 기존 배열이나 Region 객체를 직접 변경하면 `regions` 참조가 유지돼 인덱스가 재생성되지 않을 수 있다. 이 구현에서는 불변 업데이트가 인덱스 정합성의 필요 조건이다.
 
-Viewport 객체도 매 렌더마다 새로 만드는 경우 `useMemo`의 계산 생략 효과가 사라질 수 있다. 이 경우 `viewport.start`와 `viewport.end`를 의존성으로 사용하거나 상위에서 참조를 안정화한다.
+화면 범위 조회는 `viewport` 객체 참조가 아니라 `viewportStart`와 `viewportEnd`를 의존성으로 사용한다. 상위 컴포넌트가 같은 범위의 객체를 다시 만들어도 조회를 반복하지 않기 위해서다.
 
-## [sort1] 8. Canvas 갱신을 위한 작은 신호 객체를 만들었다
+## [sort1] 8. Canvas 갱신 요청을 전달하는 신호 객체를 만들었다
 
-### [sort2] 8-1. 신호는 상태가 아니라 알림을 전달한다
+### [sort2] 8-1. 신호는 상태 대신 갱신 요청을 전달한다
 
 스크롤 중 TrackRow에 필요한 것은 새로운 React UI 상태가 아니라 “현재 위치로 Canvas를 다시 그려라”라는 알림이었다.
 
@@ -395,6 +418,7 @@ export function createScrollFrameSignal(): ScrollFrameSignal {
 
 ```ts
 import { describe, expect, it, vi } from 'vitest';
+import { createScrollFrameSignal } from './scroll-frame-signal';
 
 describe('createScrollFrameSignal', () => {
   it('구독 중인 listener에만 알림을 전달한다', () => {
@@ -411,9 +435,9 @@ describe('createScrollFrameSignal', () => {
 });
 ```
 
-### [sort2] 8-2. 같은 frame의 요청을 한 번으로 합친다
+### [sort2] 8-2. 같은 frame의 갱신 요청을 한 번으로 합친다
 
-wheel 이벤트가 짧은 시간에 여러 번 들어와도 이미 `requestAnimationFrame` callback을 예약했다면 추가 예약을 만들지 않는다.
+wheel 이벤트가 짧은 시간에 여러 번 들어와도 이미 `requestAnimationFrame` 콜백을 예약했다면 추가 예약을 만들지 않는다.
 
 ```tsx
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -422,7 +446,7 @@ export function useScrollFrameSignal() {
   const [signal] = useState(createScrollFrameSignal);
   const frameRequestIdRef = useRef<number | null>(null);
 
-  const requestCanvasInvalidation = useCallback(() => {
+  const requestCanvasUpdate = useCallback(() => {
     if (frameRequestIdRef.current !== null) {
       return;
     }
@@ -445,42 +469,29 @@ export function useScrollFrameSignal() {
 
   return {
     signal,
-    requestCanvasInvalidation,
+    requestCanvasUpdate,
   };
 }
 ```
 
-예약 여부는 `0` 같은 숫자의 truthy 여부가 아니라 `null`과 비교한다. 컴포넌트가 unmount되면 예약된 callback도 취소한다.
+예약 여부는 `0` 같은 숫자의 truthy 여부가 아니라 `null`과 비교한다. 컴포넌트가 unmount되면 예약된 콜백도 취소한다.
 
-이 코드는 스크롤 이벤트 수를 줄이지 않는다. 같은 frame 안에서 발생한 Canvas invalidation 예약만 한 번으로 합친다.
+이 코드는 스크롤 이벤트 수를 줄이지 않는다. 같은 frame 안에서 발생한 Canvas 갱신 예약만 한 번으로 합친다. 신호를 받은 모든 TrackRow의 Canvas draw 함수는 계속 호출된다.
 
-## [sort1] 9. TrackRow는 최신 draw 함수를 참조해 Canvas만 갱신한다
+## [sort1] 9. TrackRow는 최신 draw 함수를 참조해 Canvas를 갱신한다
 
-부모는 참조가 유지되는 `signal`을 TrackRow에 전달한다.
-
-```tsx
-const { signal, requestCanvasInvalidation } = useScrollFrameSignal();
-
-return (
-  <TimelineViewport onScroll={requestCanvasInvalidation}>
-    {tracks.map(track => (
-      <TrackRow key={track.id} track={track} scrollFrameSignal={signal} />
-    ))}
-  </TimelineViewport>
-);
-```
-
-TrackRow는 신호를 구독하고 Canvas draw 함수만 호출한다.
+부모는 참조가 유지되는 `signal`을 TrackRow에 전달한다. TrackRow는 신호를 구독하고 Canvas draw 함수만 호출한다.
 
 ```tsx
-import { memo, useEffect, useLayoutEffect, useRef } from 'react';
+import { memo, type UIEvent, useCallback, useEffect, useLayoutEffect, useRef } from 'react';
+import { type ScrollFrameSignal, useScrollFrameSignal } from './scroll-frame-signal';
 
-interface UseCanvasInvalidationOptions {
+interface UseCanvasUpdateOptions {
   signal: ScrollFrameSignal;
   drawCanvas: () => void;
 }
 
-function useCanvasInvalidation({ signal, drawCanvas }: UseCanvasInvalidationOptions): void {
+function useCanvasUpdate({ signal, drawCanvas }: UseCanvasUpdateOptions): void {
   const drawCanvasRef = useRef(drawCanvas);
 
   useLayoutEffect(() => {
@@ -494,22 +505,72 @@ function useCanvasInvalidation({ signal, drawCanvas }: UseCanvasInvalidationOpti
   }, [signal]);
 }
 
+interface TimelineTrack {
+  id: string;
+}
+
+interface LatestScrollPosition {
+  current: number;
+}
+
 interface TrackRowProps {
   track: TimelineTrack;
   scrollFrameSignal: ScrollFrameSignal;
+  scrollLeftRef: LatestScrollPosition;
 }
 
-export const TrackRow = memo(function TrackRow({ track, scrollFrameSignal }: TrackRowProps) {
-  const drawCanvas = useTrackCanvasDraw(track);
+export const TrackRow = memo(function TrackRow({ track, scrollFrameSignal, scrollLeftRef }: TrackRowProps) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const drawCanvas = useCallback(() => {
+    const canvas = canvasRef.current;
+    const context = canvas?.getContext('2d');
 
-  useCanvasInvalidation({
+    if (!canvas || !context) {
+      return;
+    }
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillText(`${track.id}: ${scrollLeftRef.current}px`, 8, 16);
+  }, [scrollLeftRef, track.id]);
+
+  useLayoutEffect(() => {
+    drawCanvas();
+  }, [drawCanvas]);
+
+  useCanvasUpdate({
     signal: scrollFrameSignal,
     drawCanvas,
   });
 
-  return <canvas>{/* 기존 Canvas 접근성 대체 콘텐츠 */}</canvas>;
+  return <canvas ref={canvasRef} width={320} height={40} aria-label={`${track.id} 타임라인`} />;
 });
+
+interface TimelineProps {
+  tracks: TimelineTrack[];
+}
+
+export function Timeline({ tracks }: TimelineProps) {
+  const { signal, requestCanvasUpdate } = useScrollFrameSignal();
+  const scrollLeftRef = useRef(0);
+  const handleScroll = useCallback(
+    (event: UIEvent<HTMLDivElement>) => {
+      scrollLeftRef.current = event.currentTarget.scrollLeft;
+      requestCanvasUpdate();
+    },
+    [requestCanvasUpdate]
+  );
+
+  return (
+    <div onScroll={handleScroll}>
+      {tracks.map(track => (
+        <TrackRow key={track.id} track={track} scrollFrameSignal={signal} scrollLeftRef={scrollLeftRef} />
+      ))}
+    </div>
+  );
+}
 ```
+
+`handleScroll`은 최신 가로 위치를 `scrollLeftRef`에 기록한 뒤 Canvas 갱신을 요청한다. React state를 바꾸지 않으므로 이 경로만으로는 부모와 TrackRow가 다시 실행되지 않는다.
 
 신호 구독 effect에 `drawCanvas`를 직접 의존시키지 않은 이유는 draw 함수가 바뀔 때마다 구독을 해제하고 다시 등록하는 일을 피하기 위해서다. 대신 ref가 최신 함수를 가리키게 한다.
 
@@ -520,33 +581,28 @@ export const TrackRow = memo(function TrackRow({ track, scrollFrameSignal }: Tra
 - draw 함수가 사용하는 scroll 위치와 Canvas 참조가 최신 값이어야 한다.
 - Canvas 갱신으로 React state를 다시 바꾸는 순환 경로가 없어야 한다.
 
-React의 [`memo`](https://react.dev/reference/react/memo)는 props가 이전과 같을 때 컴포넌트 렌더링을 건너뛸 수 있게 한다. 다만 `memo`는 보장된 동작 변경이 아니라 성능 최적화다. 다른 prop이나 context가 바뀌면 TrackRow는 다시 실행된다.
+React의 [`memo`](https://react.dev/reference/react/memo)는 props가 이전과 같을 때 컴포넌트 재렌더링을 건너뛸 수 있게 한다. 다만 `memo`는 보장된 동작 변경이 아니라 성능 최적화다. 다른 prop이나 context가 바뀌면 TrackRow는 다시 실행된다.
 
-## [sort1] 10. React 실행과 Canvas invalidation을 따로 검증했다
+## [sort1] 10. 구현 결과를 세 단계로 검증했다
 
-신호 분리 테스트는 두 결과를 구분해야 한다.
+각 검증은 확인할 수 있는 범위가 다르다.
 
-```text
-확인할 수 있는 것
-→ 스크롤 신호만으로 TrackRow의 React 실행이 반복되지 않는다.
-→ 각 신호가 마운트된 Canvas의 invalidation을 호출한다.
+| 검증 단계            | 확인할 내용                                                 | 이 단계만으로 확인할 수 없는 내용            |
+| -------------------- | ----------------------------------------------------------- | -------------------------------------------- |
+| 알고리즘 단위 테스트 | 긴 Region, 경계 포함, 입력 순서, 잘못된 범위 처리           | 사용자 입력 반응 시간                        |
+| React 통합 테스트    | 스크롤 신호와 TrackRow 실행 경로의 분리                     | Canvas draw 시간과 앱 전체 React commit      |
+| 실제 앱 비교 측정    | 고정 fixture에서 Long Task, 입력, CPU, React 지표의 전후 값 | 시간 인덱스와 Canvas 신호 각각의 독립 기여도 |
 
-확인할 수 없는 것
-→ Canvas draw 시간이 줄었다.
-→ 전체 React commit 수가 줄었다.
-→ 실제 FPS가 향상됐다.
-```
-
-프로젝트 테스트에서는 15개 TrackRow에 240회 신호를 보냈다.
+프로젝트의 React 통합 테스트에서는 15개 TrackRow에 240회 신호를 보냈다. 해당 테스트 구성의 예상값은 다음과 같았다.
 
 ```text
-예상 TrackRow 실행: 최초 15회
-예상 Canvas invalidation: 15 × 240 = 3,600회
+TrackRow 실행: 최초 15회
+Canvas 갱신 함수 호출: 15 × 240 = 3,600회
 ```
 
-이 테스트는 TrackRow의 React 실행 경로가 스크롤 알림에서 분리됐는지 검증한다. Canvas draw 성능은 실제 앱 측정이나 별도 draw profiler가 필요하다.
+이 결과는 스크롤 알림이 TrackRow의 React 실행을 반복하지 않으면서 Canvas 갱신 함수에는 전달되는지 확인한다. Canvas draw 성능은 실제 앱 측정이나 별도 draw profiler로 확인해야 한다.
 
-같은 frame의 요청 병합은 `requestAnimationFrame`을 stub으로 주입하면 더 작게 테스트할 수 있다. production 구현에서는 브라우저 전역 함수를 직접 호출하는 대신 다음 의존성을 객체로 묶어 주입할 수 있다.
+같은 frame의 요청 병합은 `requestAnimationFrame`을 stub으로 주입해 단위 테스트할 수 있다. 브라우저 전역 함수와 테스트를 분리해야 한다면 다음 의존성을 객체로 주입한다.
 
 ```ts
 interface AnimationFrameScheduler {
@@ -555,85 +611,18 @@ interface AnimationFrameScheduler {
 }
 ```
 
-이 추상화는 필수 조건이 아니다. scheduler 동작을 단위 테스트해야 할 때 선택할 수 있는 구조다.
+이 추상화는 scheduler 동작을 독립적으로 테스트해야 할 때만 필요하다.
 
-## [sort1] 11. 실제 앱에서는 비교 측정과 원인 분석을 분리했다
+실제 앱에서는 단위 테스트와 별도로 고정 fixture와 같은 스크롤 입력을 사용해 변경 전후를 비교해야 한다. 측정 조건, 결과, 결론의 범위는 [판단 과정 글](/posts/timeline-performance-region-index-decision)에 정리했다.
 
-구현이 맞아도 사용자 증상이 개선됐다는 뜻은 아니다. 실제 Electron 앱에서는 동일한 fixture와 스크롤 입력으로 변경 전후를 비교했다.
+## [sort1] 11. 마치며
 
-```text
-Track: 18개
-Region: 1,518개
-측정 시간: 10초
-wheel 입력: 303회
-입력 간격: 33ms
-반복 횟수: 변경 전·후 각각 3회
-대표값: 3회 중앙값
-```
+Region 시간 인덱스는 목록 변경 시 정렬과 보조 데이터 생성을 수행하고, 스크롤 중에는 화면과 겹칠 후보만 검사한다. Canvas 갱신 신호는 스크롤 알림을 React prop 변경과 분리하고 최신 draw 함수를 호출한다.
 
-변경 전후 비교에서는 Trace를 끄고, call stack 분석은 Trace를 켠 별도 실행에서 수행했다. 측정 도구가 실행 중인 앱에 추가 작업을 만들었기 때문이다.
+두 구현 모두 비용을 없애지 않는다. 시간 인덱스는 재생성 비용과 추가 메모리를 사용한다. 신호 객체는 구독 등록·해제와 최신 draw 함수 관리가 필요하다.
 
-결과는 다음과 같았다.
-
-| 지표                  | 변경 전 | 변경 후 |       변화 |
-| --------------------- | ------: | ------: | ---------: |
-| Long Task 횟수        |    74회 |    19회 | 74.3% 감소 |
-| Long Task 누적 시간   | 4,418ms | 1,154ms | 73.9% 감소 |
-| DOM wheel 입력 수신율 |   83.8% |   91.7% | 7.9%p 향상 |
-
-반면 메인 스레드 CPU 비율과 앱 전체 React commit 수는 감소하지 않았다. 따라서 이 구현으로 확인한 결과는 **전체 작업량 감소가 아니라 긴 메인 스레드 점유 감소**다.
-
-두 변경 중 어느 하나가 73.9% 감소를 단독으로 만들었다고도 결론 내릴 수 없다. 두 변경을 함께 적용한 전후 비교이기 때문이다. 각 변경의 기여도를 구분하려면 인덱스만 적용한 상태와 신호 분리만 적용한 상태를 각각 측정해야 한다.
-
-## [sort1] 12. 최종 확인 목록
-
-구현을 적용한 뒤 다음 항목을 확인한다.
-
-- [ ] 긴 Region이 화면보다 먼저 시작해도 조회되는가
-- [ ] 화면 경계와 맞닿은 Region의 포함 규칙이 유지되는가
-- [ ] 조회 결과의 렌더링 순서가 바뀌지 않는가
-- [ ] Region 수정 시 배열 참조와 인덱스가 함께 갱신되는가
-- [ ] TrackRow unmount 시 신호 구독이 해제되는가
-- [ ] 예약된 animation frame이 unmount 시 취소되는가
-- [ ] 구독 callback이 최신 Canvas draw 함수를 호출하는가
-- [ ] 스크롤 신호가 React state 변경으로 되돌아오는 순환 경로가 없는가
-- [ ] 단위 테스트와 실제 앱 측정을 구분했는가
-- [ ] Long Task 외에 CPU와 React 지표도 함께 기록했는가
-
-## [sort1] 13. 자주 묻는 질문
-
-### [sort2] 13-1. 시간 인덱스가 항상 선형 조회보다 빠른가?
-
-아니다. Region 수가 적거나 목록이 스크롤보다 자주 바뀌면 인덱스 생성 비용이 더 클 수 있다. 데이터 규모와 조회·변경 빈도를 측정해 선택해야 한다.
-
-### [sort2] 13-2. 왜 interval tree를 사용하지 않았는가?
-
-현재 요구사항은 Region 목록이 바뀔 때 인덱스를 다시 만들고, 스크롤 중 읽기 조회를 반복하는 구조였다. 정렬 배열과 누적 최대 종료 시간은 이 조건에서 구현과 테스트 범위가 작았다. Region을 한 건씩 매우 자주 삽입·삭제해야 한다면 동적 interval tree 같은 다른 자료구조를 다시 비교해야 한다.
-
-### [sort2] 13-3. 신호 객체를 쓰면 React 렌더링이 모두 사라지는가?
-
-아니다. 스크롤 신호 때문에 발생하던 TrackRow 실행 경로만 분리한다. 다른 prop, state, context가 바뀌면 React 렌더링은 그대로 발생한다.
-
-### [sort2] 13-4. 모든 Track Canvas는 계속 다시 그리는가?
-
-그렇다. 이 구현은 모든 마운트된 TrackRow에 Canvas invalidation을 전달한다. 화면 밖 Canvas draw가 주요 비용으로 측정되면 invalidation 차단이나 세로 Track 가상화를 추가로 검토해야 한다.
-
-## [sort1] 14. 마치며
-
-이번 구현의 핵심은 더 복잡한 자료구조나 새로운 렌더링 프레임워크가 아니었다.
-
-Region 조회에서는 목록 변경과 스크롤 조회의 빈도가 다르다는 점을 이용해 정렬 비용을 변경 시점으로 옮겼다. Canvas 갱신에서는 React UI 계산과 명령형 draw 요청이 같은 경로일 필요가 없다는 점을 이용했다.
-
-두 변경 모두 비용을 제거하지는 않는다. 시간 인덱스는 메모리와 재생성 비용을 만들고, 신호 객체는 구독 lifecycle을 만든다. 대신 현재 데이터에서 자주 반복되는 경로의 비용을 줄였다.
-
-> 성능 구현은 비용을 없애는 일이 아니라, 데이터 규모와 실행 빈도에 맞는 시점과 경로로 비용을 옮기는 일에 가깝다.
-
-선택의 근거와 대안 비교는 [판단 과정 글](/posts/timeline-performance-region-index-decision)에서 이어서 확인할 수 있다.
+> 성능 구현은 비용을 없애는 일보다 데이터 규모와 실행 빈도에 맞는 시점과 경로로 비용을 옮기는 일에 가깝다.
 
 ## 참고
 
 - [React 공식 문서: `memo`](https://react.dev/reference/react/memo)
-- [W3C Long Tasks API](https://www.w3.org/TR/longtasks-1/)
-- [Playwright 공식 문서: `connectOverCDP`](https://playwright.dev/docs/api/class-browsertype#browser-type-connect-over-cdp)
-- [Chrome DevTools Protocol: Performance domain](https://chromedevtools.github.io/devtools-protocol/tot/Performance/)
-- [Chrome DevTools Protocol: Tracing domain](https://chromedevtools.github.io/devtools-protocol/tot/Tracing/)
