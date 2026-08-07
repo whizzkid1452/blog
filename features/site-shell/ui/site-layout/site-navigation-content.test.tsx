@@ -19,8 +19,7 @@ describe('SiteNavigationContent', () => {
     expect(markup).toContain('profile-avatar.png');
     expect(markup).toContain('>GitHub</a>');
     expect(markup).toContain('>About</a>');
-    expect(markup).toContain('href="/auth/login?next=%2Fprivate-posts"');
-    expect(markup).toContain('>Google 로그인</a>');
+    expect(markup).not.toContain('/auth/login');
     expect(markup).not.toContain('>English</a>');
     expect(markup).toContain('role="search"');
     expect(markup).toContain('>주제</h2>');

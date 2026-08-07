@@ -49,12 +49,6 @@ export function SiteNavigationContent({
           >
             About
           </a>
-          <Link
-            className={styles.navigationAnchor}
-            href={{ pathname: '/auth/login', query: { next: '/private-posts' } }}
-          >
-            Google 로그인
-          </Link>
         </div>
       </nav>
 
