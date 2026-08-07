@@ -1,5 +1,5 @@
 ---
-title: '1,518개 Region 타임라인에서 Long Task를 73.9% 줄이기까지'
+title: '대규모 타임라인에서도 부드럽게 동작하는 에디터 만들기'
 description: '이진 탐색 기반 시간 인덱스와 rAF 기반 Signal 구독으로 Region 조회와 Canvas 갱신 경로를 분리하고, 측정 결과의 한계까지 설명합니다.'
 date: '2026-07-24'
 tags: ['react', 'performance', 'timeline', 'canvas', 'architecture']
