@@ -75,7 +75,7 @@ _로컬 저장을 먼저 완료하고, 응답의 Session과 Revision이 일치�
 
 썸네일 디코딩은 UI 작업과 분리하기 위해 Web Worker와 WebCodecs로 옮기고, 현재 화면에 필요한 구간부터 처리했습니다. **첫 표시 시간은 `6.26초 → 2.82초`로 55.0% 단축됐고, Main Thread busy 비율은 `66% → 11%`로 83.3% 감소했습니다.**
 
-드래그 중에는 위치를 메모리에 보관하고 `requestAnimationFrame`마다 Overlay만 갱신한 뒤, 드래그가 끝날 때 최종 상태를 반영했습니다. **React Profiler의 `actualDuration`은 `2.87ms → 1.98ms`로 31.0% 감소했습니다.** 이 값은 React 렌더링 시간이며 Pointer 처리와 브라우저 화면 그리기를 포함한 전체 응답 시간은 아닙니다.
+드래그 중에는 위치를 메모리에 보관하고 `requestAnimationFrame`마다 Overlay만 갱신한 뒤, 드래그가 끝날 때 최종 상태를 반영했습니다. Region 11개 중 선택 Region을 120px 거리로 50단계 드래그하고 변경 전후를 각각 3회 실행했습니다. 회차별 React Profiler `actualDuration` 평균의 중앙값은 `2.87ms → 1.98ms`로 31.0% 감소했습니다. 이 값은 React 렌더링 시간이며 Pointer 처리와 브라우저 화면 그리기를 포함한 전체 응답 시간은 아닙니다.
 
 미디어 가져오기는 WebCodecs를 우선 사용하고, 지원하지 않는 형식은 FFmpeg로 처리하는 Fallback을 적용했습니다. **기본 경로의 처리 속도를 유지하면서 브라우저별 형식 차이를 보완했습니다.**
 
@@ -101,7 +101,7 @@ _Thumbnail Decode, Drag 피드백, 미디어 가져오기는 서로 다른 처�
 
 ![676개 오디오 반영에서 1,518개 Region 편집까지 이어지는 처리 흐름](/images/anai-project-portfolio/editor-audio-region-performance-flow.svg)
 
-_오디오 반영은 실제 프로젝트의 676개 오디오를 기준으로 측정했고, 타임라인 편집은 18개 Track과 1,518개 Region을 10초간 스크롤해 변경 전후를 각각 3회 실행한 중앙값으로 비교했습니다._
+_오디오 반영은 실제 RR6 프로젝트의 676개 오디오를 한 번에 타임라인에 추가하는 구간을 측정했습니다. 타임라인 편집은 18개 Track과 1,518개 Region에서 33ms 간격으로 480px wheel 입력을 303회 전달해 10초간 스크롤하고, 변경 전후를 각각 3회 실행한 중앙값으로 비교했습니다._
 
 **1. 오디오 반영 경로**
 
@@ -123,9 +123,11 @@ _오디오 반영은 실제 프로젝트의 676개 오디오를 기준으로 측
 
 **검증 결과**
 
-- **오디오 반영:** 실제 프로젝트의 676개 처리 시간 `15.58초 → 13.08초` **16.1% 단축**, Long Task 누적 `2.24초 → 0.38초` **82.8% 감소**
+- **오디오 반영:** 실제 RR6 프로젝트에서 676개 오디오의 fetch·IPC 전달·decode·waveform 생성·Track·Region 반영을 모두 완료하는 시간 `15.58초 → 13.08초` **16.1% 단축**, 같은 반영 구간의 Long Task 누적 `2.24초 → 0.38초` **82.8% 감소**
 - **처리 안정성:** 내부 반영 작업 오류 `78건 → 0건`, 최대 메모리 사용량 `2.32GB → 2.12GB` **8.4% 감소**
-- **타임라인 편집:** 18개 Track과 1,518개 Region을 10초간 스크롤하고 변경 전후를 각각 3회 실행한 중앙값에서 Long Task 누적 `4.42초 → 1.15초` **73.9% 감소**, DOM wheel 입력 수신율 `83.8% → 91.7%` **7.9%p 향상**
+- **타임라인 편집:** 18개 Track과 1,518개 Region에서 33ms 간격의 480px wheel 입력을 303회 전달해 10초간 스크롤하고, 변경 전후를 각각 3회 실행한 중앙값에서 Long Task 누적 `4.42초 → 1.15초` **73.9% 감소**, DOM wheel 입력 수신율 `83.8% → 91.7%` **7.9%p 향상(상대 9.4%)**
+
+여기서 Long Task 누적은 각 측정 구간에 Renderer Main Thread를 50ms 이상 연속 점유한 task의 실행 시간을 합한 값입니다. 오디오 수치는 676개 반영 구간, 타임라인 수치는 10초 스크롤 구간을 뜻합니다.
 
 타임라인 측정의 전체 메인 스레드 CPU 비율과 React commit 수는 줄지 않았습니다. 따라서 이번 결과는 전체 작업량 감소가 아니라, 편집을 오래 막는 Long Task의 누적 시간과 횟수를 줄인 것으로 해석했습니다.
 
@@ -166,6 +168,16 @@ Sentry에 오류 위치, 실행 환경, 화면 경로를 기록했습니다. Err
 ![Sentry 관측, 탭 단위 Error Boundary, TanStack Query 오류 복구 흐름](/images/anai-project-portfolio/editor-observability-recovery-flow.svg)
 
 _Telemetry는 재현 조건을 좁히고, 탭 단위 Boundary는 화면 장애 범위를 제한합니다._
+
+**운영 환경 검증**
+
+실제 `0.0.69` production Renderer에서 발생한 처리되지 않은 Promise rejection도 Sentry에 수집됐습니다. 개인정보 보호 전처리가 원본 오류 메시지와 사용자 정보를 제거한 뒤에도 `StaleProjectSessionError`, `getFFmpeg`, `unhandledrejection` mechanism은 유지됐습니다.
+
+이 정보를 코드와 대조해 내보내기 창의 FFmpeg 사전 로드 호출인 `void getFFmpeg()`가 rejection을 처리하지 않는 지점까지 원인 범위를 좁혔습니다. **오류 수집, 개인정보 제거, 코드 위치 확인이 운영 환경에서도 연결되는 것을 실제 이벤트로 검증했습니다.**
+
+![production 환경에서 수집된 StaleProjectSessionError와 getFFmpeg Stack Trace](/images/anai-project-portfolio/editor-sentry-production-error-capture.png)
+
+_이 화면은 오류 수정 완료가 아니라, production 오류가 진단 가능한 형태로 수집됐음을 보여줍니다._
 
 ## [sort1] 2. Kit + Tool
 
