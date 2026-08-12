@@ -8,6 +8,7 @@ series:
   name: 'Electron 멀티 윈도우 공유 데이터'
   order: 2
 draft: false
+featured: true
 ---
 
 여러 Renderer가 가진 오래된 상태가 최신 SRT 자막을 덮어쓴 원인을 추적하고, Main Process의 `ProjectSession`을 공유 데이터의 단일 진실 공급원(Single Source of Truth, SSOT)으로 재설계한 과정을 정리합니다.

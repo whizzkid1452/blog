@@ -14,7 +14,7 @@ export function SiteLayoutContainer({ children, locale }: SiteLayoutContainerPro
   const tags = postIndex.getTags();
 
   return (
-    <SiteLayout locale={locale} tags={tags} recentPosts={posts}>
+    <SiteLayout locale={locale} tags={tags} posts={posts}>
       {children}
     </SiteLayout>
   );

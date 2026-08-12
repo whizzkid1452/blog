@@ -2,6 +2,7 @@
 title: '[Part 3.] Automation은 점을 연결하는 기능이 아니었다'
 description: 'DAW Automation에서 정렬된 Point, 곡선 보간, Write 상태, Guard Point와 Point Thinning을 하나의 모델로 구성한 과정을 설명합니다.'
 date: '2026-08-03'
+publishedAt: '2026-08-03T12:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'automation', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'

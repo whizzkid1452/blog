@@ -1,4 +1,3 @@
-import type { PostSummary } from '@/features/posts/model/post';
 import type { Locale } from '@/shared/i18n/i18n';
 import { createLocalizedPath, getUiMessages } from '@/shared/i18n/i18n';
 import Link from 'next/link';
@@ -12,16 +11,9 @@ interface SiteNavigationContentProps {
   githubProfileUrl: string;
   resumeUrl: string;
   tags: string[];
-  recentPosts: PostSummary[];
 }
 
-export function SiteNavigationContent({
-  locale,
-  githubProfileUrl,
-  resumeUrl,
-  tags,
-  recentPosts,
-}: SiteNavigationContentProps) {
+export function SiteNavigationContent({ locale, githubProfileUrl, resumeUrl, tags }: SiteNavigationContentProps) {
   const messages = getUiMessages(locale);
   return (
     <>
@@ -31,6 +23,12 @@ export function SiteNavigationContent({
         <h2 className={styles.sidebarTitle}>{messages.blogNavigationLabel}</h2>
 
         <div className={styles.sidebarUtilityLinks}>
+          <Link className={styles.navigationAnchor} href={createLocalizedPath(locale, '/posts')}>
+            {messages.posts}
+          </Link>
+          <Link className={styles.navigationAnchor} href={createLocalizedPath(locale, '/series')}>
+            {messages.series}
+          </Link>
           <a
             className={styles.navigationAnchor}
             href={githubProfileUrl}
@@ -55,26 +53,6 @@ export function SiteNavigationContent({
       <SidebarSearchForm locale={locale} />
 
       <SidebarTopicsSection locale={locale} tags={tags} />
-
-      <section className={styles.sidebarSection}>
-        <h2 className={styles.sidebarTitle}>{messages.recent}</h2>
-        {recentPosts.length > 0 ? (
-          <ol className={styles.recentPostList}>
-            {recentPosts.map(post => (
-              <li className={styles.recentPostItem} key={post.slug}>
-                <Link className={styles.recentPostLink} href={createLocalizedPath(locale, `/posts/${post.slug}`)}>
-                  {post.title}
-                </Link>
-                <time className={styles.recentPostDate} dateTime={post.date}>
-                  {post.date}
-                </time>
-              </li>
-            ))}
-          </ol>
-        ) : (
-          <p className={styles.emptyText}>{messages.noPosts}</p>
-        )}
-      </section>
     </>
   );
 }

@@ -1,5 +1,5 @@
 ---
-title: '[Part 2.] 웹브라우저 멀티에디터 만들기 - 아키텍쳐 설계 변화'
+title: '[Part 2.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계 변화'
 description: '멀티미디어 에디터 타임라인 구현 과정에서 Facade, Session Layer, 폴더 구조를 재정의한 이유를 정리합니다.'
 date: '2026-03-26'
 publishedAt: '2026-03-26T00:42:12+09:00'
@@ -10,9 +10,9 @@ series:
 draft: false
 ---
 
-← 이전 글: [[Part 1] 웹브라우저 멀티에디터 만들기 — 아키텍처 설계](/posts/browser-multieditor-architecture-design)
+← 이전 글: [[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)
 
-이전 글 [[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍쳐 설계](/posts/browser-multieditor-architecture-design)에서는 레이어드 아키텍쳐 + 단방향 데이터 흐름에 기반한 6계층의 수평 레이어(Page > Component > Hook > Facade > Store > Service)와 비즈니스 모델 기반 수직 분할(Video, Audio, Text, Image, Timeline, Project)을 통합한 격자형 아키텍쳐를 설계하였다. 이후 타임라인 기능을 본격적으로 구현하면서, 설계를 다시 한번 크게 수정하게 되었다. 이 글은 그 과정과 결과를 정리한 것이다.
+이전 글 [[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)에서는 레이어드 아키텍처 + 단방향 데이터 흐름에 기반한 6계층의 수평 레이어(Page > Component > Hook > Facade > Store > Service)와 비즈니스 모델 기반 수직 분할(Video, Audio, Text, Image, Timeline, Project)을 통합한 격자형 아키텍처를 설계하였다. 이후 타임라인 기능을 본격적으로 구현하면서, 설계를 다시 한번 크게 수정하게 되었다. 이 글은 그 과정과 결과를 정리한 것이다.
 
 ## 1. 우선 짚고 넘어가고 싶은 것
 

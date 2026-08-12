@@ -12,9 +12,9 @@ export default function PostsPage() {
     <PostListView
       posts={posts}
       eyebrow="Archive"
-      title="Posts"
-      description="All published writing, ordered from newest to oldest."
-      emptyMessage="No posts published yet."
+      title="전체 글"
+      description="공개된 글을 최신순으로 모았습니다."
+      emptyMessage="등록된 글이 없습니다."
     />
   );
 }

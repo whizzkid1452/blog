@@ -1,5 +1,5 @@
 ---
-title: '[Part 1] 브라우저에서 멀티미디어 export하기- 문제 정의와 아키텍처 설계'
+title: '브라우저에서 멀티미디어 Export하기: 문제 정의와 아키텍처 설계'
 description: '브라우저 기반 멀티미디어 에디터에서 MP4 export를 구현하기 위해 문제를 정의하고 아키텍처를 설계한 과정을 정리합니다.'
 date: '2026-04-13'
 publishedAt: '2026-04-13T19:28:05+09:00'
@@ -7,16 +7,11 @@ tags: ['export', 'webcodecs', 'architecture', 'multimedia']
 draft: false
 ---
 
-시리즈: 브라우저에서 멀티미디어 export하기
-
-- [Part 1] 문제 정의와 아키텍처 설계 ← 현재 글
-- [Part 2] 공간적 합성과 시간적 합성 - 공간적 합성과 시간적 합성
-
 ## 들어가며
 
 회사에서 요즘 만들고 있는 Studio 페이지는 브라우저에서 동작하는 멀티미디어 에디터다. 사용자가 비디오 위에 텍스트를 올리고, 오디오를 편집하고, 이미지를 배치한 뒤 "Export" 버튼을 누르면 MP4 파일이 다운로드된다. 사용자 입장에서는 버튼 하나. 근데 그 버튼 하나 뒤에 몇 주 동안의 삽질이 있었다. 텍스트를 비디오 위에 어떻게 그릴지, 오디오 클립 여러 개를 어떻게 한 줄로 합칠지, 이걸 서버 없이 브라우저 안에서 어떻게 다 처리할지 — 생각보다 만만치 않은 문제였다. 이 글은 그 과정에서 겪은 의사결정의 흐름을 정리한 기록이다. "처음엔 이렇게 생각했는데, 이래서 안 됐고, 결국 이렇게 바꿨다"는 식의 과정 중심으로, 최종적으로 어떤 아키텍처에 도달했는지까지 이야기해보려 한다.
 
-## 1. export 아키텍쳐 시스템 설계
+## 1. Export 아키텍처 설계
 
 ### 1-1. 전혀 다른 세 가지 세계를 하나로 합쳐야 한다
 
@@ -154,11 +149,7 @@ drop-daw란? 직접 만든 오디오 DAW(Digital Audio Workstation) 엔진 라�
 
 ### 3-6. 후속 변경 - 오디오 믹스다운의 통합
 
-이 아키텍처를 운영하면서 한 가지 수정이 있었다. 초기에는 비디오 Export(`useVideoExport.ts`)에서 오디오 믹스다운을 Orchestration Layer 안에 직접 구현했었다. `OfflineAudioContext`를 생성하고, 리전을 스케줄링하는 40줄짜리 코드가 `useVideoExport.ts` 안에 있었다. 이건 위 다이어그램에서 Orchestration Layer가 Engine Layer의 책임을 침범한 거다. "오디오를 어떻게 합치는가"는 Engine의 책임인데, Orchestration이 직접 Web Audio API를 호출하고 있었다. 더 큰 문제는, 이 중복 코드가 오디오 Export 경로의 믹스다운과 달랐다는 것이다. 오디오 Export는 `WebAudioProvider.exportAudio()`를 통해 트랙 볼륨/패닝/뮤트/솔로/마스터 게인이 반영된 그래프로 렌더링하는데, 비디오 Export의 중복 코드에는 이것들이 빠져 있었다. 결과적으로 "오디오 Export와 비디오 Export의 오디오가 다르다"는 버그가 존재했다. 수정 후, 비디오 Export에서도 `backend.exportAudio()`를 호출하도록 바꿨다. 이제 두 경로 모두 동일한 함수를 공유하며, 위 다이어그램의 Engine Layer에 오디오 믹스다운이 올바르게 위치한다. Part 2의 5-6절에서 이 과정을 상세히 다룬다.
-
-다음 글에서는 3단계 합성 중 앞의 두 단계, Canvas로 프레임을 합성하고 오디오를 믹스다운하는 과정을 구체적인 코드와 함께 다뤄보겠다.
-
-다음 편: [Part 2] 공간적 합성과 시간적 합성
+이 아키텍처를 운영하면서 한 가지 수정이 있었다. 초기에는 비디오 Export(`useVideoExport.ts`)에서 오디오 믹스다운을 Orchestration Layer 안에 직접 구현했었다. `OfflineAudioContext`를 생성하고, 리전을 스케줄링하는 40줄짜리 코드가 `useVideoExport.ts` 안에 있었다. 이건 위 다이어그램에서 Orchestration Layer가 Engine Layer의 책임을 침범한 거다. "오디오를 어떻게 합치는가"는 Engine의 책임인데, Orchestration이 직접 Web Audio API를 호출하고 있었다. 더 큰 문제는, 이 중복 코드가 오디오 Export 경로의 믹스다운과 달랐다는 것이다. 오디오 Export는 `WebAudioProvider.exportAudio()`를 통해 트랙 볼륨/패닝/뮤트/솔로/마스터 게인이 반영된 그래프로 렌더링하는데, 비디오 Export의 중복 코드에는 이것들이 빠져 있었다. 결과적으로 "오디오 Export와 비디오 Export의 오디오가 다르다"는 버그가 존재했다. 수정 후, 비디오 Export에서도 `backend.exportAudio()`를 호출하도록 바꿨다. 이제 두 경로 모두 동일한 함수를 공유하며, 위 다이어그램의 Engine Layer에 오디오 믹스다운이 올바르게 위치한다.
 
 ## 참고
 

@@ -2,12 +2,14 @@
 title: '[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유'
 description: '분기와 합류가 있는 Audio Processing 의존성을 DAG로 표현하고, 위상 정렬·Cycle 탐지·병렬 Group을 계산한 구조를 설명합니다.'
 date: '2026-08-03'
+publishedAt: '2026-08-03T15:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'graph', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 6
 draft: false
 visibility: public
+featured: true
 ---
 
 EQ 다음 Compressor, 그다음 Output처럼 Audio Processing을 일렬로만 연결한다면 배열 하나로 충분하다. 실제 Mixer에는 Send, Bus, Sidechain, 여러 Track의 합류가 있다. 하나의 Processor가 여러 입력을 기다리거나, 같은 입력이 여러 경로로 나뉠 수 있다.

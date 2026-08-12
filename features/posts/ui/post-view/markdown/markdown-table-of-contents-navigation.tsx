@@ -56,19 +56,6 @@ export function MarkdownTableOfContentsNavigation({ items, locale }: MarkdownTab
 
   return (
     <>
-      <section className={styles.tableOfContentsTop}>
-        <nav aria-labelledby="markdown-table-of-contents-top-title">
-          <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-top-title">
-            {messages.tableOfContentsLabel}
-          </p>
-          <MarkdownTableOfContentsList
-            activeHeadingId={activeHeadingId}
-            items={items}
-            onClick={handleTableOfContentsClick}
-          />
-        </nav>
-      </section>
-
       <aside className={styles.tableOfContentsNavigation} ref={desktopNavigationRef}>
         <nav aria-labelledby="markdown-table-of-contents-title">
           <p className={styles.tableOfContentsTitle} id="markdown-table-of-contents-title">

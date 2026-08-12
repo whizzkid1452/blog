@@ -2,6 +2,7 @@
 title: '[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까'
 description: 'Tempo와 박자표가 바뀌는 DAW 타임라인에서 Frame·Beat·BBT 변환을 구간 누적으로 설계한 과정과 남은 검증 범위를 설명합니다.'
 date: '2026-08-03'
+publishedAt: '2026-08-03T10:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'timeline', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'

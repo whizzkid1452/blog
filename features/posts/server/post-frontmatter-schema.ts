@@ -52,6 +52,7 @@ export const postFrontmatterSchema = z
     tags: z.array(tagSchema).min(1),
     draft: z.boolean().default(false),
     visibility: postVisibilitySchema.default('public'),
+    featured: z.boolean().default(false),
     coverImage: publicPathSchema.optional(),
     coverAlt: z.string().trim().min(1).optional(),
     series: z

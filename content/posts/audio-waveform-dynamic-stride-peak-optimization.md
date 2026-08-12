@@ -7,8 +7,6 @@ tags: ['audio', 'peak', 'stride', '최적화']
 draft: false
 ---
 
-참고: stride 버전 테스트 |
-
 ## 들어가며
 
 오디오 트림 에디터 개발하면서 진짜 골치 아픈 문제를 만났다. 짧은 음원에서는 지연을 느끼지 못하다가, 컴퓨터 성능이 좋지않거나 15분 이상의 긴 길이의 오디오 파일을 불러오면 화면이 멈춘 것처럼 보이고, 사용자는 그냥 기다릴 수밖에 없었다. 파형이 그려지기까지 몇 초씩 걸리는 이 문제를 어떻게 해결했는지 공유한다.
@@ -16,8 +14,6 @@ draft: false
 ---
 
 ## 1. 문제 발견: "왜 이렇게 느리지?"
-
-[화면 녹화 중 2026-02-04 120544.mp4](https://blog.kakaocdn.net/dna/6kd38/dJMcah4mCtW/AAAAAAAAAAAAAAAAAAAAAGR1D29WNPPFtDbclQh5hviLZG6ot8TjCSelJwlNTNFI/%ED%99%94%EB%A9%B4%20%EB%85%B9%ED%99%94%20%EC%A4%91%202026-02-04%20120544.mp4?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1785509999&allow_ip=&allow_referer=&signature=7eWlNWOkA5QAcwUozsTuuGtYmTg%3D&attach=1&knm=tfile.mp4)
 
 ### 1-1. 증상
 
@@ -409,8 +405,6 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 - test 1: 20초 오디오 (step 1921, totalBars 499)
 
-![오디오 파형 로딩 지연 해결기: 동적 stride를 이용한 Peak 연산 최적화 이미지 1](https://blog.kakaocdn.net/dna/EwY7Z/dJMcabwh9qD/AAAAAAAAAAAAAAAAAAAAAC-lCSBvFyR_Apl3O5-1Ha6NQ1qZrcSOqme0dKAYKHoE/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1785509999&allow_ip=&allow_referer=&signature=RDsNpTmsOuVPxFPQZckR%2BC5o7%2BQ%3D)
-
 | 방식                  | 소요 시간   | totalIterations | 비고                            |
 | --------------------- | ----------- | --------------- | ------------------------------- |
 | **j++ (stride 1)**    | **3.76 ms** | 958,579         | 가장 느림, 모든 샘플 순회       |
@@ -419,8 +413,6 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 - test 2: 284초 오디오 (step 1920, totalBars 7,101)
 
-![오디오 파형 로딩 지연 해결기: 동적 stride를 이용한 Peak 연산 최적화 이미지 2](https://blog.kakaocdn.net/dna/p0VAR/dJMcajgKFvb/AAAAAAAAAAAAAAAAAAAAACePEN3vcQiU9nbhQJ_eYWrSUu1VR7dKC_NhsVaVM6j0/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1785509999&allow_ip=&allow_referer=&signature=9%2FghYQM%2FPvgE%2FSY0ZoKbxk%2FQSfU%3D)
-
 | 방식                  | 소요 시간    | totalIterations | 비고                                       |
 | --------------------- | ------------ | --------------- | ------------------------------------------ |
 | **j++ (stride 1)**    | **52.75 ms** | 13,633,920      | 가장 느림, 모든 샘플 순회                  |
@@ -428,8 +420,6 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 | **동적 stride**       | **1.63 ms**  | 142,020         | 이번 측정에서 가장 빠름, 바당 약 20회 유지 |
 
 - test 3: 2489초 오디오 (≈41.5분, step 1920, totalBars 62,225)
-
-![오디오 파형 로딩 지연 해결기: 동적 stride를 이용한 Peak 연산 최적화 이미지 3](https://blog.kakaocdn.net/dna/di8hV7/dJMcadHCbPM/AAAAAAAAAAAAAAAAAAAAAHy51j0wIU6aabb0pOEXFLyL1nfmrATRwA-Sbj4WSQ_j/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1785509999&allow_ip=&allow_referer=&signature=9ysyIjAUwFm6n0JlTkaopWfxy6o%3D)
 
 | 방식                  | 소요 시간     | totalIterations | 비고                            |
 | --------------------- | ------------- | --------------- | ------------------------------- |
@@ -505,8 +495,6 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 ---
 
 그래서 다시 테스트:
-
-![오디오 파형 로딩 지연 해결기: 동적 stride를 이용한 Peak 연산 최적화 이미지 4](https://blog.kakaocdn.net/dna/cN6a7r/dJMcaivoikF/AAAAAAAAAAAAAAAAAAAAAMefK3VQAKqBCgR3M48Z5jVTnkjNn5qoeJI936tTzDfv/img.png?credential=yqXZFxpELC7KVnFOS48ylbz2pIh7yKj8&expires=1785509999&allow_ip=&allow_referer=&signature=m7B3VfywoETg8sq8TjNTWKGreRE%3D)
 
 ## stride 비교 요약 (전 구간)
 

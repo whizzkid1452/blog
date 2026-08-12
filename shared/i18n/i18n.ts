@@ -3,12 +3,9 @@ export type Locale = 'ko';
 export interface UiMessages {
   home: string;
   posts: string;
+  series: string;
   topics: string;
-  viewAllTopics: string;
-  collapseTopics: string;
-  recent: string;
   noTopics: string;
-  noPosts: string;
   relatedPosts: string;
   primaryNavigationLabel: string;
   blogNavigationLabel: string;
@@ -30,17 +27,14 @@ export interface UiMessages {
 const UI_MESSAGES: Record<Locale, UiMessages> = {
   ko: {
     home: '홈',
-    posts: 'Posts',
+    posts: '전체 글',
+    series: '시리즈',
     topics: '주제',
-    viewAllTopics: '전체보기',
-    collapseTopics: '접기',
-    recent: '최근 글',
     noTopics: '등록된 주제가 없습니다.',
-    noPosts: '등록된 글이 없습니다.',
     relatedPosts: '관련 글',
     primaryNavigationLabel: '주요 메뉴',
     blogNavigationLabel: '블로그 메뉴',
-    blogNavigationDescription: '주요 메뉴, 주제, 최근 글을 탐색합니다.',
+    blogNavigationDescription: '전체 글, 시리즈, 주제를 탐색합니다.',
     menuLabel: '메뉴',
     closeLabel: '닫기',
     openBlogNavigationLabel: '블로그 메뉴 열기',

@@ -19,6 +19,7 @@ export interface PostSummary {
   coverAlt?: string;
   thumbnail?: PostThumbnail;
   series?: SeriesMetadata;
+  featured?: boolean;
 }
 
 export interface SeriesMetadata {

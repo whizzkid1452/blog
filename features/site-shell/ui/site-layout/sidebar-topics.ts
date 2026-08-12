@@ -19,12 +19,6 @@ export function getPrimarySidebarTopicTags(tags: string[]): string[] {
   return PRIMARY_SIDEBAR_TOPIC_TAGS.filter(tag => availableTagSet.has(tag));
 }
 
-export function getAdditionalSidebarTopicTags(tags: string[]): string[] {
-  const primaryTopicTagSet = new Set<string>(PRIMARY_SIDEBAR_TOPIC_TAGS);
-
-  return tags.filter(tag => !primaryTopicTagSet.has(tag));
-}
-
 export function getSidebarTopicLabel(tag: string): string {
   return SIDEBAR_TOPIC_LABELS[tag] ?? tag;
 }

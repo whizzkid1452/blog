@@ -8,8 +8,7 @@ function getRuleDeclarations(selector: string): string {
 }
 
 describe('sidebar topic styles', () => {
-  it('keeps expanded topic chevrons aligned with primary topic chevrons', () => {
-    expect(getRuleDeclarations('sidebarAdditionalTopics')).toContain('width: 100%;');
-    expect(getRuleDeclarations('sidebarCollapsibleContent')).toContain('width: 100%;');
+  it('keeps curated topic links aligned across the sidebar width', () => {
+    expect(getRuleDeclarations('tagList')).toContain('width: 100%;');
   });
 });

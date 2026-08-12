@@ -2,6 +2,7 @@
 title: '[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다'
 description: 'Render, Normalize, True Peak Limit, Dither, Encode 순서를 고정한 Offline Export 파이프라인과 진행 상태·Stem 처리의 한계를 설명합니다.'
 date: '2026-08-03'
+publishedAt: '2026-08-03T14:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'export', 'architecture']
 series:
   name: 'TypeScript DAW 엔진 구현기'

@@ -6,7 +6,7 @@ import type { Metadata } from 'next';
 export const metadata: Metadata = createHomeMetadata();
 
 export default function Home() {
-  const posts = getPostIndex().getPostSummaries();
+  const posts = getPostIndex().getFeaturedPostSummaries();
 
-  return <PostListView posts={posts} />;
+  return <PostListView posts={posts} eyebrow="대표 글" />;
 }

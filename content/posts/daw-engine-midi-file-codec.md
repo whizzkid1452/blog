@@ -2,6 +2,7 @@
 title: '[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다'
 description: 'Standard MIDI File의 Chunk, Delta Time, VLQ, Running Status와 Note 수명 주기를 직접 파싱하고 다시 쓰는 구조를 설명합니다.'
 date: '2026-08-03'
+publishedAt: '2026-08-03T13:00:00+09:00'
 tags: ['daw', 'midi', 'typescript', 'binary', 'parser']
 series:
   name: 'TypeScript DAW 엔진 구현기'

@@ -10,13 +10,12 @@ describe('SiteNavigationContent', () => {
         githubProfileUrl="https://github.com/example"
         resumeUrl="https://example.com/about"
         tags={['react']}
-        recentPosts={[
-          { slug: 'example', title: 'Example post', date: '2026-07-16', tags: ['react'], visibility: 'public' },
-        ]}
       />
     );
 
     expect(markup).toContain('profile-avatar.png');
+    expect(markup).toContain('href="/posts"');
+    expect(markup).toContain('href="/series"');
     expect(markup).toContain('>GitHub</a>');
     expect(markup).toContain('>About</a>');
     expect(markup).not.toContain('/auth/login');
@@ -24,7 +23,7 @@ describe('SiteNavigationContent', () => {
     expect(markup).toContain('role="search"');
     expect(markup).toContain('>주제</h2>');
     expect(markup).toContain('href="/tags/react"');
-    expect(markup).toContain('>최근 글</h2>');
-    expect(markup).toContain('href="/posts/example"');
+    expect(markup).not.toContain('>최근 글</h2>');
+    expect(markup).not.toContain('href="/posts/example"');
   });
 });
