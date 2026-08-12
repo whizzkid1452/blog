@@ -9,6 +9,7 @@ export const RSS_FEED_PATH = '/feed.xml';
 
 const LOCAL_SITE_URL = 'http://localhost:3000';
 const PRODUCTION_NODE_ENV = 'production';
+const PRODUCTION_VERCEL_ENV = 'production';
 const WEB_URL_PROTOCOLS = new Set(['http:', 'https:']);
 const LOCAL_HOSTNAMES = new Set(['localhost', '127.0.0.1', '0.0.0.0', '[::1]']);
 
@@ -25,7 +26,7 @@ export function getSiteUrl(): URL {
     return parsePublicSiteUrl({ sourceName: 'VERCEL_URL', value: `https://${vercelUrl}` });
   }
 
-  if (isProductionRuntime()) {
+  if (isProductionDeployment()) {
     throw new Error('NEXT_PUBLIC_SITE_URL or VERCEL_URL is required to create production SEO URLs');
   }
 
@@ -43,13 +44,13 @@ function parsePublicSiteUrl({ sourceName, value }: { sourceName: string; value: 
     throw new Error(`${sourceName} must use an HTTP or HTTPS URL`);
   }
 
-  if (isProductionRuntime() && LOCAL_HOSTNAMES.has(url.hostname)) {
+  if (isProductionDeployment() && LOCAL_HOSTNAMES.has(url.hostname)) {
     throw new Error(`${sourceName} must not point to a local host in production`);
   }
 
   return url;
 }
 
-function isProductionRuntime(): boolean {
-  return process.env.NODE_ENV === PRODUCTION_NODE_ENV;
+function isProductionDeployment(): boolean {
+  return process.env.NODE_ENV === PRODUCTION_NODE_ENV && process.env.VERCEL_ENV === PRODUCTION_VERCEL_ENV;
 }

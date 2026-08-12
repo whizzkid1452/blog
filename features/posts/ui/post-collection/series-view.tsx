@@ -15,7 +15,7 @@ export function SeriesView({ locale = 'ko', series }: SeriesViewProps) {
     <section className={styles.pageShell}>
       <header className={styles.header}>
         <p className={styles.eyebrow}>Collections</p>
-        <h1 className={styles.title}>Series</h1>
+        <h1 className={styles.title}>시리즈</h1>
         <p className={styles.description}>{messages.description}</p>
       </header>
 

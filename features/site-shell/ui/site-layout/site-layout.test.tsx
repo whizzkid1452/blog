@@ -12,7 +12,7 @@ describe('SiteLayout', () => {
   it('모바일 헤더에 메뉴 트리거와 현재 페이지 제목을 표시한다', () => {
     currentPathname.value = '/';
     const markup = renderToStaticMarkup(
-      <SiteLayout locale="ko" tags={[]} recentPosts={[]}>
+      <SiteLayout locale="ko" tags={[]} posts={[]}>
         <p>Content</p>
       </SiteLayout>
     );
@@ -34,9 +34,7 @@ describe('SiteLayout', () => {
       <SiteLayout
         locale="ko"
         tags={['react']}
-        recentPosts={[
-          { slug: 'example', title: 'Example post', date: '2026-07-16', tags: ['react'], visibility: 'public' },
-        ]}
+        posts={[{ slug: 'example', title: 'Example post', date: '2026-07-16', tags: ['react'], visibility: 'public' }]}
       >
         <p>Content</p>
       </SiteLayout>
@@ -45,15 +43,16 @@ describe('SiteLayout', () => {
     expect(markup).toContain('>Example post</p>');
   });
 
-  it('기본 메뉴에 Series와 비공개 글 링크를 표시하지 않는다', () => {
+  it('기본 메뉴에 전체 글과 시리즈 링크를 표시하고 비공개 글 링크는 표시하지 않는다', () => {
     currentPathname.value = '/';
     const markup = renderToStaticMarkup(
-      <SiteLayout locale="ko" tags={[]} recentPosts={[]}>
+      <SiteLayout locale="ko" tags={[]} posts={[]}>
         <p>Content</p>
       </SiteLayout>
     );
 
-    expect(markup).not.toContain('href="/series"');
+    expect(markup).toContain('href="/series"');
+    expect(markup).toContain('href="/posts"');
     expect(markup).not.toContain('href="/private-posts"');
   });
 
@@ -63,9 +62,7 @@ describe('SiteLayout', () => {
       <SiteLayout
         locale="ko"
         tags={['react']}
-        recentPosts={[
-          { slug: 'example', title: 'Example post', date: '2026-07-16', tags: ['react'], visibility: 'public' },
-        ]}
+        posts={[{ slug: 'example', title: 'Example post', date: '2026-07-16', tags: ['react'], visibility: 'public' }]}
       >
         <p>Content</p>
       </SiteLayout>
@@ -80,6 +77,8 @@ describe('SiteLayout', () => {
     expect(sidebarMarkup).toContain('>블로그 메뉴</h2>');
     expect(sidebarMarkup).not.toContain('>홈</a>');
     expect(sidebarMarkup).not.toContain('>글</a>');
+    expect(sidebarMarkup).toContain('>전체 글</a>');
+    expect(sidebarMarkup).toContain('>시리즈</a>');
     expect(sidebarMarkup).toContain('>GitHub</a>');
     expect(sidebarMarkup).toContain('>About</a>');
     expect(sidebarMarkup).not.toContain('>English</a>');
@@ -87,6 +86,6 @@ describe('SiteLayout', () => {
     expect(sidebarMarkup).not.toContain('>검색</h2>');
     expect(sidebarMarkup.indexOf('>블로그 메뉴</h2>')).toBeLessThan(sidebarMarkup.indexOf('role="search"'));
     expect(sidebarMarkup.indexOf('role="search"')).toBeLessThan(sidebarMarkup.indexOf('>주제</h2>'));
-    expect(sidebarMarkup.indexOf('>주제</h2>')).toBeLessThan(sidebarMarkup.indexOf('>최근 글</h2>'));
+    expect(sidebarMarkup).not.toContain('>최근 글</h2>');
   });
 });

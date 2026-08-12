@@ -23,6 +23,10 @@ export class PostIndex {
     return this.publicPosts.map(toPostSummary);
   }
 
+  getFeaturedPostSummaries(): PostSummary[] {
+    return this.publicPosts.filter(post => post.featured === true).map(toPostSummary);
+  }
+
   getAuthorizedPostSummaries(): PostSummary[] {
     return this.posts.filter(post => post.draft || post.visibility === 'authenticated').map(toPostSummary);
   }
@@ -86,7 +90,7 @@ export function getPostPublishedDateTime(post: Pick<Post, 'date' | 'publishedAt'
 }
 
 function toPostSummary(post: Post): PostSummary {
-  const thumbnail = getFirstPostContentImage(post.content);
+  const thumbnail = getPostThumbnail(post);
 
   return {
     slug: post.slug,
@@ -100,7 +104,16 @@ function toPostSummary(post: Post): PostSummary {
     coverAlt: post.coverAlt,
     ...(thumbnail == null ? {} : { thumbnail }),
     series: post.series,
+    featured: post.featured,
   };
+}
+
+function getPostThumbnail(post: Post) {
+  if (post.coverImage != null && post.coverAlt != null) {
+    return { src: post.coverImage, alt: post.coverAlt };
+  }
+
+  return getFirstPostContentImage(post.content);
 }
 
 function compareSeriesPosts(leftPost: PostSummary, rightPost: PostSummary): number {

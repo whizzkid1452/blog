@@ -10,11 +10,11 @@ series:
 draft: false
 ---
 
-관련 글: [[Part 1] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)
+관련 글: [[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)
 
 이전 글 요약
 
-이전 글 [[Part 2.] 웹브라우저 멀티에디터 만들기 - 아키텍쳐 설계 변화](/posts/browser-multieditor-architecture-change)에서는 타임라인 기능을 구현하면서 기존 아키텍처를 크게 수정한 과정을 다뤘다. 타임라인이 모든 도메인의 시간 정보를 횡단해야 하는 수평적 관심사라는 점을 발견하고, 이를 위해 Session Layer라는 새로운 수평 계층을 추가했다. 또한 프랙탈 폴더 구조 대신 레이어 기반 MVC 구조를 채택하여, 폴더 이름만으로도 아키텍처의 의도가 드러나도록 했다. 최종적으로 Presentation, Component, Business, Session, Store, Engine의 6계층 구조가 확정되었다. 아키텍쳐에 이어 멀티미디어 에디팅에 또 하나의 중요한 과제인 타임라인에 대해 어떻게 설계하게되었는지 이야기를 공유해보고 싶다.
+이전 글 [[Part 2.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계 변화](/posts/browser-multieditor-architecture-change)에서는 타임라인 기능을 구현하면서 기존 아키텍처를 크게 수정한 과정을 다뤘다. 타임라인이 모든 도메인의 시간 정보를 횡단해야 하는 수평적 관심사라는 점을 발견하고, 이를 위해 Session Layer라는 새로운 수평 계층을 추가했다. 또한 프랙탈 폴더 구조 대신 레이어 기반 MVC 구조를 채택하여, 폴더 이름만으로도 아키텍처의 의도가 드러나도록 했다. 최종적으로 Presentation, Component, Business, Session, Store, Engine의 6계층 구조가 확정되었다. 아키텍처에 이어 멀티미디어 에디팅에 또 하나의 중요한 과제인 타임라인에 대해 어떻게 설계하게되었는지 이야기를 공유해보고 싶다.
 
 ## 1. 타임라인이란?
 
@@ -133,4 +133,4 @@ engine.getCurrentTime()
 - CanvasRenderingContext2D.drawImage(): [https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage](https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/drawImage)
 - 어댑터 패턴: [https://inpa.tistory.com/entry/GOF-%F0%9F%92%A0-%EC%96%B4%EB%8C%91%ED%84%B0Adaptor-%ED%8C%A8%ED%84%B4-%EC%A0%9C%EB%8C%80%EB%A1%9C-%EB%B0%B0%EC%9B%8C%EB%B3%B4%EC%9E%90](https://inpa.tistory.com/entry/GOF-%F0%9F%92%A0-%EC%96%B4%EB%8C%91%ED%84%B0Adaptor-%ED%8C%A8%ED%84%B4-%EC%A0%9C%EB%8C%80%EB%A1%9C-%EB%B0%B0%EC%9B%8C%EB%B3%B4%EC%9E%90)
 
-관련 글: [[Part 1] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)
+관련 글: [[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)

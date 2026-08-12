@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { getAdditionalSidebarTopicTags, getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
+import { getPrimarySidebarTopicTags, getSidebarTopicLabel } from './sidebar-topics';
 
 describe('getPrimarySidebarTopicTags', () => {
   it('returns portfolio topic tags in configured order when available', () => {
@@ -10,15 +10,6 @@ describe('getPrimarySidebarTopicTags', () => {
 
   it('omits portfolio topic tags without a matching published tag', () => {
     expect(getPrimarySidebarTopicTags(['react', 'drag'])).toEqual(['react']);
-  });
-});
-
-describe('getAdditionalSidebarTopicTags', () => {
-  it('returns only tags outside the portfolio topic set', () => {
-    expect(getAdditionalSidebarTopicTags(['drag', 'react', 'nextjs', 'performance', 'architecture'])).toEqual([
-      'drag',
-      'nextjs',
-    ]);
   });
 });
 

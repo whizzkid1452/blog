@@ -13,15 +13,30 @@ describe('PostIndex', () => {
     expect(index.getPostSummaries().map(post => post.slug)).toEqual(['newer-post', 'older-post']);
   });
 
-  it('does not use a configured cover image when the post content has no image', () => {
+  it('returns only featured public posts in publish order', () => {
+    const index = new PostIndex([
+      createPost({ slug: 'older-featured', date: '2026-07-01', featured: true }),
+      createPost({ slug: 'regular-post', date: '2026-07-04' }),
+      createPost({ slug: 'featured-draft', date: '2026-07-05', featured: true, draft: true }),
+      createPost({ slug: 'newer-featured', date: '2026-07-03', featured: true }),
+    ]);
+
+    expect(index.getFeaturedPostSummaries().map(post => post.slug)).toEqual(['newer-featured', 'older-featured']);
+  });
+
+  it('uses a configured cover image before content images', () => {
     const index = new PostIndex([
       createPost({
         coverImage: '/images/cover.png',
         coverAlt: 'Configured cover',
+        content: '![Content image](/images/content.png)',
       }),
     ]);
 
-    expect(index.getPostSummaries()[0]?.thumbnail).toBeUndefined();
+    expect(index.getPostSummaries()[0]?.thumbnail).toEqual({
+      src: '/images/cover.png',
+      alt: 'Configured cover',
+    });
   });
 
   it('uses the first content image as the thumbnail when a cover image is not configured', () => {

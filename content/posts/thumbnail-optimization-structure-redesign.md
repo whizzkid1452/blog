@@ -1,5 +1,5 @@
 ---
-title: '[썸네일 생성 최적화 시도 2]썸네일 생성 구조 재설계하기'
+title: '[Part 2.] 썸네일 생성 구조 재설계하기'
 description: '타임라인 썸네일 생성을 poster, visible tile, backfill로 나누어 초기 표시와 성능을 개선한 설계를 정리합니다.'
 date: '2026-06-06'
 publishedAt: '2026-06-06T00:53:42+09:00'
@@ -159,4 +159,4 @@ idle 시간:
 
 > 지금 보는 것은 우선 처리하고, 나중에 볼 수도 있는 것은 보조 작업으로 처리한다.
 
-타임라인 썸네일 생성 전략은 이 기준 위에서 정리할 수 있었다. 이전 글: [[썸네일 생성 최적화 시도1] Web Worker 를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker) 다음 글: [[썸네일 생성 최적화 시도3] Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
+타임라인 썸네일 생성 전략은 이 기준 위에서 정리할 수 있었다. 이전 글: [[Part 1.] Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker) 다음 글: [[Part 3.] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)

@@ -20,7 +20,7 @@ describe('MarkdownContent', () => {
 
     expect(renderedMarkup).toContain('<aside');
     expect(renderedMarkup).toContain('<nav aria-labelledby="markdown-table-of-contents-title">');
-    expect(renderedMarkup).toContain('<nav aria-labelledby="markdown-table-of-contents-top-title">');
+    expect(renderedMarkup).not.toContain('markdown-table-of-contents-top-title');
     expect(renderedMarkup).toContain('href="#구현"');
     expect(renderedMarkup).toContain('href="#renderer-요청과-main-확정"');
     expect(renderedMarkup).toContain('href="#ipc-요청-처리"');

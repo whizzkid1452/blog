@@ -1,5 +1,5 @@
 ---
-title: '[썸네일 최적화 시도 1]Web Worker 를 이용한 썸네일 생성 최적화'
+title: '[Part 1.] Web Worker를 이용한 썸네일 생성 최적화'
 description: '비디오 썸네일 생성 지연을 줄이기 위해 Web Worker 전략을 적용하고 측정한 과정을 정리합니다.'
 date: '2026-04-17'
 publishedAt: '2026-04-17T14:26:22+09:00'
@@ -12,8 +12,8 @@ draft: false
 
 썸네일 최적화 시도 시리즈는 총 3편으로, 잘못된 판단으로 삽질을 하고, 스스로에게 질문하고 수정해나가는 과정을 담았습니다. 다음 글들은 아래 링크에서 보실 수 있습니다.
 
-- [[썸네일 생성 최적화 시도 2]썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
-- [[썸네일 생성 최적화 시도 3] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
+- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
+- [[Part 3.] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
 
 ## 1. 들어가며
 
@@ -345,5 +345,5 @@ Web Worker는 abort 메시지를 받으면 해당 sourceId를 무시 목록에 �
 
 썸네일 최적화 시도 시리즈는 총 3편으로, 잘못된 판단으로 삽질을 하고, 스스로에게 질문하고 수정해나가는 과정을 담았습니다. 다음 글들은 아래 링크에서 보실 수 있습니다.
 
-- [[썸네일 생성 최적화 시도 2]썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
-- [[썸네일 생성 최적화 시도 3] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
+- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
+- [[Part 3.] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)

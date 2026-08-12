@@ -1,5 +1,5 @@
 ---
-title: '[썸네일 생성 최적화 시도 3] Web Worker를 다시 의심하고 검증하기'
+title: '[Part 3.] Web Worker를 다시 의심하고 검증하기'
 description: 'Web Worker 기반 썸네일 생성 전략을 다시 측정하며 언제 효과가 있는지 검증한 과정을 정리합니다.'
 date: '2026-06-09'
 publishedAt: '2026-06-09T11:23:22+09:00'
@@ -8,14 +8,15 @@ series:
   name: '썸네일 생성 최적화'
   order: 3
 draft: false
+featured: true
 ---
 
 썸네일 최적화 시도 시리즈는 총 3편으로, 잘못된 판단으로 삽질을 하고, 스스로에게 질문하고 수정해나가는 과정을 담았습니다. 이전 글들은 아래 링크에서 보실 수 있습니다.
 
 이전 글:
 
-- [[썸네일 생성 최적화 시도1] Web Worker 를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
-- [[썸네일 생성 최적화 시도2] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
+- [[Part 1.] Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
+- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
 
 ## 1. 들어가며
 
@@ -188,5 +189,5 @@ HTMLVideoElement seek는 poster 1장에는 매우 강했다.
 
 이전 글:
 
-- [[썸네일 생성 최적화 시도1] Web Worker 를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
-- [[썸네일 생성 최적화 시도2] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
+- [[Part 1.] Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
+- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)

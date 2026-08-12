@@ -1,40 +1,9 @@
-.sidebarTopics,
-.sidebarAdditionalTopics {
+.sidebarTopics {
   display: flex;
   width: 100%;
   flex-direction: column;
   align-items: flex-start;
   gap: 10px;
-}
-
-.sidebarSectionTrigger {
-  border: 0;
-  padding: 0;
-  background: transparent;
-  color: var(--color-text-muted);
-  cursor: pointer;
-  font: inherit;
-  font-size: 12px;
-  font-weight: 600;
-  line-height: 1.4;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.sidebarSectionTrigger:hover,
-.sidebarSectionTrigger:focus-visible {
-  color: var(--color-link);
-  outline: none;
-}
-
-.sidebarCollapsibleContent {
-  display: flex;
-  width: 100%;
-  flex-direction: column;
-}
-
-.sidebarCollapsibleContent[data-state='closed'] {
-  display: none;
 }
 
 .tagList {

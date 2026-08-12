@@ -10,16 +10,13 @@ interface SiteLayoutProps {
   children: ReactNode;
   locale: Locale;
   tags: string[];
-  recentPosts: PostSummary[];
+  posts: PostSummary[];
 }
 
 const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
 const RESUME_URL = 'https://elderly-mosquito-87f.notion.site/38073b56612a80efb6e1f5f7055e5c15?source=copy_link';
-const RECENT_POST_COUNT = 5;
-
-export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutProps) {
+export function SiteLayout({ children, locale, tags, posts }: SiteLayoutProps) {
   const messages = getUiMessages(locale);
-  const visibleRecentPosts = recentPosts.slice(0, RECENT_POST_COUNT);
 
   return (
     <div className={styles.siteShell}>
@@ -30,7 +27,6 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
             githubProfileUrl={GITHUB_PROFILE_URL}
             resumeUrl={RESUME_URL}
             tags={tags}
-            recentPosts={visibleRecentPosts}
           />
         </aside>
 
@@ -39,8 +35,7 @@ export function SiteLayout({ children, locale, tags, recentPosts }: SiteLayoutPr
           githubProfileUrl={GITHUB_PROFILE_URL}
           resumeUrl={RESUME_URL}
           tags={tags}
-          posts={recentPosts}
-          recentPosts={visibleRecentPosts}
+          posts={posts}
         />
 
         <main className={styles.mainContent}>{children}</main>

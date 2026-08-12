@@ -35,7 +35,8 @@ describe('resolveSiteHeaderTitle', () => {
 
   it('고정 페이지에 해당하는 현지화된 제목을 반환한다', () => {
     expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/private-posts', posts })).toBe('비공개 글');
-    expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/posts', posts })).toBe('Posts');
+    expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/posts', posts })).toBe('전체 글');
+    expect(resolveSiteHeaderTitle({ locale: 'ko', pathname: '/series', posts })).toBe('시리즈');
   });
 
   it('알 수 없는 경로나 일치하지 않는 글은 사이트 이름으로 fallback한다', () => {

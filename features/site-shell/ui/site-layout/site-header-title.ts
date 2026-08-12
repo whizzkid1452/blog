@@ -10,7 +10,6 @@ interface ResolveSiteHeaderTitleParams {
 }
 
 const FIXED_PAGE_TITLES = {
-  series: 'Series',
   search: 'Search',
 } as const;
 
@@ -34,7 +33,7 @@ export function resolveSiteHeaderTitle({ locale, pathname, posts }: ResolveSiteH
   }
 
   if (pathname === '/series') {
-    return FIXED_PAGE_TITLES.series;
+    return messages.series;
   }
 
   if (pathname === '/search') {

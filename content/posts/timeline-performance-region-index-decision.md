@@ -5,6 +5,9 @@ date: '2026-07-24'
 tags: ['react', 'performance', 'timeline', 'canvas', 'architecture']
 draft: false
 visibility: public
+featured: true
+coverImage: '/images/anai-project-portfolio/editor-performance-comparison.svg'
+coverAlt: '에디터 성능 개선 전후 비교'
 ---
 
 18개 Track과 1,518개 Region이 배치된 타임라인에서 가로 스크롤과 편집 입력이 늦게 반영되는 문제가 있었습니다. 코드를 확인해 보니 스크롤할 때마다 다음 두 작업이 반복되고 있었습니다.

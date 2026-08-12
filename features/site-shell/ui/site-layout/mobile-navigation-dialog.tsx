@@ -20,7 +20,6 @@ interface MobileNavigationDialogProps {
   resumeUrl: string;
   tags: string[];
   posts: PostSummary[];
-  recentPosts: PostSummary[];
 }
 
 export function MobileNavigationDialog({
@@ -29,7 +28,6 @@ export function MobileNavigationDialog({
   resumeUrl,
   tags,
   posts,
-  recentPosts,
 }: MobileNavigationDialogProps) {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
@@ -95,7 +93,6 @@ export function MobileNavigationDialog({
               githubProfileUrl={githubProfileUrl}
               resumeUrl={resumeUrl}
               tags={tags}
-              recentPosts={recentPosts}
             />
           </div>
         </Dialog.Content>

@@ -5,6 +5,7 @@ date: '2026-08-07'
 tags: ['local-first', 'indexeddb', 'cloud-sync', 'architecture']
 draft: false
 visibility: public
+featured: true
 ---
 
 # 네트워크가 끊겨도 편집을 지키는 Local-first 저장 설계

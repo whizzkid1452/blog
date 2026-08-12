@@ -26,16 +26,26 @@ describe('getSiteUrl', () => {
     expect(getSiteUrl().toString()).toBe('https://blog.example.vercel.app/');
   });
 
-  it('rejects a missing public URL in production', () => {
+  it('allows a local URL during a local production build', () => {
     vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('VERCEL_ENV', '');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000');
+
+    expect(getSiteUrl().toString()).toBe('http://localhost:3000/');
+  });
+
+  it('rejects a missing public URL in a production deployment', () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('VERCEL_ENV', 'production');
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', '');
     vi.stubEnv('VERCEL_URL', '');
 
     expect(() => getSiteUrl()).toThrow('NEXT_PUBLIC_SITE_URL or VERCEL_URL is required');
   });
 
-  it('rejects a local public URL in production', () => {
+  it('rejects a local public URL in a production deployment', () => {
     vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('VERCEL_ENV', 'production');
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'http://localhost:3000');
 
     expect(() => getSiteUrl()).toThrow('NEXT_PUBLIC_SITE_URL must not point to a local host in production');

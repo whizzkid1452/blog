@@ -2,6 +2,7 @@
 title: '[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다'
 description: 'K-weighting, 시간 창, loudness gate, 4배 oversampling을 조합한 블록 기반 Meter DSP의 구조와 블록 경계에서 발견한 한계를 설명합니다.'
 date: '2026-08-03'
+publishedAt: '2026-08-03T11:00:00+09:00'
 tags: ['daw', 'audio', 'dsp', 'typescript', 'lufs']
 series:
   name: 'TypeScript DAW 엔진 구현기'
