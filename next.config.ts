@@ -6,7 +6,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/resume',
-        destination: 'https://notion.site/38073b56612a80efb6e1f5f7055e5c15',
+        destination:
+          'https://elderly-mosquito-87f.notion.site/Software-Engineer-38073b56612a80efb6e1f5f7055e5c15?pvs=74',
         permanent: true,
       },
     ];
