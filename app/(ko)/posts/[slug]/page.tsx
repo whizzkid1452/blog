@@ -54,11 +54,13 @@ export default async function PostPage({ params }: PostPageProps) {
   }
 
   const relatedPosts = postIndex.getRelatedPostSummaries(post);
+  const seriesNavigation = postIndex.getSeriesPostNavigation(post);
+
   return (
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostJsonLd(post) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: createPostBreadcrumbJsonLd(post) }} />
-      <PostView post={post} relatedPosts={relatedPosts} />
+      <PostView post={post} relatedPosts={relatedPosts} seriesNavigation={seriesNavigation} />
     </>
   );
 }

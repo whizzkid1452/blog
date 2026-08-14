@@ -4,7 +4,7 @@ import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
   title: '시리즈',
-  description: '연속된 주제의 블로그 글을 시리즈별 읽기 순서로 모았습니다.',
+  description: '기술적 임팩트가 큰 시리즈부터, 각 시리즈 안에서는 읽는 순서대로 모았습니다.',
   alternates: {
     canonical: '/series',
   },

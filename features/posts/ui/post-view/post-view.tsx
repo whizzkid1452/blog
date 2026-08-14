@@ -1,19 +1,22 @@
 import type { Post, PostSummary } from '../../model/post';
+import type { PostSeriesNavigation } from '../../model/post-index';
 import type { Locale } from '@/shared/i18n/i18n';
 import { createLocalizedPath, getUiMessages } from '@/shared/i18n/i18n';
 import Link from 'next/link';
 import { CommentsSection } from '@/features/comments/ui/comments-section/comments-section';
 import { MarkdownContent } from './markdown/markdown-content';
 import { hasMarkdownTableOfContents } from './markdown/markdown-table-of-contents';
+import { SeriesPostNavigation } from './series-post-navigation';
 import styles from './post-view.module.css';
 
 interface PostViewProps {
   locale?: Locale;
   post: Post;
   relatedPosts: PostSummary[];
+  seriesNavigation: PostSeriesNavigation | null;
 }
 
-export function PostView({ locale = 'ko', post, relatedPosts }: PostViewProps) {
+export function PostView({ locale = 'ko', post, relatedPosts, seriesNavigation }: PostViewProps) {
   const messages = getUiMessages(locale);
   const hasTableOfContents = hasMarkdownTableOfContents(post.content);
 
@@ -40,6 +43,7 @@ export function PostView({ locale = 'ko', post, relatedPosts }: PostViewProps) {
         </header>
         <MarkdownContent content={post.content} locale={locale} title={post.title} />
       </article>
+      {seriesNavigation == null ? null : <SeriesPostNavigation locale={locale} navigation={seriesNavigation} />}
       {relatedPosts.length > 0 ? (
         <section className={styles.relatedSection} aria-labelledby="related-posts-title">
           <h2 className={styles.relatedTitle} id="related-posts-title">

@@ -44,7 +44,7 @@ export function SeriesView({ locale = 'ko', series }: SeriesViewProps) {
 
 const SERIES_MESSAGES = {
   ko: {
-    description: '연속된 주제의 글을 읽는 순서대로 모았습니다.',
+    description: '기술적 임팩트가 큰 시리즈부터, 각 시리즈 안에서는 읽는 순서대로 모았습니다.',
     empty: '등록된 시리즈가 없습니다.',
     postCount: (count: number) => `${count}개 글`,
   },

@@ -2,10 +2,26 @@ import type { Post, PostSummary } from './post';
 import { getFirstPostContentImage } from './post-thumbnail';
 
 const RELATED_POSTS_LIMIT = 3;
+const CURATED_SERIES_DISPLAY_ORDER = [
+  'Electron 멀티 윈도우 공유 데이터',
+  'TypeScript DAW 엔진 구현기',
+  '웹브라우저 멀티에디터 만들기',
+  '드래그 최적화',
+  '썸네일 생성 최적화',
+] as const;
+const SERIES_DISPLAY_POSITION_BY_NAME = new Map<string, number>(
+  CURATED_SERIES_DISPLAY_ORDER.map((seriesName, position) => [seriesName, position])
+);
 
 export interface PostSeries {
   name: string;
   posts: PostSummary[];
+}
+
+export interface PostSeriesNavigation {
+  name: string;
+  previousPost?: PostSummary;
+  nextPost?: PostSummary;
 }
 
 export class PostIndex {
@@ -73,7 +89,29 @@ export class PostIndex {
       name,
       // 발행일과 읽기 순서는 다를 수 있으므로 frontmatter의 order를 우선한다.
       posts: posts.sort(compareSeriesPosts),
-    })).sort((leftSeries, rightSeries) => leftSeries.name.localeCompare(rightSeries.name));
+    })).sort(compareSeriesDisplayOrder);
+  }
+
+  getSeriesPostNavigation(post: Pick<Post, 'slug' | 'series'>): PostSeriesNavigation | null {
+    if (post.series == null) {
+      return null;
+    }
+
+    const series = this.getSeries().find(candidate => candidate.name === post.series?.name);
+    const currentPostIndex = series?.posts.findIndex(candidate => candidate.slug === post.slug) ?? -1;
+
+    if (series == null || currentPostIndex < 0) {
+      return null;
+    }
+
+    const previousPost = series.posts[currentPostIndex - 1];
+    const nextPost = series.posts[currentPostIndex + 1];
+
+    return {
+      name: series.name,
+      ...(previousPost == null ? {} : { previousPost }),
+      ...(nextPost == null ? {} : { nextPost }),
+    };
   }
 
   getPostBySlug(slug: string): Post | null {
@@ -124,6 +162,25 @@ function compareSeriesPosts(leftPost: PostSummary, rightPost: PostSummary): numb
   }
 
   return leftPost.slug.localeCompare(rightPost.slug);
+}
+
+function compareSeriesDisplayOrder(leftSeries: PostSeries, rightSeries: PostSeries): number {
+  const leftPosition = SERIES_DISPLAY_POSITION_BY_NAME.get(leftSeries.name);
+  const rightPosition = SERIES_DISPLAY_POSITION_BY_NAME.get(rightSeries.name);
+
+  if (leftPosition != null && rightPosition != null) {
+    return leftPosition - rightPosition;
+  }
+
+  if (leftPosition != null) {
+    return -1;
+  }
+
+  if (rightPosition != null) {
+    return 1;
+  }
+
+  return leftSeries.name.localeCompare(rightSeries.name);
 }
 
 function comparePosts(leftPost: Post, rightPost: Post): number {
