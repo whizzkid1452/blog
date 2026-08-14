@@ -13,6 +13,12 @@ const markdownImageStyles = readFileSync(
 const postViewStyles = readFileSync(new URL('./post-view.module.css', import.meta.url), 'utf8');
 
 describe('post table of contents layout', () => {
+  it('uses the expanded post content width', () => {
+    const pageShellRule = getCssRule(postViewStyles, '.pageShell');
+
+    expect(pageShellRule).toContain('width: min(100%, 960px);');
+  });
+
   it('keeps table-of-contents headings below the fixed site header', () => {
     const headingRule = getCssRule(
       markdownContentStyles,
@@ -96,7 +102,7 @@ describe('post table of contents layout', () => {
 
     expect(pageShellRule).toContain('--desktop-table-of-contents-width: 280px;');
     expect(pageShellRule).toContain('--desktop-table-of-contents-content-offset: -140px;');
-    expect(pageShellRule).toContain('width: min(calc(100% - var(--desktop-table-of-contents-width)), 720px);');
+    expect(pageShellRule).toContain('width: min(calc(100% - var(--desktop-table-of-contents-width)), 900px);');
     expect(pageShellRule).toContain('inset-inline-start: var(--desktop-table-of-contents-content-offset);');
   });
 });

@@ -1,6 +1,6 @@
 .pageShell {
   display: flex;
-  width: min(100%, 768px);
+  width: min(100%, 960px);
   flex-direction: column;
   gap: 40px;
   margin: 0 auto;
@@ -111,7 +111,7 @@
     --desktop-table-of-contents-content-offset: -140px;
 
     position: relative;
-    width: min(calc(100% - var(--desktop-table-of-contents-width)), 720px);
+    width: min(calc(100% - var(--desktop-table-of-contents-width)), 900px);
     inset-inline-start: var(--desktop-table-of-contents-content-offset);
   }
 }

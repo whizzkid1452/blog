@@ -11,6 +11,15 @@ describe('post list spacing', () => {
   it.each([
     ['post list', postListStyles],
     ['post collection', collectionStyles],
+  ])('uses the expanded content width in the %s', (_, styles) => {
+    const pageShellRule = getCssRule(styles, '.pageShell');
+
+    expect(pageShellRule).toContain('width: min(100%, 960px);');
+  });
+
+  it.each([
+    ['post list', postListStyles],
+    ['post collection', collectionStyles],
   ])('removes vertical space between cards in the %s', (_, styles) => {
     const postListRule = getCssRule(styles, '.postList');
 
