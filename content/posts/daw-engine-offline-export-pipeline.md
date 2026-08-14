@@ -1,8 +1,8 @@
 ---
 title: '[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다'
 description: 'Render, Normalize, True Peak Limit, Dither, Encode 순서를 고정한 Offline Export 파이프라인과 진행 상태·Stem 처리의 한계를 설명합니다.'
-date: '2026-08-03'
-publishedAt: '2026-08-03T14:00:00+09:00'
+date: '2026-03-07'
+publishedAt: '2026-03-07T14:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'export', 'architecture']
 series:
   name: 'TypeScript DAW 엔진 구현기'
@@ -198,3 +198,19 @@ Offline Export를 구현하면서 각 알고리즘을 따로 만드는 것보다
 > “Export 완료는 Blob을 만들었다는 뜻이 아니라, 선택한 음질 정책과 파일 계약을 검증했다는 뜻이어야 한다.”
 
 다음 단계는 Codec Decode Round Trip fixture와 취소 가능한 단계 계약을 추가하는 것이다.
+
+## 참고
+
+**표준·공식 자료**
+
+- [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
+- [ITU-R BS.1770-5, Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/rec/R-REC-BS.1770-5-202311-I)
+- [Library of Congress, WAVE Audio File Format](https://www.loc.gov/preservation/digital/formats/fdd/fdd000001.shtml)
+
+**한국어 블로그**
+
+- [Web Audio API와 브라우저 오디오 2026](https://www.youngju.dev/blog/culture/2026-05-16-web-audio-api-browser-audio-2026-audioworklet-tone-js-howler-wavesurfer-peaks-meyda-faust-csound-web-speech-deep-dive)
+
+**해외 블로그**
+
+- [How Browser Audio Works: The Web Audio API Explained](https://trimr.net/web-audio-api-how-browser-audio-works)

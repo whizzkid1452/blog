@@ -9,11 +9,11 @@ draft: false
 
 rAF에 대한 추가적인 정보는 이 글을 참고해주세요: [TIL | rAF란?](/posts/request-animation-frame)
 
-## 문제 상황
+## [sort1] 1. 문제 상황
 
 오디오 에디터에 미니맵 만들어서 뷰포트 핸들 드래그하면 줌 영역 조정되게 했는데, 막상 써보니까 화면이 엄청 버벅거렸다. 핸들 드래그할 때마다 화면이 끊기는 느낌이 들어서 UX가 정말 안좋았다.
 
-## 원래 코드 뭐가 문제였나
+## [sort1] 2. 기존 코드의 문제
 
 ```ts
 const onMove = (e2: PointerEvent) => {
@@ -27,7 +27,7 @@ const onMove = (e2: PointerEvent) => {
 
 처음엔 pointermove 이벤트 발생할 때마다 그냥 `setViewportRange`를 바로바로 호출했다. 근데 pointermove가 초당 몇십~몇백 회씩 발생하더라. 그걸 다 처리하려니까 버벅일 수밖에.
 
-## 어디가 느렸을까?
+## [sort1] 3. 병목 지점
 
 `setViewportRange` 안에서 무슨 일이 일어나는지 보면:
 
@@ -59,9 +59,9 @@ ws.zoom() + setScroll() (초당 100회)
 파형 리렌더링 (초당 100회) ❌ 당연히 버벅이지
 ```
 
-## 해결: RequestAnimationFrame으로 스로틀링
+## [sort1] 4. RequestAnimationFrame으로 갱신 횟수 제한하기
 
-### RAF가 뭔데?
+### [sort2] 4-1. rAF란?
 
 `requestAnimationFrame(RAF)`는 브라우저한테 "다음 화면 그릴 때 이 함수 실행해줘"라고 부탁하는 API다.
 
@@ -72,7 +72,7 @@ requestAnimationFrame(() => {
 });
 ```
 
-### RAF 특징 정리
+### [sort2] 4-2. rAF 특징
 
 | 항목        | 설명                          |
 | ----------- | ----------------------------- |
@@ -82,11 +82,11 @@ requestAnimationFrame(() => {
 | 취소        | `cancelAnimationFrame(id)`    |
 | 탭 비활성화 | 자동으로 멈춤 (배터리 절약됨) |
 
-### 스로틀링 어떻게 했나
+### [sort2] 4-3. 스로틀링 구현
 
 생각해보니까 드래그할 때마다 바로바로 파형을 다시 그릴 필요가 없더라. 어차피 사람 눈엔 60fps 정도면 충분히 부드럽게 보이니까, **"프레임당 최대 1번만 호출하자"**는 전략을 세웠다.
 
-#### 1단계: 변수 세팅
+**1단계: 변수 설정**
 
 ```ts
 /** RAF ID 저장용 */
@@ -100,7 +100,7 @@ let pendingEnd: number | null = null;
 - `rafId`: 지금 RAF가 예약되어 있는지 체크하는 용도
 - `pendingStart`/`pendingEnd`: 드래그하면서 계속 바뀌는 값을 임시로 저장
 
-#### 2단계: 핵심 아이디어 - 두 단계로 업데이트
+**2단계: 두 단계로 업데이트**
 
 ```ts
 const onMove = (e2: PointerEvent) => {
@@ -131,7 +131,7 @@ const onMove = (e2: PointerEvent) => {
 - UI 오버레이는 즉시 업데이트: 사용자한테 "반응하고 있어요!"라고 보여줘야 하니까
 - 무거운 파형 렌더링만 스로틀링: 프레임당 1번만 호출되게
 
-### RAF 스로틀링이 어떻게 돌아가나
+### [sort2] 4-4. rAF 스로틀링의 동작 순서
 
 ```text
 pointermove 1회 → pending 업데이트 → RAF 예약 (rafId에 저장)
@@ -150,7 +150,7 @@ pointermove 3회 → pending 업데이트 → rafId 있음 → RAF 새로 안 �
 | 다음 프레임                      | RAF 콜백 실행 → `setViewportRange` 1번 호출 → `rafId = null` |
 | 그 다음 pointermove              | 다시 `rafId === null` → RAF 예약                             |
 
-### 드래그 끝날 때 마지막 상태 보장
+### [sort2] 4-5. 드래그 종료 시 마지막 상태 반영
 
 ```ts
 const onUp = () => {
@@ -180,9 +180,9 @@ const onUp = () => {
 
 이렇게 해야 마지막 상태가 정확하게 반영됨
 
-## 얼마나 빨라졌나
+## [sort1] 5. 변경 전후 비교
 
-### 최적화 전
+### [sort2] 5-1. 최적화 전
 
 ```text
 pointermove 이벤트 (초당 100회)
@@ -194,7 +194,7 @@ ws.zoom() + setScroll() (초당 100회)
 파형 리렌더링 (초당 100회) ❌ 버벅버벅
 ```
 
-### 최적화 후
+### [sort2] 5-2. 최적화 후
 
 ```text
 pointermove 이벤트 (초당 100회)
@@ -210,30 +210,30 @@ setViewportRange 호출 (최대 60회/초)
 파형 리렌더링 (최대 60회/초) 부드럽게!
 ```
 
-### 개선 효과 정리
+### [sort2] 5-3. 개선 효과
 
 - 호출 횟수 감소: 초당 100회 → 최대 60회 (약 40% 감소)
 - 반응성은 그대로: UI 오버레이는 바로바로 업데이트되니까 사용자는 느끼지 못함
 - 자동 최적화: 탭 바꾸면 RAF 자동으로 멈춰서 배터리도 절약
 
-## 핵심 정리
+## [sort1] 6. 핵심 정리
 
-### 1. 두 단계로 업데이트
+### [sort2] 6-1. 두 단계로 업데이트
 
 - UI 오버레이: 즉시 업데이트로 반응성 확보
 - 무거운 파형: RAF로 스로틀링해서 성능 확보
 
-### 2. 중복 호출 방지
+### [sort2] 6-2. 중복 호출 방지
 
 - `rafId === null` 체크로 RAF 하나만 실행
 - 불필요한 렌더링 작업 제거
 
-### 3. 최신 값 보장
+### [sort2] 6-3. 최신 값 보장
 
 - `pendingStart`/`pendingEnd`에 항상 최신 값 저장
 - 드래그 끝나면 최종 값 바로 반영
 
-## 마무리
+## [sort1] 7. 마무리
 
 RAF 스로틀링 진짜 간단한데 효과가 좋다. 특히:
 

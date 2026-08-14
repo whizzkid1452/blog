@@ -307,7 +307,7 @@ Registry는 현재 제품 운영 방식에 맞춘 선택이다. 다음 조건이
 
 > 좋은 디자인 시스템은 모든 변화를 막는 규칙이 아니라, 다음 제품이 같은 문제를 다시 풀지 않게 만드는 출발점이어야 한다.
 
-## 참고 자료
+## 참고
 
 - [Figma가 설명하는 디자인 시스템의 기본 개념](https://www.figma.com/resource-library/design-system-examples/)
 - [Figma가 설명하는 디자인 토큰의 역할](https://www.figma.com/resource-library/design-tokens/)

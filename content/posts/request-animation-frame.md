@@ -9,13 +9,11 @@ draft: false
 
 참고: [rAF로 오디오 에디터 줌 기능 버벅거림 잡기](/posts/audio-editor-zoom-raf-throttling)
 
-# rAF = requestAnimationFrame
-
 requestAnimationFrame(RAF)은 다음 화면을 그리기 바로 전에 콜백(애니메이션 로직)을 실행하도록 브라우저에 요청하는 자바스크립트 내장 API다.
 
 ---
 
-## 1. requestAnimationFrame이 하는 일
+## [sort1] 1. requestAnimationFrame이 하는 일
 
 브라우저가 **다음 화면을 그리기 직전**에 지정한 콜백을 실행해 줍니다.
 
@@ -26,7 +24,7 @@ const rafId = requestAnimationFrame(() => {
 });
 ```
 
-## 2. 특징
+## [sort1] 2. 특징
 
 | 항목      | 설명                        |
 | --------- | --------------------------- |
@@ -41,7 +39,7 @@ const rafId = requestAnimationFrame(() => {
 
 ---
 
-## 1. requestAnimationFrame 반환값
+### [sort2] 2-1. requestAnimationFrame 반환값
 
 ```ts
 const rafId = requestAnimationFrame(() => {
@@ -54,7 +52,7 @@ requestAnimationFrame은 **예약 ID**를 숫자로 반환합니다.
 
 ---
 
-## 2. rafId를 쓰는 이유: 취소
+### [sort2] 2-2. rafId를 쓰는 이유: 취소
 
 ```ts
 // 예약
@@ -69,15 +67,13 @@ if (rafId !== null) {
 
 cancelAnimationFrame(rafId)로 **아직 실행되지 않은 예약**을 취소할 수 있습니다.
 
-> rAF 스로틀링
-
-# RAF 스로틀링 방식
+## [sort1] 3. rAF 스로틀링 방식
 
 이 코드에서는 **“한 번에 하나의 RAF만 예약”**하는 방식으로 스로틀링합니다.
 
 ---
 
-## 1. 동작 방식
+### [sort2] 3-1. 동작 방식
 
 ```text
 pointermove 1회 → pending 업데이트 → RAF 예약 (rafId 저장)
@@ -91,7 +87,7 @@ pointermove 3회 → pending 업데이트 → rafId 있음 → 새 RAF 예약 �
 
 ---
 
-## 2. 코드 흐름
+### [sort2] 3-2. 코드 흐름
 
 ```ts
 // onMove: pointermove마다 실행
@@ -108,7 +104,7 @@ if (rafId.current === null) {
 
 ---
 
-## 3. 스로틀링이 되는 이유
+### [sort2] 3-3. 스로틀링이 되는 이유
 
 | 상황                           | 동작                                                  |
 | ------------------------------ | ----------------------------------------------------- |
@@ -121,7 +117,7 @@ if (rafId.current === null) {
 
 ---
 
-## 4. pending의 역할
+### [sort2] 3-4. pending의 역할
 
 여러 번의 pointermove가 한 프레임 안에 들어와도:
 
@@ -132,7 +128,7 @@ if (rafId.current === null) {
 
 ---
 
-## 5. 정리
+### [sort2] 3-5. 정리
 
 | 요소                     | 역할                             |
 | ------------------------ | -------------------------------- |
@@ -141,18 +137,11 @@ if (rafId.current === null) {
 | rafId !== null           | RAF 이미 예약됨 → pending만 갱신 |
 | pendingStart, pendingEnd | RAF 실행 시점의 최신 값 저장     |
 
-참조:
+## 참고
 
-[https://developer.mozilla.org/ko/docs/Glossary/Throttle](https://developer.mozilla.org/ko/docs/Glossary/Throttle)
-
-[https://stackoverflow.com/questions/26120838/shall-the-requestanimationframe-calls-always-be-throttled-down-to-60-fps](https://stackoverflow.com/questions/26120838/shall-the-requestanimationframe-calls-always-be-throttled-down-to-60-fps)
-
-[https://developer.mozilla.org/ko/docs/Glossary/Throttle](https://developer.mozilla.org/ko/docs/Glossary/Throttle)
-
-[https://web.dev/articles/speed-rendering?hl=ko](https://web.dev/articles/speed-rendering?hl=ko)
-
-[https://inpa.tistory.com/entry/](https://inpa.tistory.com/entry/)[🌐-requestAnimationFrame-가이드](https://inpa.tistory.com/entry/%F0%9F%8C%90-requestAnimationFrame-%EA%B0%80%EC%9D%B4%EB%93%9C)
-
-[https://developer.mozilla.org/ko/docs/Web/API/Window/requestAnimationFrame](https://developer.mozilla.org/ko/docs/Web/API/Window/requestAnimationFrame)
-
-[https://rhei.me/blog/cse/requestanimationframe-guide](https://rhei.me/blog/cse/requestanimationframe-guide)
+- [Throttle](https://developer.mozilla.org/ko/docs/Glossary/Throttle)
+- [Shall the requestAnimationFrame calls always be throttled down to 60 FPS?](https://stackoverflow.com/questions/26120838/shall-the-requestanimationframe-calls-always-be-throttled-down-to-60-fps)
+- [Rendering performance](https://web.dev/articles/speed-rendering?hl=ko)
+- [requestAnimationFrame 가이드](https://inpa.tistory.com/entry/%F0%9F%8C%90-requestAnimationFrame-%EA%B0%80%EC%9D%B4%EB%93%9C)
+- [Window: requestAnimationFrame() method](https://developer.mozilla.org/ko/docs/Web/API/Window/requestAnimationFrame)
+- [requestAnimationFrame 완벽 가이드](https://rhei.me/blog/cse/requestanimationframe-guide)

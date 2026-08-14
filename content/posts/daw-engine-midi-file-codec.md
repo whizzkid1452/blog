@@ -1,8 +1,8 @@
 ---
 title: '[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다'
 description: 'Standard MIDI File의 Chunk, Delta Time, VLQ, Running Status와 Note 수명 주기를 직접 파싱하고 다시 쓰는 구조를 설명합니다.'
-date: '2026-08-03'
-publishedAt: '2026-08-03T13:00:00+09:00'
+date: '2026-01-30'
+publishedAt: '2026-01-30T13:00:00+09:00'
 tags: ['daw', 'midi', 'typescript', 'binary', 'parser']
 series:
   name: 'TypeScript DAW 엔진 구현기'
@@ -218,3 +218,17 @@ MIDI 파일을 직접 파싱하면서 가장 어려웠던 부분은 bit 연산�
 > “Parser가 파일을 끝까지 읽었다는 사실은 정보를 보존했다는 뜻이 아니다.”
 
 현재 구현은 Note 중심 Import와 Export의 기반을 제공한다. 다음 단계는 Running Status 경계와 가변 Tempo를 fixture로 고정하고, 버려지는 Event를 Import 결과에 명시하는 것이다.
+
+## 참고
+
+**표준·공식 자료**
+
+- [MIDI Association, Standard MIDI Files](https://midi.org/standard-midi-files)
+
+**한국어 블로그**
+
+- [MIDI 포맷에 대해 알아보자](https://pubul.tistory.com/108)
+
+**해외 블로그**
+
+- [Standard MIDI file format, updated](https://midimusic.github.io/tech/midispec.html)

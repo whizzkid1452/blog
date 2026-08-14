@@ -1,8 +1,8 @@
 ---
 title: '[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다'
 description: 'K-weighting, 시간 창, loudness gate, 4배 oversampling을 조합한 블록 기반 Meter DSP의 구조와 블록 경계에서 발견한 한계를 설명합니다.'
-date: '2026-08-03'
-publishedAt: '2026-08-03T11:00:00+09:00'
+date: '2025-11-18'
+publishedAt: '2025-11-18T11:00:00+09:00'
 tags: ['daw', 'audio', 'dsp', 'typescript', 'lufs']
 series:
   name: 'TypeScript DAW 엔진 구현기'
@@ -211,3 +211,18 @@ K-weighting coefficient, loudness gate, FIR tap을 구현하는 일은 분명 �
 > “DSP의 정확성은 계산식뿐 아니라 block 경계와 상태 갱신 순서까지 포함한다.”
 
 다음 단계는 채널별 loop를 Frame 범위 중심 loop로 바꾸고 reference fixture를 추가하는 것이다. 그 검증이 끝난 뒤에야 이 모듈을 오디오 실행 경로에 연결할 수 있다.
+
+## 참고
+
+**표준·공식 자료**
+
+- [ITU-R BS.1770-5, Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/rec/R-REC-BS.1770-5-202311-I)
+- [EBU R 128, Loudness normalisation and permitted maximum level of audio signals](https://tech.ebu.ch/publications/r128)
+
+**한국어 블로그**
+
+- [[음향] True Peak와 Inter-sample Peak](https://miing95.tistory.com/46)
+
+**해외 블로그**
+
+- [pyloudnorm: ITU-R BS.1770 알고리즘 구현](https://www.christiansteinmetz.com/projects-blog/pyloudnorm)

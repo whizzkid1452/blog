@@ -7,15 +7,13 @@ tags: ['audio', 'peak', 'stride', '최적화']
 draft: false
 ---
 
-## 들어가며
-
 오디오 트림 에디터 개발하면서 진짜 골치 아픈 문제를 만났다. 짧은 음원에서는 지연을 느끼지 못하다가, 컴퓨터 성능이 좋지않거나 15분 이상의 긴 길이의 오디오 파일을 불러오면 화면이 멈춘 것처럼 보이고, 사용자는 그냥 기다릴 수밖에 없었다. 파형이 그려지기까지 몇 초씩 걸리는 이 문제를 어떻게 해결했는지 공유한다.
 
 ---
 
-## 1. 문제 발견: "왜 이렇게 느리지?"
+## [sort1] 1. 문제 발견: "왜 이렇게 느리지?"
 
-### 1-1. 증상
+### [sort2] 1-1. 증상
 
 처음엔 그냥 "파일이 커서 그런가보다" 하고 넘어갔다. 근데 사용자 테스트 해보니까 문제가 심각하더라.
 
@@ -25,15 +23,15 @@ draft: false
 
 특히 문제는 **긴 길이의 오디오 파일을 업로드**할 때였다. 물론 프로덕트 특성 상, 5분 이내의 짧은 파일을 업로드하는 경우가 대부분이겠지만, **참된 개발자라면 언제나 엣지케이스를 고려**해야한다.
 
-### 1-2. 첫 번째 가설: "디코딩이 느린가?"
+### [sort2] 1-2. 첫 번째 가설: "디코딩이 느린가?"
 
 처음엔 당연히 decodeAudioData가 범인일 거라 생각했다. 큰 파일 디코딩하는 게 오래 걸리는 거 당연하지 않나? "웹 오디오 API 자체가 느린 거면 어떡하지..." 걱정이 앞섰다.
 
 ---
 
-## 2. 원인 추적: 범인을 찾아서
+## [sort1] 2. 원인 추적: 범인을 찾아서
 
-### 2-1. 측정의 시작
+### [sort2] 2-1. 측정의 시작
 
 막연한 추측으로는 문제를 해결할 수 없었다. 정확히 **어디서** 시간이 걸리는지 알아야 했다. 가장 먼저 한 건 console.time으로 각 구간 측정하는 거였다.
 
@@ -55,7 +53,7 @@ console.timeEnd('drawWaveform');
 
 \- arrayBuffer: 인코딩된 오디오 파일의 raw 데이터
 
-### 2-2. 충격적인 결과
+### [sort2] 2-2. 충격적인 결과
 
 ```text
 decodeAudioData: 800ms
@@ -67,7 +65,7 @@ drawWaveform: 30ms
 
 디코딩은 1초도 안 걸렸는데, peak 추출하는 데 2초 넘게 걸렸다. 완전 예상 밖이었다.
 
-### 2-3. Chrome DevTools로 더 깊이
+### [sort2] 2-3. Chrome DevTools로 더 깊이
 
 정확히 extractPeaks 내부에서 무슨 일이 일어나는지 보려고 Chrome DevTools Performance 탭을 열었다.
 
@@ -79,9 +77,9 @@ drawWaveform: 30ms
 
 ---
 
-## 3. 근본 원인 파악: 수백만 번의 반복
+## [sort1] 3. 근본 원인 파악: 수백만 번의 반복
 
-### 3-1. 코드 뜯어보기
+### [sort2] 3-1. 코드 뜯어보기
 
 문제의 코드를 다시 자세히 들여다봤다.
 
@@ -117,7 +115,7 @@ function extractPeaks(audioBuffer: AudioBuffer, barCount = 1500) {
 
 \- i \* samplesPerBar: 현재 바의 시작 인덱스 계산
 
-### 3-2. 숫자로 계산해보기
+### [sort2] 3-2. 숫자로 계산해보기
 
 5분 오디오를 기준으로 계산해봤다:
 
@@ -133,7 +131,7 @@ function extractPeaks(audioBuffer: AudioBuffer, barCount = 1500) {
 
 이제 왜 느린지 명확했다.
 
-### 3-3. "정말 모든 샘플을 봐야 할까?"
+### [sort2] 3-3. "정말 모든 샘플을 봐야 할까?"
 
 여기서 핵심적인 질문을 던졌다.
 
@@ -149,9 +147,9 @@ function extractPeaks(audioBuffer: AudioBuffer, barCount = 1500) {
 
 ---
 
-## 4. 해결책 탐색: 다른 사람들은 어떻게 했을까?
+## [sort1] 4. 해결책 탐색: 다른 사람들은 어떻게 했을까?
 
-### 4-1. 레퍼런스 찾기
+### [sort2] 4-1. 레퍼런스 찾기
 
 혼자 고민하기보다 비슷한 문제를 해결한 사례를 찾아봤다.
 
@@ -180,7 +178,7 @@ Wavesurfer는 sampleSize=10으로 peak를 10개씩 묶어서 평균을 냈다. �
 
 BBC의 도구는 아예 -pixels-per-second 1 옵션으로 **초당 1픽셀**까지 해상도를 줄였다. 그래도 시각적으로는 충분했다.
 
-### 4-2. Stride 개념 발견
+### [sort2] 4-2. Stride 개념 발견
 
 이런 사례들을 보면서
 
@@ -206,9 +204,9 @@ for (let j = start; j < end; j += 10) { ... }
 
 ---
 
-## 5. 해결책 구현: 고정 Stride 10에서 동적 Stride로
+## [sort1] 5. 해결책 구현: 고정 Stride 10에서 동적 Stride로
 
-### 5-0. 공통 구조: 하나의 함수, 세 가지 방식
+### [sort2] 5-1. 공통 구조: 하나의 함수, 세 가지 방식
 
 테스트 구현에서는 세 가지 방식 모두 같은 함수 runExtractPeaksWithStride를 사용했고, stride 값만 다르게 전달했다.
 
@@ -268,7 +266,7 @@ runExtractPeaksWithStride(channelData, totalBars, step, 'dynamic')
 
 세 버전 모두 같은 runExtractPeaksWithStride 안에서 strideMode만 1, 10, 'dynamic'으로 바꿔 쓰는 구조다.
 
-### 5-1. 첫 번째 시도: 고정 Stride 10
+### [sort2] 5-2. 첫 번째 시도: 고정 Stride 10
 
 처음엔 단순하게 stride를 10으로 고정했다.
 
@@ -289,7 +287,7 @@ for (let j = start; j < end; j += 10) {
 
 단 한 글자 차이다. j++(stride 1)를 j += 10(stride 10)으로 바꿨을 뿐이다. 결과는 좋았다. 5분 오디오에서 2100ms → 210ms로 10배 빨라졌다.
 
-### 5-2. 문제 발견: "오디오가 길어지면?"
+### [sort2] 5-3. 문제 발견: "오디오가 길어지면?"
 
 하지만 더 긴 오디오로 테스트하면서 한계를 발견했다.
 
@@ -318,7 +316,7 @@ for (let j = start; j < end; j += 10) {
 
 41분짜리 파일에서는 55.80ms나 걸렸다. 이건 사용자가 "잠깐 멈췄다"고 느낄 수 있는 수준이다.
 
-### 5-3. 핵심 통찰: "바당 일정한 샘플만 확인하면 되지 않을까?"
+### [sort2] 5-4. 핵심 통찰: "바당 일정한 샘플만 확인하면 되지 않을까?"
 
 곰곰이 생각해봤다.
 
@@ -328,7 +326,7 @@ for (let j = start; j < end; j += 10) {
 
 "그래, stride를 동적으로 조절하자!"
 
-### 5-4. 동적 Stride 구현
+### [sort2] 5-5. 동적 Stride 구현
 
 ```ts
 // 동적 stride로 호출
@@ -381,7 +379,7 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 }
 ```
 
-### 5-5. 동적 Stride의 작동 원리
+### [sort2] 5-6. 동적 Stride의 작동 원리
 
 **20초 오디오 예시:**
 
@@ -399,9 +397,9 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 ---
 
-## 6. 결과: 극적인 개선
+## [sort1] 6. 결과: 극적인 개선
 
-### 6-1. 전체 비교
+### [sort2] 6-1. 전체 비교
 
 - test 1: 20초 오디오 (step 1921, totalBars 499)
 
@@ -427,7 +425,7 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 | **j+=10 (stride 10)** | **55.80 ms**  | 11,947,200      | 여전히 체감 지연 가능           |
 | **동적 stride**       | **15.77 ms**  | 1,244,500       | 가장 빠름, 바당 약 20회 유지    |
 
-## 세 구간 요약:
+**세 구간 요약**
 
 | 구간       | j++ (stride 1)            | j+=10 (stride 10)         | 동적 stride             |
 | ---------- | ------------------------- | ------------------------- | ----------------------- |
@@ -437,7 +435,7 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 ---
 
-## 해석
+**해석**
 
 - **동적 stride**가 j++ 대비 **약 12.5배**, j+=10 대비 **약 3.5배** 빠름.
 - 41분 파일에서도 **약 15.77 ms**로 끝나서 UI 블로킹이 거의 없음.
@@ -445,7 +443,7 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 ---
 
-## 결론: stride 세 가지 방식 비교
+### [sort2] 6-2. Stride 세 가지 방식 비교
 
 | 방식                  | 특징                                                                                                          | 적합한 경우                                               |
 | --------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
@@ -455,7 +453,7 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 > 질문: 왜 짧은 오디오에서는 동적 stride 가 stride 10 보다 더 느리게 나왔을까?
 
-## 1. 측정 오차 가능성 (가장 유력)
+**1. 측정 오차 가능성(가장 유력)**
 
 - 차이는 **0.18ms**로 매우 작음.
 - console.time 해상도, 백그라운드 작업, GC 등에 의해 이 정도는 쉽게 튈 수 있음.
@@ -465,7 +463,7 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 ---
 
-## 2. 바마다 stride를 다시 계산하는 비용
+**2. 바마다 stride를 다시 계산하는 비용**
 
 동적 stride는 **매 바(499번)**마다 다음을 계산합니다.
 
@@ -486,7 +484,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 ---
 
-## 3. JIT / 최적화 차이
+**3. JIT 최적화 차이**
 
 - j += 10처럼 **상수 stride**는 엔진이 루프를 더 공격적으로 최적화하기 쉬움.
 - j += stride처럼 **변수 stride**는 최적화가 조금 덜 aggressive할 수 있음.
@@ -496,7 +494,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 그래서 다시 테스트:
 
-## stride 비교 요약 (전 구간)
+**재측정 결과**
 
 | duration             | j++ (stride 1)    | j+=10 (stride 10) | 동적 stride           |
 | -------------------- | ----------------- | ----------------- | --------------------- |
@@ -507,13 +505,13 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 (20초는 두 번 측정한 값 둘 다 표기.)
 
-## **최종 결론!!**
+**최종 결론**
 
 - **95분 오디오**에서도 동적 stride는 **약 35ms**로, j++(428ms)·j+=10(108ms)보다 훨씬 빠르고, 길이에 비해 선형으로 잘 스케일함.
 - **20초 재측정**에서는 동적 stride가 **0.16ms**로 가장 빠름 → 짧은 구간에서 처음에 동적이 더 느리게 나온 것은 **측정 오차(분산)** 로 보는 게 타당함.
 - **실사용 권장:** 짧은/긴 구간 모두 **동적 stride**를 쓰는 것이 가장 일관되고 유리함.
 
-### 6-2. 성능 개선 비율
+### [sort2] 6-3. 성능 개선 비율
 
 **20초 오디오:**
 
@@ -525,7 +523,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 - j++ 대비: 약 **12배** 개선
 - j+=10 대비: 약 **3배** 개선
 
-### 6-3. 왜 동적 Stride가 더 좋을까?
+### [sort2] 6-4. 왜 동적 Stride가 더 좋을까?
 
 **1. 일관된 성능**
 
@@ -545,7 +543,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 - 오디오 길이가 늘어나도 바 개수만 늘어날 뿐
 - 계산 복잡도: O(barCount × 20) = O(barCount)
 
-### 6-4. 시각적 품질은?
+### [sort2] 6-5. 시각적 품질은?
 
 가장 중요한 건 사용자가 보는 화면이다.
 
@@ -567,9 +565,9 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 ---
 
-## 7. 배운 점
+## [sort1] 7. 배운 점
 
-### 7-1. 측정 없이는 최적화도 없다
+### [sort2] 7-1. 측정 없이는 최적화도 없다
 
 "느린 것 같다"는 느낌만으로는 부족하다.
 
@@ -579,7 +577,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 측정이 모든 최적화의 시작이다.
 
-### 7-2. 모든 데이터를 볼 필요는 없다
+### [sort2] 7-2. 모든 데이터를 볼 필요는 없다
 
 특히 시각화에서는 더욱 그렇다.
 
@@ -589,7 +587,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 목적에 맞는 적절한 수준의 정확도가 중요하다.
 
-### 7-3. 고정값보다 동적 적용이 낫다
+### [sort2] 7-3. 고정값보다 동적 적용이 낫다
 
 처음엔 stride 10으로 만족했지만, 더 긴 오디오를 테스트하면서 한계를 발견했다.
 
@@ -604,7 +602,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 - 오디오 길이에 무관하게 일관된 성능
 - 계산 복잡도가 선형적으로 증가
 
-### 7-4. 레퍼런스의 중요성
+### [sort2] 7-4. 레퍼런스의 중요성
 
 혼자 고민하지 말고 다른 사람들의 해결책을 찾아보자.
 
@@ -614,7 +612,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 선배 개발자들의 경험에서 배울 수 있다.
 
-### 7-5. 작은 아이디어, 큰 효과
+### [sort2] 7-5. 작은 아이디어, 큰 효과
 
 ```ts
 // 고정 stride
@@ -629,11 +627,11 @@ for (let j = start; j < end; j += stride) { ... }
 
 ---
 
-## 8. 추가 최적화 가능성
+## [sort1] 8. 추가 최적화 가능성
 
 현재 동적 stride로도 충분하지만, 더 개선할 여지는 있다:
 
-### 8-1. Web Worker로 이동
+### [sort2] 8-1. Web Worker로 이동
 
 ```ts
 // 메인 스레드 블로킹 제거
@@ -647,7 +645,7 @@ worker.onmessage = e => {
 
 95분 오디오도 35ms면 충분히 빠르지만, Web Worker로 이동하면 메인 스레드를 완전히 자유롭게 할 수 있다.
 
-### 8-2. Progressive Rendering
+### [sort2] 8-2. Progressive Rendering
 
 ```ts
 // 일부 peak를 먼저 그리고 나머지는 점진적으로
@@ -660,7 +658,7 @@ setTimeout(() => {
 }, 0);
 ```
 
-### 8-3. 캐싱
+### [sort2] 8-3. 캐싱
 
 ```ts
 // 같은 파일은 다시 계산하지 않기
@@ -678,7 +676,7 @@ return peaks;
 
 ---
 
-## 9. 마무리
+## [sort1] 9. 마무리
 
 긴 오디오 로딩 문제를 해결하는 여정에서:
 
@@ -708,14 +706,14 @@ return peaks;
 
 ---
 
-## 참고:
+## 참고
 
 - [CNN 기본 전문 용어 모음](https://sdk17586.tistory.com/83)
 - [https://www.npmjs.com/package/webaudio-peaks](https://www.npmjs.com/package/webaudio-peaks)
 - [How can I make bbc/audiowaveform peaks match wavesurfer.js'? · katspaugh wavesurfer.js · Discussion #2769](https://github.com/katspaugh/wavesurfer.js/discussions/2769)
 - [Reduce memory consumption by chunking mediaenhancement](https://github.com/katspaugh/wavesurfer.js/issues/557)
 
-## 참고 사례:
+**참고 사례**
 
 **webaudio-peaks 라이브러리**
 

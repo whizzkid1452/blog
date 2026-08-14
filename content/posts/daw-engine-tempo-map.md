@@ -1,8 +1,8 @@
 ---
 title: '[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까'
 description: 'Tempo와 박자표가 바뀌는 DAW 타임라인에서 Frame·Beat·BBT 변환을 구간 누적으로 설계한 과정과 남은 검증 범위를 설명합니다.'
-date: '2026-08-03'
-publishedAt: '2026-08-03T10:00:00+09:00'
+date: '2025-10-12'
+publishedAt: '2025-10-12T10:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'timeline', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'
@@ -192,3 +192,18 @@ describe('TempoMap round trip', () => {
 > “시간 좌표가 많아질수록 변환 함수보다 불변 조건을 먼저 정의해야 한다.”
 
 현재 구조는 Tempo 구간 누적과 공통 좌표 변환의 기반을 제공한다. 다음 단계는 4분음표가 아닌 박자표의 BBT 정책을 명확히 하고, 왕복 테스트로 그 정책을 고정하는 것이다.
+
+## 참고
+
+**표준·공식 자료**
+
+- [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
+- [MIDI Association, Standard MIDI Files](https://midi.org/standard-midi-files)
+
+**한국어 블로그**
+
+- [[Audio] Python에서 MIDI 파일 다루기](https://tkayyoo.tistory.com/189)
+
+**해외 블로그**
+
+- [Timing in MIDI files](https://sites.uci.edu/camp2014/2014/05/19/timing-in-midi-files/)

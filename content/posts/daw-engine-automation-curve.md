@@ -1,8 +1,8 @@
 ---
 title: '[Part 3.] Automation은 점을 연결하는 기능이 아니었다'
 description: 'DAW Automation에서 정렬된 Point, 곡선 보간, Write 상태, Guard Point와 Point Thinning을 하나의 모델로 구성한 과정을 설명합니다.'
-date: '2026-08-03'
-publishedAt: '2026-08-03T12:00:00+09:00'
+date: '2025-12-24'
+publishedAt: '2025-12-24T12:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'automation', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'
@@ -194,3 +194,19 @@ Automation 구현에서 보간 공식만 보면 절반만 보는 셈이다. 실�
 > “시간에 따른 값을 계산하는 문제와, 누가 그 값을 소유하는지 결정하는 문제는 분리해서 설계해야 한다.”
 
 다음 단계는 TOUCH와 LATCH를 명시적 상태로 분리하고, 곡선 범위와 cache 무효화를 자동 테스트로 고정하는 것이다.
+
+## 참고
+
+**내부 글·표준 자료**
+
+- [Cubic Hermite Spline이란? 값과 접선으로 만드는 3차 보간](/posts/cubic-hermite-spline-interpolation)
+- [Web Audio API 1.1, AudioParam automation](https://www.w3.org/TR/webaudio-1.1/)
+- [F. N. Fritsch and R. E. Carlson, Monotone Piecewise Cubic Interpolation](https://doi.org/10.1137/0717021)
+
+**한국어 블로그**
+
+- [믹싱 오토메이션 완전 가이드](https://studionol.co.kr/ko/stories/mix-automation1)
+
+**해외 블로그**
+
+- [Creative Mix Automation In Your DAW](https://www.soundonsound.com/techniques/creative-mix-automation-your-daw)

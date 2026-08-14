@@ -179,7 +179,7 @@ Renderer 사이에서 데이터를 전달하려면 Main Process가 메시지를 
 
 그래서 상태 관리 도구보다 먼저 프로젝트 데이터가 어떤 조건을 충족해야 하는지 정리했습니다.
 
-### 4-1. 여러 화면이 함께 사용하는가
+### [sort2] 4-1. 여러 화면이 함께 사용하는가
 
 프로젝트 정보, 편집 결과, SRT Row는 여러 화면에서 함께 사용했습니다.
 
@@ -194,7 +194,7 @@ Renderer 사이에서 데이터를 전달하려면 Main Process가 메시지를 
 
 즉, 동일한 프로젝트 데이터를 여러 Renderer가 동시에 읽거나 변경할 수 있었습니다.
 
-### 4-2. 앱 종료 이후에도 복구해야 하는가
+### [sort2] 4-2. 앱 종료 이후에도 복구해야 하는가
 
 프로젝트 정보와 자막, 편집 결과는 애플리케이션을 종료한 뒤에도 보존돼야 했습니다.
 
@@ -212,7 +212,7 @@ Renderer 사이에서 데이터를 전달하려면 Main Process가 메시지를 
 └─ Local Project File
 ```
 
-### 4-3. 특정 창의 생명주기와 독립적인가
+### [sort2] 4-3. 특정 창의 생명주기와 독립적인가
 
 공유 데이터에는 다음 규칙도 필요했습니다.
 
@@ -243,7 +243,7 @@ Renderer 사이에서 데이터를 전달하려면 Main Process가 메시지를 
 
 ## [sort1] 5. 검토한 대안
 
-### 5-1. Renderer Store를 서로 동기화한다
+### [sort2] 5-1. Renderer Store를 서로 동기화한다
 
 가장 먼저 검토한 방법은 한 Renderer의 Store가 변경될 때 다른 Renderer의 Store에도 같은 내용을 전달하는 방식이었습니다.
 
@@ -269,7 +269,7 @@ Renderer C Store 갱신
 
 따라서 Renderer 간 Store 동기화는 최종 구조에서 제외했습니다.
 
-### 5-2. Local Project File을 SSOT로 사용한다
+### [sort2] 5-2. Local Project File을 SSOT로 사용한다
 
 다음으로 검토한 방법은 모든 Renderer가 로컬 프로젝트 파일을 기준으로 동작하는 구조였습니다.
 
@@ -308,7 +308,7 @@ Renderer에서 변경
 └─ Local Project File
 ```
 
-### 5-3. Main Process가 원본을 소유한다
+### [sort2] 5-3. Main Process가 원본을 소유한다
 
 마지막으로 Main Process에서 실행 중인 프로젝트 데이터를 관리하는 방식을 검토했습니다.
 
@@ -365,7 +365,7 @@ _Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조_
 
 Modal, Hover, Filter, 검색어처럼 특정 화면에서만 사용하는 상태는 기존처럼 각 Renderer에서 관리했습니다.
 
-### 6-1. Main Process를 선택한 이유
+### [sort2] 6-1. Main Process를 선택한 이유
 
 Main Process는 특정 Renderer의 생명주기에 종속되지 않습니다.
 
@@ -399,7 +399,7 @@ Main ProjectSession
 화면 갱신 · 파일 저장
 ```
 
-### 6-2. SSOT는 복사본이 하나라는 뜻이 아니다
+### [sort2] 6-2. SSOT는 복사본이 하나라는 뜻이 아니다
 
 Main Process를 SSOT로 정했다고 해서 Renderer에 프로젝트 데이터가 없어야 하는 것은 아닙니다.
 
@@ -461,7 +461,7 @@ Main Process에는 React 컴포넌트 트리가 없기 때문에 `useState`나 R
 - Class private field
 - Vanilla Zustand
 
-### 7-1. Plain Object
+### [sort2] 7-1. Plain Object
 
 현재 프로젝트 데이터를 보관하는 것만 필요하다면 일반 객체로도 충분합니다.
 
@@ -481,7 +481,7 @@ Plain Object로도 구현할 수 있지만, 모든 변경을 한 경로로 통�
 
 결국 중요한 것은 데이터를 어떤 객체에 넣는지가 아니라 누가 어떤 메서드를 통해 변경할 수 있는가였습니다.
 
-### 7-2. Class private field
+### [sort2] 7-2. Class private field
 
 Class를 사용하면 프로젝트 데이터를 private field로 감추고 외부에는 허용된 메서드만 공개할 수 있습니다.
 
@@ -492,7 +492,7 @@ projectSession.dispatch(action);
 
 IPC Handler, Renderer 갱신 코드, 파일 저장 코드가 내부 데이터를 직접 수정하지 않고 모두 같은 변경 경로를 사용하도록 만들 수 있었습니다.
 
-### 7-3. Vanilla Zustand
+### [sort2] 7-3. Vanilla Zustand
 
 Zustand의 `createStore`를 사용하면 React 없이도 Vanilla Store를 만들 수 있습니다.
 
@@ -578,7 +578,7 @@ ProjectSession
 
 ## [sort1] 9. Renderer Cache와 UI 이벤트의 역할을 분리했다
 
-### 9-1. Renderer Cache는 화면 표시만 담당한다
+### [sort2] 9-1. Renderer Cache는 화면 표시만 담당한다
 
 Main의 Snapshot이 변경되면 Renderer 화면도 갱신돼야 합니다.
 
@@ -616,7 +616,7 @@ Renderer TanStack Query Cache
 
 UI가 Cache의 값을 프로젝트 최종 상태로 확정하지 않고, 사용자의 변경을 다시 Main에 요청한다는 API 규칙을 의미합니다.
 
-### 9-2. useSyncExternalStore를 사용하지 않은 이유
+### [sort2] 9-2. useSyncExternalStore를 사용하지 않은 이유
 
 `useSyncExternalStore`도 검토했습니다.
 
@@ -637,7 +637,7 @@ UI가 Cache의 값을 프로젝트 최종 상태로 확정하지 않고, 사용�
 
 향후 프로젝트 규모가 커져 전체 Snapshot을 매번 전달하는 비용이 커진다면 변경된 영역만 Patch로 전달하는 방식을 검토할 수 있습니다.
 
-### 9-3. 저장되지 않는 창 간 이벤트는 별도 채널로 전달한다
+### [sort2] 9-3. 저장되지 않는 창 간 이벤트는 별도 채널로 전달한다
 
 프로젝트 데이터와 비슷해 보이지만 파일에 저장할 필요가 없는 이벤트도 있었습니다.
 
@@ -690,7 +690,7 @@ Main Process는 채널 연결만 담당하고 해당 이벤트를 프로젝트 S
 
 ## [sort1] 10. 변경 전후 비교
 
-### AS-IS
+### [sort2] 10-1. AS-IS
 
 ```text
 각 Renderer
@@ -709,7 +709,7 @@ Main Process는 채널 연결만 담당하고 해당 이벤트를 프로젝트 S
 - 새로 열린 화면은 이전 변경 이벤트를 받을 수 없었다.
 - 저장 데이터와 일시적인 UI 이벤트가 같은 흐름에 섞여 있었다.
 
-### TO-BE
+### [sort2] 10-2. TO-BE
 
 ```text
 Renderer
@@ -758,7 +758,7 @@ Main Process를 SSOT로 둔다고 해서 모든 문제가 자동으로 해결되
 
 명확한 장점이 있는 만큼 새로운 비용도 생겼습니다.
 
-### 11-1. 모든 프로젝트 변경이 IPC 경계를 통과한다
+### [sort2] 11-1. 모든 프로젝트 변경이 IPC 경계를 통과한다
 
 Renderer에서 발생한 변경은 Main에 요청한 뒤 다시 확정 결과를 전달받아야 합니다.
 
@@ -770,7 +770,7 @@ Renderer에서 발생한 변경은 Main에 요청한 뒤 다시 확정 결과를
 - 에러 처리
 - Renderer 갱신 규칙
 
-### 11-2. Main Process가 비대해질 수 있다
+### [sort2] 11-2. Main Process가 비대해질 수 있다
 
 공유 상태를 Main에서 관리한다고 해서 모든 로직을 하나의 Class에 넣어서는 안 됩니다.
 
@@ -796,7 +796,7 @@ Repository는 어떤 상태가 최신인지 결정하지 않습니다. `ProjectS
 
 각 모듈의 책임을 분리하지 않으면 Main Process가 새로운 거대한 Store 또는 Service가 될 수 있습니다.
 
-### 11-3. Snapshot 전달 비용이 증가할 수 있다
+### [sort2] 11-3. Snapshot 전달 비용이 증가할 수 있다
 
 현재는 구현 복잡도를 낮추기 위해 확정된 전체 Snapshot을 전달했습니다.
 
@@ -810,13 +810,13 @@ Repository는 어떤 상태가 최신인지 결정하지 않습니다. `ProjectS
 - 필요한 Renderer에만 선택적으로 Broadcast
 - 큰 바이너리 데이터와 프로젝트 메타데이터 분리
 
-### 11-4. 충돌 해결 정책이 필요하다
+### [sort2] 11-4. 충돌 해결 정책이 필요하다
 
 `version`과 `baseVersion`은 충돌 가능성을 감지할 수 있게 해주지만 충돌을 해결해 주지는 않습니다.
 
 여러 Renderer가 같은 데이터를 동시에 수정할 수 있다면 도메인에 맞는 충돌 정책이 필요합니다.
 
-### 11-5. 저장 실패에 대한 복구 정책이 필요하다
+### [sort2] 11-5. 저장 실패에 대한 복구 정책이 필요하다
 
 Main의 메모리 상태는 최신이지만 파일 저장은 실패할 수 있습니다.
 

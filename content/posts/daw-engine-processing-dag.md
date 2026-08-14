@@ -1,8 +1,8 @@
 ---
 title: '[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유'
 description: '분기와 합류가 있는 Audio Processing 의존성을 DAG로 표현하고, 위상 정렬·Cycle 탐지·병렬 Group을 계산한 구조를 설명합니다.'
-date: '2026-08-03'
-publishedAt: '2026-08-03T15:00:00+09:00'
+date: '2026-04-13'
+publishedAt: '2026-04-13T15:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'graph', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'
@@ -222,3 +222,19 @@ DAG를 도입하면 분기와 합류를 명확히 표현하고, Cycle을 실행 
 > “Graph는 의존성을 표현하지만 Buffer 소유권과 실행 안전성까지 자동으로 보장하지 않는다.”
 
 현재 구현은 구조 계산을 독립시킨 기반이다. 다음 단계는 단위 테스트로 Graph 불변 조건을 고정하고, Buffer와 latency 계약을 가진 실행 Node로 확장하는 것이다.
+
+## 참고
+
+**내부 글·표준 자료**
+
+- [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)
+- [A. B. Kahn, Topological sorting of large networks](https://doi.org/10.1145/368996.369025)
+- [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
+
+**한국어 블로그**
+
+- [방향 비순환 그래프(DAG, Directed Acyclic Graph)](https://jackpot53.tistory.com/84)
+
+**해외 블로그**
+
+- [Topological Sort of Directed Acyclic Graph](https://www.baeldung.com/cs/dag-topological-sort)
