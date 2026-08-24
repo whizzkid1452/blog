@@ -1,5 +1,5 @@
 ---
-title: '디자인 시스템을 npm 패키지 대신 shadcn Registry로 배포한 이유'
+title: '디자인 시스템 구축기'
 description: 'micro SaaS 환경에서 npm 패키지 대신 shadcn Registry를 선택한 이유와 구현 기준을 정리합니다.'
 date: '2026-07-10'
 tags: ['design-system', 'shadcn', 'tokens-studio', 'frontend', 'architecture']
