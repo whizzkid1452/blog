@@ -6,6 +6,8 @@ publishedAt: '2026-07-15T09:00:00+09:00'
 tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
 draft: false
 featured: true
+coverImage: '/images/electron-multi-window-shared-data-ssot/to-be-project-document-service.png'
+coverAlt: 'Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조 (TO-BE)'
 ---
 
 > "SRT 자막을 한참 수정하고 점심을 먹고 왔는데, 수정한 내용이 다 날아갔어요!"
