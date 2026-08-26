@@ -1,6 +1,6 @@
 ---
 title: '[Part 3.] Web Worker를 다시 의심하고 검증하기'
-description: 'Web Worker 기반 썸네일 생성 전략을 다시 측정하며 언제 효과가 있는지 검증한 과정을 정리합니다.'
+description: '썸네일 생성 경로의 전체 처리 시간과 UI 루프 지연을 분리해 Web Worker의 역할을 다시 검증합니다.'
 date: '2026-06-09'
 publishedAt: '2026-06-09T11:23:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'webcodecs']
@@ -11,181 +11,187 @@ draft: false
 featured: true
 ---
 
-썸네일 최적화 시도 시리즈는 총 3편으로, 잘못된 판단으로 삽질을 하고, 스스로에게 질문하고 수정해나가는 과정을 담았습니다. 이전 글들은 아래 링크에서 보실 수 있습니다.
-
-이전 글:
+썸네일 생성 최적화 시리즈의 마지막 글이다. 앞선 과정은 다음 글에서 볼 수 있다.
 
 - [[Part 1.] Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
 - [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
 
-## [sort1] 1. 들어가며
+## [sort1] 1. Web Worker를 다시 의심한 이유
 
-앞선 글에서는 비디오 썸네일 생성 구조를 두 번에 걸쳐 정리했다. 첫 번째 글에서는 Web Worker를 이용해 썸네일 생성 비용을 메인 스레드에서 분리하는 과정을 다뤘다. 그 과정에서 처음에는 Web Worker 가 항상 빠를 것이라고 생각했지만, 실제로는 생성 개수와 측정 조건에 따라 결과가 달라진다는 점을 확인했다. 그래서 seek-first-1-then-worker 전략을 선택했다. 두 번째 글에서는 썸네일 생성을 하나의 작업으로 보지 않고 poster, visible tile, background prefetch로 나누는 설계를 정리했다. 전체 duration 기준으로 미리 만드는 방식보다, 사용자가 지금 보고 있는 viewport를 먼저 채우는 방식이 더 적합하다고 판단했다. 이번 글은 그 다음 단계의 고민을 다룬다. 구조를 나누고 나니 새로운 질문이 생겼다. 이 정도 구조가 정말 필요한가? 직접 써봤을 때 불편하지 않다면 Web Worker 를 빼도 되는 것 아닌가? Web Worker 를 유지한다면 그 이유는 속도인가, UI 응답성인가? 이번 글의 목적은 구현을 더 설명하는 것이 아니다. 이미 만든 구조를 다시 의심하고, 어떤 근거로 유지하거나 단순화할 수 있는지 판단한 과정을 정리하는 것이다.
+1편에서는 썸네일 생성 비용을 메인 스레드에서 분리하기 위해 Web Worker를 도입했다. 2편에서는 썸네일을 하나의 작업으로 보지 않고 다음 세 가지로 나눴다.
 
-## [sort1] 2. 직접 써본 느낌만으로 충분한 경우
+- 업로드 직후 보여줄 poster
+- 현재 viewport에 필요한 visible tile
+- 화면 밖 구간을 미리 만드는 background thumbnail prefetch
 
-성능 작업을 하다 보면 숫자를 계속 보고 싶어진다. 하지만 실제 제품에서는 체감도 중요하다. 사용자가 import 직후 타임라인을 스크롤하고, region을 드래그하고, 편집 동작을 했을 때 불편함이 없다면 그 자체로 의미 있는 관찰이다. 다만 이 관찰이 충분한 범위는 제한적이다. 직접 사용해봤을 때 불편함이 없었다면, 다음 판단에는 충분할 수 있다.
+구조를 나누고 나니 다른 질문이 생겼다.
 
-| 판단                                   | 체감 가능 여부 |
-| -------------------------------------- | -------------- |
-| 현재 UX가 당장 문제 없어 보인다        | 가능           |
-| 추가 스케줄링을 당장 넣지 않는다       | 가능           |
-| Web Worker 제거 판단을 보류한다        | 가능           |
-| 성능 문제가 완전히 없다고 말한다       | 부족           |
-| Web Worker 를 제거한다                 | 부족           |
-| 모든 대용량 영상에서 안전하다고 말한다 | 부족           |
+> 직접 사용했을 때 불편하지 않다면 Web Worker를 제거해도 되지 않을까?
 
-즉, 수동 검증은 제품 판단에는 도움이 된다. 하지만 아키텍처를 제거하거나 복잡도를 줄이는 결정을 하려면 더 좁은 질문에 답해야 한다. 내가 확인해야 했던 질문은 이것이었다.
+이 질문에 답하려면 전체 생성 시간만 비교해서는 부족했다. Web Worker를 유지할 근거가 처리량인지, 메인 스레드 응답성인지 구분해야 했다.
 
-> 썸네일 생성이 실제 편집 동작의 메인 스레드 응답성을 유의미하게 망가뜨리는가?
+## [sort1] 2. 직접 사용한 느낌으로 판단할 수 있는 범위
 
-이 질문에 답하려면 단순히 전체 생성 시간이 아니라, 편집 중 UI 루프가 얼마나 막히는지를 봐야 했다.
+직접 사용해 보는 것은 제품 판단에 필요하다. import 직후 스크롤과 드래그가 자연스럽다면 당장 추가 최적화가 필요하지 않다고 판단할 수 있다. 그러나 수동 검증만으로 성능 문제가 없거나 Web Worker를 제거해도 안전하다고 결론 내릴 수는 없다.
 
-## [sort1] 3. 빠르다는 말의 의미를 다시 나누기
+| 판단                                     | 수동 검증만으로 가능한가 |
+| ---------------------------------------- | ------------------------ |
+| 현재 사용 흐름이 불편한지 확인           | 가능                     |
+| 추가 스케줄링의 우선순위 결정            | 가능                     |
+| 성능 문제가 모든 환경에서 없다고 단정    | 불가능                   |
+| Web Worker 제거 후 회귀가 없다고 단정    | 불가능                   |
+| 대용량·고해상도 영상에서도 안전한지 판단 | 불가능                   |
 
-처음에는 썸네일 생성 경로를 비교할 때 총 생성 시간을 주로 봤다. 몇 장을 몇 초에 만들었는지를 보면 빠른 경로를 고를 수 있을 것 같았다. 하지만 작업을 진행하면서 빠르다는 말이 너무 넓다는 것을 알게 됐다. 여기서는 최소한 세 가지를 분리해야 했다.
+이번 검증에서 확인할 질문은 다음과 같이 좁혔다.
 
-| 기준             | 의미                                           |
-| ---------------- | ---------------------------------------------- |
-| 첫 시각적 피드백 | import 후 사용자가 처음 이미지를 보는 시간     |
-| 전체 생성 시간   | 요청한 썸네일이 모두 준비되는 시간             |
-| UI 응답성        | 생성 중 스크롤, 드래그, 입력이 얼마나 밀리는지 |
+> 썸네일 생성 중 메인 스레드의 UI 루프가 얼마나 지연되는가?
 
-poster-first 구조는 첫 시각적 피드백을 줄이는 선택이다. 실제로 첫 region 표시 시간은 약 6.26초에서 2.82초로 줄었다. 약 55% 개선이다. 하지만 이 개선은 Web Worker 때문이라고 말하면 안 된다. 이 수치는 전체 썸네일을 기다리지 않고 poster 1장을 먼저 공유한 구조 변화의 결과에 가깝다. Web Worker 의 역할은 다른 곳에 있었다. Web Worker 가 정말 필요한지는 전체 생성 시간이 줄었는가보다 메인 스레드를 얼마나 덜 막았는가로 판단해야 했다.
+## [sort1] 3. “빠르다”를 세 가지로 나누기
 
-## [sort1] 4. 벤치마크를 다시 잡은 이유
+썸네일 생성 경로가 빠르다는 표현에는 서로 다른 세 가지 의미가 섞일 수 있다.
 
-초기 벤치마크는 HTMLVideoElement seek와 Web Worker /WebCodecs를 비교했다. 이후에는 Main/WebCodecs 경로도 추가했다. 이 비교가 필요했던 이유는 단순하다. Web Worker 가 빠른 이유가 WebCodecs 때문인지, 아니면 Web Worker 때문인지 분리해야 했기 때문이다. 그래서 세 경로를 나눴다.
+| 기준             | 확인하려는 것                                      |
+| ---------------- | -------------------------------------------------- |
+| 첫 시각적 피드백 | import 후 첫 이미지가 보이는 데 걸린 시간          |
+| 전체 생성 시간   | 요청한 썸네일이 모두 준비되는 데 걸린 시간         |
+| UI 루프 지연     | 생성 중 `requestAnimationFrame` 간격이 밀리는 정도 |
 
-| 경로                  | 의미                                                                |
-| --------------------- | ------------------------------------------------------------------- |
-| HTMLVideoElement seek | 브라우저 비디오 요소의 currentTime seek 후 frame capture            |
-| Main/WebCodecs        | 메인 스레드에서 ArrayBuffer read, mp4box demux, VideoDecoder decode |
-| Web Worker /WebCodecs | Web Worker 에서 ArrayBuffer read, mp4box demux, VideoDecoder decode |
+poster-first 구조는 첫 시각적 피드백을 줄이기 위한 선택이다. 1편의 측정에서는 첫 region 표시가 `6262.2ms`에서 `2815.8ms`로 약 55% 단축됐다. 이 값은 전체 썸네일을 기다리지 않고 poster를 먼저 보여준 결과다. Web Worker 자체의 효과로 해석하면 안 된다.
 
-Main/WebCodecs와 Web Worker /WebCodecs는 가능한 한 같은 방식으로 맞췄다. 파일을 ArrayBuffer로 읽고, mp4box로 demux하고, 선택한 sample을 VideoDecoder로 decode하는 흐름이다. 이렇게 해야 Web Worker 가 유리한 이유를 더 좁게 볼 수 있다.
+Web Worker의 역할은 전체 생성 시간과 UI 루프 지연을 함께 비교해야 판단할 수 있다.
 
-## [sort1] 5. Main busy와 Max stall
+## [sort1] 4. WebCodecs 실행 위치를 분리한 벤치마크
 
-새로 본 지표는 Main busy와 Max stall이다. 이 글에서 Main busy는 실행 중 requestAnimationFrame 간격이 16.7ms를 초과한 누적 시간을 실행 시간으로 나눈 값이다. 16.7ms는 60fps 기준 한 프레임 예산이다. 정확히 말하면 이 값은 순수 JS 실행 시간만을 뜻하지 않는다. 렌더링, GC, bitmap 수신과 반영, 브라우저 내부 작업까지 섞일 수 있다. 그래서 메인 스레드 JS 블로킹이라고 단정하면 부정확하다. 더 정확한 표현은 다음과 같다.
+초기 비교는 `HTMLVideoElement seek`와 `Worker/WebCodecs`만 대상으로 삼았다. 이 비교만으로는 WebCodecs가 빨랐는지, Web Worker로 실행 위치를 옮긴 효과인지 구분할 수 없다. 그래서 `Main/WebCodecs`를 추가해 세 경로를 비교했다.
 
-> Main busy는 UI 루프 지연을 추정하는 대리 지표다.
+| 경로                    | 처리 방식                                                    |
+| ----------------------- | ------------------------------------------------------------ |
+| `HTMLVideoElement seek` | `currentTime` 변경 후 브라우저 비디오 디코더에서 프레임 캡처 |
+| `Main/WebCodecs`        | 메인 스레드에서 `mp4box` demux와 `VideoDecoder` decode 실행  |
+| `Worker/WebCodecs`      | Web Worker에서 `mp4box` demux와 `VideoDecoder` decode 실행   |
 
-Max stall은 측정 구간에서 관찰된 가장 긴 단일 프레임 간격으로, 최대 멈춤 시간을 의미한다. 이 값이 크면 사용자는 순간적인 멈춤으로 느낄 수 있다. 즉, 두 지표는 다음 질문에 답하기 위해 추가했다.
+`Main/WebCodecs`와 `Worker/WebCodecs`는 같은 파일을 `ArrayBuffer`로 읽고, 선택한 sample을 디코딩하는 흐름으로 맞췄다. 두 경로의 주요 차이는 demux와 decode를 실행하는 스레드다.
 
-> 썸네일 생성 중 UI 루프가 얼마나 오래, 얼마나 자주 밀리는가?
+같은 비디오 파일에서 각 경로로 1장, 10장, 100장을 요청했다. 이 화면만으로는 반복 횟수와 결과 분산을 확인할 수 없으므로, 아래 수치를 다른 환경의 일반적인 성능으로 확대 해석하지 않는다.
 
-## [sort1] 6. 숫자가 바꾼 판단
+## [sort1] 5. UI 루프 지연을 본 두 지표
 
-위 내용을 바탕으로 테스트 페이지를 만들어서 다시 검증을 해보았다. 테스트 페이지 작성에는 자동화 도구의 도움을 받았고, 작성된 코드를 검수하는 방식으로 진행하였다. 자동화된 테스트 페이지 작성 보조를 활용하면 테스트 페이지 작성에 대한 심적 부담감이 확연히 줄어든다는 장점이 있었다. 100장 생성 기준 결과는 다음과 같았다.
+`Main busy`는 측정 중 `requestAnimationFrame` 간격이 60fps의 프레임 예산인 `16.7ms`를 초과한 정도를 비율로 나타낸 대리 지표다. 순수 JavaScript 실행 시간만 측정하지는 않는다. 렌더링, 가비지 컬렉션, `ImageBitmap` 수신과 브라우저 내부 작업도 포함될 수 있다.
 
-| Mode                  | Total      | Avg/frame | Main busy | Max stall |
-| --------------------- | ---------- | --------- | --------- | --------- |
-| Web Worker /WebCodecs | 3936.61ms  | 39.37ms   | 11%       | 428.87ms  |
-| Main/WebCodecs        | 4047.95ms  | 40.48ms   | 66%       | 1251.81ms |
-| HTMLVideoElement seek | 20844.48ms | 208.44ms  | 0%        | 21.05ms   |
+`Max stall`은 측정 구간에서 관찰된 가장 긴 단일 프레임 간격이다.
 
-이 결과에서 중요한 점은 Web Worker /WebCodecs와 Main/WebCodecs의 전체 생성 시간이 거의 비슷하다는 것이다. Web Worker 가 압도적으로 빠르다고 말하기 어렵다. 하지만 Main busy와 Max stall은 다르다. Web Worker /WebCodecs는 Main busy가 11%였고, Main/WebCodecs는 66%였다. Max stall도 Web Worker 는 약 429ms, Main은 약 1252ms였다. 따라서 이 결과는 다음 해석과 일치한다.
+따라서 두 값은 실제 입력 지연을 직접 측정한 결과가 아니다. 값이 클수록 UI 루프가 길게 밀렸을 가능성과 일치하지만, 실제 에디터의 스크롤과 드래그가 느려졌다는 결론에는 별도의 상호작용 측정이 필요하다.
 
-> Web Worker 의 핵심 가치는 전체 처리 속도보다 UI 응답성 보호에 있다.
+## [sort1] 6. 1장·10장·100장 측정 결과
 
-Web Worker 는 같은 WebCodecs 기반 처리를 메인 스레드 밖으로 옮긴다. 그래서 전체 생성 시간이 비슷하더라도, 사용자가 편집하는 동안 메인 스레드가 덜 막힐 수 있다.
+![HTMLVideoElement seek, Main/WebCodecs, Worker/WebCodecs 썸네일 생성 벤치마크](/images/thumbnail-optimization-worker-verification/thumbnail-generation-benchmark.png)
 
-## [sort1] 7. HTMLVideoElement seek의 위치
+_같은 비디오 파일에서 세 경로로 1장, 10장, 100장을 요청한 측정 화면_
 
-HTMLVideoElement seek는 poster 1장에는 매우 강했다.
+### [sort2] 6-1. poster 1장은 HTMLVideoElement seek가 빨랐다
 
-| Mode                  | Requested | First frame | Total     |
-| --------------------- | --------- | ----------- | --------- |
-| HTMLVideoElement seek | 1         | 50.29ms     | 51.2ms    |
-| Web Worker /WebCodecs | 1         | 3163.29ms   | 3163.35ms |
-| Main/WebCodecs        | 1         | 6143.84ms   | 6143.85ms |
+| 경로                    | 첫 프레임   | 전체 시간   |
+| ----------------------- | ----------- | ----------- |
+| `HTMLVideoElement seek` | `50.29ms`   | `51.2ms`    |
+| `Worker/WebCodecs`      | `3163.29ms` | `3163.35ms` |
+| `Main/WebCodecs`        | `6143.84ms` | `6143.85ms` |
 
-이 수치는 poster-first 전략을 다시 뒷받침한다. 대표 이미지 1장을 빠르게 보여주는 목적이라면 HTMLVideoElement seek가 가장 적합하다. Web Worker /WebCodecs는 초기 demux와 decode 준비 비용이 있어서 1장 작업에는 불리하다. 하지만 HTMLVideoElement seek를 여러 장 생성에 쓰는 것은 조심해야 한다. 실험 중 10장 생성에서 912348.63ms라는 비정상값이 나왔다. 이 값은 일반적인 성능 판단에 그대로 넣으면 안 된다. seek queue가 멈췄는지, 측정 로직에 문제가 있었는지, 브라우저 decode stall이 있었는지 추가 확인이 필요하다. 그럼에도 방향은 분명했다.
+이 실행에서는 `HTMLVideoElement seek`가 poster 1장을 가장 빨리 만들었다. WebCodecs 두 경로는 파일 읽기, demux, decoder 준비 비용을 한 장에 모두 부담했다. 이 결과는 업로드 직후 poster를 seek로 만드는 선택을 뒷받침한다.
 
-| 용도                | 적합한 경로                            |
-| ------------------- | -------------------------------------- |
-| poster 1장          | HTMLVideoElement seek                  |
-| visible tile 일부   | 상황에 따라 seek queue 또는 Web Worker |
-| bulk thumbnail      | Web Worker /WebCodecs                  |
-| Main/WebCodecs 단독 | UI 응답성 리스크 있음                  |
+### [sort2] 6-2. 10장 seek 결과는 이상치로 분리했다
 
-## [sort1] 8. 실제 에디터 UI를 기준으로 다시 보기
+10장 실행에서 `HTMLVideoElement seek`의 전체 시간은 `912348.63ms`, `Max stall`은 `909557ms`였다. 다른 실행과 차이가 지나치게 크다. 현재 자료만으로는 seek queue 정지, 디코더 지연, 백그라운드 탭 제한, 측정 오류 중 무엇이 관여했는지 구분할 수 없다.
 
-벤치마크 페이지는 경로 비교에는 좋다. 하지만 실제 편집 경험을 완전히 대표하지는 않는다. 특히 region drag는 단순히 DOM element를 움직이는 작업이 아니다. 실제 에디터에서는 dnd-kit, placement 계산, interaction preview store, canvas redraw, commit command가 함께 움직인다. 그래서 실제 판단에는 E2E 테스트가 필요했다. 테스트에서 봐야 하는 것은 다음이다.
+따라서 이 값으로 “여러 장의 seek는 항상 느리다”라고 결론 내리지 않았다. 같은 조건의 반복 실행과 Performance trace가 필요하다. 2편에서 제안한 “visible tile은 main-thread seek queue로 생성한다”는 설계도 이 결과만으로는 검증되지 않았다.
 
-| 시나리오                         | 확인하려는 것                        |
-| -------------------------------- | ------------------------------------ |
-| import 직후 region drag          | thumbnail loading 중 편집이 막히는지 |
-| thumbnails loaded 후 region drag | baseline 편집 성능                   |
-| zoom level별 drag                | tile 수와 canvas redraw 비용 증가    |
-| clip count별 drag                | track 수 증가에 따른 비용            |
-| trim handle drag                 | resize preview와 commit 경로 비용    |
+### [sort2] 6-3. 100장에서는 전체 시간보다 UI 루프 지표가 달랐다
 
-이 테스트는 Web Worker 가 필요한지 직접 증명하기보다, 실제 편집 경로에서 jank가 발생하는지 확인하는 장치다. 더 강한 결론을 내려면 같은 E2E를 strategy별로 돌려야 한다.
+| 경로                    | 전체 시간    | 장당 평균  | Main busy | Max stall   |
+| ----------------------- | ------------ | ---------- | --------- | ----------- |
+| `Worker/WebCodecs`      | `3936.61ms`  | `39.37ms`  | `11%`     | `428.87ms`  |
+| `Main/WebCodecs`        | `4047.95ms`  | `40.48ms`  | `66%`     | `1251.81ms` |
+| `HTMLVideoElement seek` | `20844.48ms` | `208.44ms` | `0%`      | `21.05ms`   |
 
-| 비교군                | 목적                          |
-| --------------------- | ----------------------------- |
-| Web Worker /WebCodecs | 현재 구조                     |
-| Main/WebCodecs        | Web Worker 제거 가능성 확인   |
-| thumbnail off         | thumbnail 외 비용 기준선 확인 |
+`Worker/WebCodecs`와 `Main/WebCodecs`의 전체 시간 차이는 `111.34ms`, 약 2.8%였다. 이 실행만 보면 Web Worker가 전체 처리를 크게 단축했다고 말하기 어렵다.
 
-이 비교가 있어야 썸네일 생성 때문에 밀린다와 타임라인 자체 redraw 비용 때문에 밀린다를 더 잘 구분할 수 있다.
+반면 `Main busy`는 `66%`에서 `11%`로 55%포인트 낮았고, `Max stall`은 `1251.81ms`에서 `428.87ms`로 약 65.7% 낮았다. 이 차이는 demux와 decode를 Web Worker로 옮겼을 때 UI 루프 지연이 줄어든다는 해석과 일치한다.
 
-## [sort1] 9. background prefetch와 메모리 상한
+`HTMLVideoElement seek`의 `Main busy`와 `Max stall`은 낮았지만 전체 생성에는 `20844.48ms`가 걸렸다. 이 경로는 브라우저 비디오 디코더의 비동기 seek를 기다리므로, rAF 기반 지표가 낮다는 사실만으로 처리량까지 좋다고 판단할 수 없다.
 
-두 번째 글에서는 화면 밖 썸네일 생성을 backfill이라고 불렀다. 이후 다시 생각해보니 더 정확한 표현은 background thumbnail prefetch에 가깝다.backfill은 빈 곳을 메운다는 느낌이 강하다. 실제 의도는 사용자가 아직 보지 않는 구간을 낮은 우선순위로 미리 만들어두는 것이다. 이 작업은 반드시 상한이 있어야 한다. Web Worker 에서 썸네일을 다 만든 뒤 한 번에 main thread로 보내면 순간 메모리 사용량이 커질 수 있다. 브라우저가 디스크 스왑으로 안전하게 처리해줄 것이라고 기대하면 안 된다. 필요한 방어선은 다음과 같다.
+## [sort1] 7. 2편의 구조에서 수정한 판단
 
-| 방어선               | 이유                                   |
-| -------------------- | -------------------------------------- |
-| batch 전송           | ImageBitmap이 한 번에 몰리는 상황 방지 |
-| cache 상한           | 긴 영상에서 메모리 증가 방지           |
-| in-flight dedupe     | 같은 timestamp 중복 생성 방지          |
-| stale result discard | scroll, zoom 이후 늦게 온 결과 무시    |
-| ImageBitmap.close    | 사용하지 않는 bitmap 리소스 해제       |
-| abort 처리           | import 취소, undo, 프로젝트 전환 대응  |
+[2편의 구조](/posts/thumbnail-optimization-structure-redesign)는 “지금 보는 것은 우선 처리하고, 나중에 볼 수도 있는 것은 보조 작업으로 처리한다”는 기준을 세웠다. 이번 측정도 작업의 우선순위를 나눈다는 방향은 바꾸지 않았다. 다만 실행 경로에 대한 확신은 다음과 같이 좁혔다.
 
-여기서 중요한 점은 Web Worker 를 쓴다고 메모리 문제가 사라지지 않는다는 것이다. Web Worker 는 메인 스레드 점유를 줄일 수 있지만, 결과 bitmap과 cache는 여전히 관리해야 한다.
+| 작업                          | 현재 판단                                                        |
+| ----------------------------- | ---------------------------------------------------------------- |
+| poster 1장                    | `HTMLVideoElement seek` 사용 근거가 있음                         |
+| visible tile                  | seek와 Worker 중 어느 경로가 나은지 아직 단정하지 않음           |
+| background thumbnail prefetch | 대량 처리 시 `Worker/WebCodecs`를 유지할 근거가 있음             |
+| `Main/WebCodecs` 단독 전환    | 이번 실행에서는 UI 루프 지연 지표가 커 기본 경로로 선택하지 않음 |
 
-## [sort1] 10. 최종 선택
+즉, 이번 벤치마크는 2편의 구조 전체를 증명하지 않는다. poster와 background thumbnail prefetch를 분리한 방향을 지지하지만, visible tile 경로는 실제 에디터에서 다시 비교해야 한다.
 
-현재 기준에서 선택한 구조는 다음과 같다. 정리하면 다음과 같다.
+## [sort1] 8. 실제 에디터에서 추가로 확인할 것
 
-| 선택                                | 이유                          | 비용                                        |
-| ----------------------------------- | ----------------------------- | ------------------------------------------- |
-| poster-first 유지                   | 첫 시각적 피드백이 가장 빠름  | poster와 thumbnail cache 분리 필요          |
-| Web Worker /WebCodecs 유지          | Main busy와 Max stall 감소    | Web Worker message, abort, memory 관리 필요 |
-| HTMLVideoElement seek는 poster 중심 | 1장 생성이 매우 빠름          | 여러 장 seek는 불안정 가능성                |
-| background prefetch는 낮은 우선순위 | 화면 밖 탐색 경험 보완        | 상한 없으면 메모리 위험                     |
-| E2E로 실제 UI 검증                  | synthetic benchmark 한계 보완 | 테스트 환경과 selector 관리 필요            |
+벤치마크 페이지는 디코딩 경로를 통제해 비교하기 좋다. 하지만 실제 에디터에서는 drag-and-drop 처리, 배치 계산, preview 상태 갱신, Canvas redraw, command commit이 함께 실행된다.
 
-이 구조는 가장 단순한 구조는 아니다. 하지만 현재 관찰한 수치에서는 Main/WebCodecs 단독 전환보다 더 안전하다. 특히 Web Worker /WebCodecs와 Main/WebCodecs의 전체 처리 시간이 비슷한데도 Main busy가 크게 다르다는 점이 중요했다. Web Worker 는 속도 최적화 도구라기보다 UI 응답성 보호 장치에 가깝다.
+실제 UI에 대한 결론을 내려면 같은 시나리오를 세 전략으로 반복해야 한다.
 
-## [sort1] 11. 아직 단정하지 않은 것
+| 비교군                   | 확인 목적                           |
+| ------------------------ | ----------------------------------- |
+| `Worker/WebCodecs`       | 현재 구조의 상호작용 지연 측정      |
+| `Main/WebCodecs`         | Web Worker 제거 시 변화 측정        |
+| thumbnail generation off | 썸네일 생성 외 타임라인 비용 기준선 |
 
-이번 측정으로 모든 결론이 끝난 것은 아니다. 아직 단정하지 않은 것은 다음과 같다.
+측정 시나리오는 import 직후 region drag, 썸네일 생성 완료 후 drag, zoom 단계별 drag, clip 수 증가, trim handle drag로 나눈다. 이 비교가 있어야 썸네일 생성과 타임라인 redraw의 영향을 구분할 수 있다.
 
-| 남은 질문                              | 필요한 확인                                      |
-| -------------------------------------- | ------------------------------------------------ |
-| HTMLVideoElement seek 10장 이상치 원인 | timeout, seek queue, decode stall 분리           |
-| Web Worker 가 모든 환경에서 유리한가   | 저사양 PC, 긴 영상, 4K 영상 측정                 |
-| memory leak이 없는가                   | 반복 import, undo, project switch 후 메모리 추적 |
-| E2E jank의 원인이 thumbnail인가        | Web Worker/Main/off 비교군                       |
-| cache 상한이 적절한가                  | viewport 이동 패턴과 영상 길이별 관찰            |
+## [sort1] 9. Web Worker를 유지해도 필요한 메모리 관리
 
-그래서 현재 결론은 단정짓는것이 아닌, 이 정도가 정확한 표현이다.
+2편에서 사용한 `backfill`은 “빈 곳을 나중에 채운다”는 뜻이 강하다. 실제 작업은 사용자가 아직 보지 않은 구간을 낮은 우선순위로 미리 생성하므로, 이 글에서는 `background thumbnail prefetch`로 부른다.
 
-> 지금 수치에서는 Web Worker 제거보다 Web Worker유지가 더 타당하다.
+Web Worker는 메인 스레드 점유를 줄일 수 있지만 결과 `ImageBitmap`과 캐시 메모리까지 줄여주지는 않는다. 다음 방어선은 별도로 필요하다.
+
+- `ImageBitmap`을 작은 batch로 전송한다.
+- 캐시에 저장할 썸네일 수의 상한을 둔다.
+- 같은 timestamp의 in-flight 요청을 중복 실행하지 않는다.
+- scroll과 zoom 이후 도착한 stale 결과를 버린다.
+- 사용하지 않는 `ImageBitmap`에 `close()`를 호출한다.
+- import 취소, undo, 프로젝트 전환 시 진행 중인 작업을 중단한다.
+
+## [sort1] 10. 현재 선택
+
+현재 측정 근거로는 다음 구조를 유지한다.
+
+| 선택                            | 근거                                             | 남는 비용                    |
+| ------------------------------- | ------------------------------------------------ | ---------------------------- |
+| poster-first 유지               | 1장 seek가 `51.2ms`에 완료됨                     | poster와 thumbnail 캐시 분리 |
+| `Worker/WebCodecs` 유지         | 100장에서 Main busy와 Max stall이 더 낮게 관찰됨 | message, abort, 메모리 관리  |
+| visible tile 경로는 보류        | 10장 seek 이상치의 원인을 확인하지 못함          | seek/Worker 비교 측정 필요   |
+| background prefetch에 상한 적용 | 화면 밖 썸네일은 즉시 완료할 필요가 없음         | 우선순위와 캐시 정책 필요    |
+
+따라서 현재 결론은 “Web Worker가 더 빠르다”가 아니다.
+
+> 이번 측정에서는 Web Worker를 제거할 근거가 부족했다. Worker/WebCodecs는 Main/WebCodecs와 전체 시간이 비슷했지만, UI 루프 지연 대리 지표는 더 낮았다.
+
+## [sort1] 11. 아직 결론 내리지 않은 것
+
+| 남은 질문                            | 필요한 근거                                     |
+| ------------------------------------ | ----------------------------------------------- |
+| 10장 seek 이상치의 원인은 무엇인가   | 반복 실행, timeout 로그, Performance trace      |
+| 실제 drag 입력 지연도 줄어드는가     | 전략별 E2E 측정                                 |
+| 다른 환경에서도 같은 경향이 나오는가 | 저사양 PC, 긴 영상, 4K 영상의 반복 측정         |
+| 메모리 누수가 없는가                 | 반복 import, undo, 프로젝트 전환 후 메모리 추적 |
+| 캐시 상한이 적절한가                 | 영상 길이와 viewport 이동 패턴별 관찰           |
+
+한 번의 벤치마크 화면만으로 Web Worker가 모든 환경에서 유리하다고 단정할 수 없다. 지금 확인한 것은 이 파일과 실행 환경에서 나타난 경향이다.
 
 ## [sort1] 12. 마치며
 
-세번의 썸네일 생성 최적화를 거치며 가장 크게 바뀐 관점은 “썸네일을 얼마나 빨리 많이 만들 것인가”에서 “사용자가 먼저 체감하는 구간을 어떻게 안정적으로 보여줄 것인가”로 이동한 것이다. 처음에는 Web Worker 를 쓰면 썸네일 생성이 빨라질 것이라고 생각했다. 그래서 관심은 주로 전체 생성 시간에 있었다. 하지만 측정해보니 Web Worker 는 항상 빠른 해법이 아니었다. 10장처럼 작업량이 작을 때는 오히려 seek보다 느렸고, 60장처럼 작업량이 커졌을 때 이점이 분명해졌다. 여기서 중요한 기준은 “Worker가 빠른가”가 아니라, 어떤 작업량과 어떤 목적에서 Web Worker 가 유리한가였다. 그 다음에는 전체 생성 시간보다 첫 시각적 피드백이 더 중요하다는 쪽으로 관점이 바뀌었다. 사용자는 모든 썸네일이 완성되는 시점보다, import 직후 타임라인에 영상이 보이기 시작하는 시점을 먼저 체감한다. 그래서 전체를 Web Worker 에 맡기는 것보다, poster 또는 첫 1장을 먼저 보여주고 나머지를 점진적으로 채우는 구조가 더 적합했다. 이때부터 성능 최적화의 기준은 총 처리 시간이 아니라 첫 화면 안정화 시간과 전체 완료 시간 사이의 균형이 되었다.
+처음에는 Web Worker를 쓰면 썸네일 생성이 빨라질 것이라고 생각했다. 이번 측정에서 100장 전체 생성 시간은 `Worker/WebCodecs`와 `Main/WebCodecs`가 비슷했다. 대신 Main busy와 Max stall에서 차이가 나타났다.
 
-두 번째 시도에서는 생성 대상 자체를 다시 보게 되었다. 기존처럼 duration 기준으로 몇 장을 만들지 정하는 방식은 구현은 단순하지만, 사용자가 지금 보는 viewport와 맞지 않을 수 있었다. 그래서 “전체 영상에서 몇 장을 만들 것인가”가 아니라 “현재 화면에 필요한 tile을 먼저 어떻게 채울 것인가”가 더 중요한 질문이 되었다. 여기서 poster, visible tile, background prefetch를 분리하는 구조가 나왔다. 세 번째 시도에서는 Web Worker 의 의미를 다시 의심했다. 직접 써봤을 때 불편함이 없다면 Web Worker 를 빼도 되는 것 아닌지 고민했다. 하지만 Main/WebCodecs와 Worker/WebCodecs를 비교해보니 전체 생성 시간은 비슷해도 main busy와 max stall은 크게 달랐다. 이 결과로 Web Worker 의 가치는 단순한 생성 속도가 아니라 메인 스레드 UI 응답성을 보호하는 것에 있다는 쪽으로 관점이 정리됐다. 결국 중요한 것은 다음 세 가지였다. 첫째, 사용자가 먼저 보는 것과 나중에 볼 수 있는 것을 분리하는 것이다. poster와 visible tile은 빠르게 보여줘야 하고, 화면 밖 썸네일은 낮은 우선순위로 제한적으로 처리해도 된다.
+이 결과로 Web Worker의 역할을 “처리 시간 단축”에서 “대량 디코딩 중 UI 루프 지연 위험 감소”로 더 좁게 정의할 수 있었다. poster는 seek로 먼저 보여주고, 화면 밖 대량 생성은 Web Worker에 맡긴다. visible tile 경로는 실제 상호작용 측정 전까지 단정하지 않는다.
 
-둘째, 속도 지표를 하나로 보지 않는 것이다. first-region, generated, main busy, max stall은 서로 다른 질문에 답한다. 전체 생성 시간이 빠르다고 첫 화면이 빠른 것은 아니고, 생성 시간이 비슷하다고 UI 응답성이 같은 것도 아니다. 셋째, 최적화의 이득과 구조적 복잡도를 함께 보는 것이다. Web Worker, queue, abort, stale check, cache 상한은 모두 비용이 있다. 따라서 구조를 계속 복잡하게 만드는 것이 목표가 아니라, E2E와 메모리 관찰을 통해 어디까지가 필요한 복잡도인지 판단해야 한다. 이제 남은 작업은 구조를 더 복잡하게 만드는 것이 아니다. 오히려 반대로, E2E와 메모리 관찰을 통해 현재 구조에서 정말 필요한 복잡도와 덜어낼 수 있는 복잡도를 구분해야 한다. 세번의 작업을 통해 성능 최적화는 무조건 더 빠른 코드를 찾는 일이 아니라는 것을 배웠다. 사용자가 먼저 체감하는 구간과 나중에 처리해도 되는 구간을 나누고, 실제로 필요한 최적화인지 판단해야 한다. 동시에 함께 일하는 개발자들과 미래의 내가 이 코드를 다시 봤을 때 쉽게 이해할 수 있는지, 인계 비용과 러닝커브까지 고려해야 한다. 결국 중요한 것은 속도만이 아니라,
-
-> 성능 개선이 가져오는 이득과 구조적 복잡도 사이의 트레이드오프를 판단하는 일이었다.
+> 성능 최적화는 가장 빠른 경로 하나를 고르는 일이 아니라, 사용자가 먼저 보는 작업과 나중에 처리할 작업에 서로 다른 기준을 적용하는 일이다.
 
 이전 글:
 
