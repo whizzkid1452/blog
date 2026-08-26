@@ -113,8 +113,14 @@ function getHeadingViolation({ level, title }: { level: number; title: string })
     return 'H2는 `[sort1] N. 제목` 형식을 사용해야 합니다';
   }
 
-  if (level === 3 && (tableOfContentsTag?.[1] !== '2' || !SECOND_LEVEL_HEADING_PATTERN.test(visibleTitle))) {
-    return 'H3는 `[sort2] N-N. 제목` 형식을 사용해야 합니다';
+  if (level === 3) {
+    if (!SECOND_LEVEL_HEADING_PATTERN.test(visibleTitle)) {
+      return 'H3는 `N-N. 제목` 형식을 사용해야 합니다';
+    }
+
+    if (tableOfContentsTag != null && tableOfContentsTag[1] !== '2') {
+      return 'H3에 sort 태그를 쓸 때는 `[sort2]`만 사용할 수 있습니다';
+    }
   }
 
   return null;
