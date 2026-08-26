@@ -58,7 +58,7 @@ export const postFrontmatterSchema = z
     series: z
       .object({
         name: z.string().trim().min(1),
-        order: z.number().int().positive(),
+        order: z.number().int().nonnegative(),
       })
       .optional(),
   })
