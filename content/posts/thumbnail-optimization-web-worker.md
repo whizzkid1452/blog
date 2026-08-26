@@ -1,6 +1,6 @@
 ---
-title: '[Part 1.] Web Worker를 이용한 썸네일 생성 최적화'
-description: '비디오 썸네일 생성 지연을 줄이기 위해 Web Worker 전략을 적용하고 측정한 과정을 정리합니다.'
+title: '[Part 1.] 첫 화면과 전체 썸네일을 따로 최적화하기'
+description: '첫 화면은 HTMLVideoElement seek로 빠르게 채우고, 나머지는 Web Worker에서 생성하도록 나눈 과정을 정리합니다.'
 date: '2026-04-17'
 publishedAt: '2026-04-17T14:26:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'editor']
@@ -10,340 +10,216 @@ series:
 draft: false
 ---
 
-썸네일 최적화 시도 시리즈는 총 3편으로, 잘못된 판단으로 삽질을 하고, 스스로에게 질문하고 수정해나가는 과정을 담았습니다. 다음 글들은 아래 링크에서 보실 수 있습니다.
+## [sort1] 1. 썸네일이 모두 만들어질 때까지 타임라인이 비어 있었다
 
-- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
-- [[Part 3.] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
+비디오를 import하면 타임라인에 장면별 썸네일이 표시된다. 문제는 생성이 끝나기 전까지 타임라인이 비어 보였다는 점이다. 사용자는 이 상태에서 import가 끝났는지, 영상이 정상적으로 로드됐는지 판단하기 어려웠다.
 
-## [sort1] 1. 들어가며
+처음에는 전체 생성 시간만 줄이면 된다고 생각했다. demux와 프레임 생성 파이프라인을 Web Worker에서 제어하면 해결될 것 같았다. 하지만 실험을 거치며 목표가 두 개라는 것을 알게 되었다.
 
-비디오를 에디터에 임포트하면 타임라인에 썸네일이 그려진다. 이 구간이 지연되면 편집을 시작할 수 있는 시점이 함께 늦어지고, 초기 체감 속도에 그대로 영향을 준다. 이번 작업의 목표는 세 가지였다.
+1. **첫 시각적 피드백:** 타임라인에 첫 이미지가 언제 나타나는가
+2. **전체 생성 시간:** 필요한 썸네일이 언제 모두 준비되는가
 
-- 썸네일 전체 생성 시간을 줄인다.
-- 첫 썸네일이 보이는 시점을 앞당긴다.
-- 빠른 경로가 실패해도 안전하게 복구한다.
+결론부터 말하면, 한 가지 경로로 두 목표를 모두 만족시키기는 어려웠다. 이 프로젝트에서는 **대표 이미지 1장은 `HTMLVideoElement` seek로 먼저 만들고, 나머지는 Web Worker에서 생성하는 방식**이 가장 균형이 좋았다.
 
-결론부터 적으면, 처음부터 끝까지 Web Worker만 사용하는 방식보다 "첫 1장은 seek, 나머지는 Web Worker"로 나눈 전략이 가장 균형이 좋았다. 하지만 여기에 도달하기까지 측정 조건을 두 번 바로잡아야 했고, 중간에 한 번 엎었다. 그 과정을 이 글에 정리했다. Web Worker는 웹 애플리케이션의 메인 실행 스레드와 분리된 백그라운드 스레드에서 스크립트를 실행할 수 있게 해주는 간단한 수단이다. 이점은 스레드 자체가 별도로 실행되기 때문에 메인(보통 UI) 스레드의 동작이 느려지거나 중단되지 않는다는 것이다. 출처: MDN - Web Workers API
+다만 이 글에서 측정한 것은 첫 표시 시간과 전체 생성 시간이다. Web Worker가 실제 편집 중 UI 응답성을 얼마나 보호하는지는 이 시점에 분리해서 측정하지 못했다. 이 질문은 Part 3에서 다시 검증한다.
 
-## [sort1] 2. 가설과 측정 조건
+## [sort1] 2. 먼저 “빠르다”의 기준을 나눴다
 
-### [sort2] 2-1. 초기 가설
+성능을 하나의 숫자로 보면 서로 다른 문제가 섞인다. 이 글에서는 다음 세 지표를 구분한다.
+
+| 지표                | 답하려는 질문                                 | 이 글의 측정 범위 |
+| ------------------- | --------------------------------------------- | ----------------- |
+| 첫 이미지 표시 시간 | 사용자는 언제 로딩이 진행 중임을 알 수 있는가 | 측정함            |
+| 전체 생성 시간      | 요청한 썸네일은 언제 모두 준비되는가          | 측정함            |
+| UI 응답성           | 생성 중 스크롤과 드래그가 얼마나 밀리는가     | 후속 검증 필요    |
+
+첫 이미지가 빨리 보여도 전체 생성은 오래 걸릴 수 있다. 반대로 전체 생성 시간이 짧아도 완료 직전까지 화면이 비어 있으면 체감은 느릴 수 있다. 따라서 두 지표를 함께 비교해야 했다.
+
+## [sort1] 3. 첫 비교는 작업량부터 달랐다
 
 초기 가설은 단순했다.
 
-> 썸네일 생성은 무거운 작업이므로, Web Worker로 옮기면 성능이 개선될 것이다.
+> 썸네일 디코딩을 Web Worker로 옮기면 생성 시간이 줄어들 것이다.
 
-실험을 진행해보니 이 가설은 일부 조건에서만 맞았다. 핵심은 "항상 빠른가"가 아니라 "어떤 조건에서 빠른가"였다.
+Web Worker 경로를 구현한 뒤 첫 로그를 봤지만, 비교 조건이 같지 않았다.
 
-### [sort2] 2-2. 측정 조건 불일치
-
-Web Worker 경로를 붙이고 첫 로그를 확인했을 때, 결과가 기대와 다르게 나왔다. 자세히 보니 비교 기준 자체가 달랐다.
-
-- seek 경로: 10장 생성
+- `HTMLVideoElement` seek 경로: 10장 생성
 - Web Worker 경로: 60장 생성
 
-같은 작업량이 아닌 상태에서 총 시간을 나란히 놓고 비교하고 있었다. "Web Worker가 빠르다"든 "느리다"든 판단할 수 있는 데이터가 아니었다. 성능 실험에서 가장 먼저 의심해야 하는 것은 코드가 아니라 측정 조건이라는 걸 여기서 다시 확인했다.
+이 값으로는 어느 경로가 더 빠른지 판단할 수 없다. 작업량이 다르기 때문이다. 코드보다 측정 조건을 먼저 바로잡아야 했다.
 
-### [sort2] 2-3. 조건과 지표 재정의
+다시 측정할 때는 입력 파일, 브라우저 세션, 생성 개수를 동일하게 맞췄다. 기록한 시점도 분리했다.
 
-그래서 측정 조건부터 다시 잡았다.
+- `generated`: 요청한 썸네일이 모두 생성된 시점
+- `first-thumbnail-visible`: 첫 썸네일이 표시된 시점
+- `first-region-drawn-on-track-row`: 타임라인에 첫 비디오 구간이 그려진 시점
 
-- 입력 파일: `YTDown.com_YouTube_Media_4CLWuZ3403k_001_1080p.mp4`
-- 실행 환경: localhost, 동일 브라우저 세션
-- 비교 방식: seek/Web Worker 모두 동일한 썸네일 개수로 측정
-- 관찰 로그: 콘솔 perf 로그 + 성능 패널 장기 작업 구간
+아래 수치는 이 조건에서 기록한 값이다. 다른 코덱, 브라우저, 기기에서도 같은 결과가 나온다고 일반화할 수는 없다.
 
-지표도 하나가 아니라 세 개로 분리했다.
+## [sort1] 4. 적은 작업에서는 seek, 많은 작업에서는 Worker가 빨랐다
 
-- `[thumbnail] perf(generated)`: 전체 생성 완료 시점
-- `[thumbnail] perf(first-thumbnail-visible)`: 첫 썸네일이 화면에 처음 보인 시점
-- `[thumbnail] perf(first-region-drawn-on-track-row)`: 트랙 행에 첫 구간이 그려진 시점
+같은 개수를 생성하자 작업량에 따라 결과가 달라졌다.
 
-지표를 분리하고 나니, 단순 총 시간 비교가 아니라 병목이 어느 구간에 있는지가 보이기 시작했다.
+| 생성 개수 | `HTMLVideoElement` seek | Web Worker | 관찰 결과                |
+| --------- | ----------------------: | ---------: | ------------------------ |
+| 10장      |               4,246.2ms |  6,381.2ms | seek가 2,135ms 빨랐다    |
+| 60장      |              13,394.1ms |  7,028.9ms | Worker가 약 47.5% 빨랐다 |
 
-개선 전 10장, 60장
+10장에서는 Web Worker가 오히려 느렸다. Worker 시작, 메시지 전달, demux와 decoder 준비 같은 고정 비용이 작은 작업에서 더 크게 드러난 결과와 일치한다. 다만 이 측정만으로 각 비용의 비중까지 분리했다고 말할 수는 없다.
 
-10장 기준 dom seek 이용 시 콘솔 측정 결과
+60장에서는 Web Worker 경로가 약 6.37초 빨랐다. 적어도 이 테스트 환경에서는 **처리량이 커질 때 Web Worker 경로가 전체 생성 시간에 유리했다.**
 
-10장 기준 dom seek 이용 시 성능 측정 결과
+여기서 첫 판단을 수정했다.
 
-60장 기준 dom seek 이용 시 콘솔 측정 결과
+> Web Worker는 항상 빠른 경로가 아니라, 초기 비용을 감수할 만큼 작업량이 클 때 유리한 경로였다.
 
-60장 기준 dom seek 이용 시 성능 측정 결과
+## [sort1] 5. Worker만 사용하자 첫 화면이 6초 넘게 비었다
 
-## [sort1] 3. 측정 결과
+전체 생성 시간만 보면 60장을 Web Worker에서 만드는 방식이 좋았다. 그러나 사용자는 완료 시간보다 먼저 빈 타임라인을 보게 된다. Worker가 첫 결과를 전달할 때까지 기다리면 첫 비디오 구간이 6.26초 뒤에 나타났다.
 
-조건을 맞춘 뒤 다시 측정했더니, Web Worker의 성격이 꽤 선명하게 드러났다.
+이 문제를 풀기 위해 [veed.io](https://www.veed.io)의 점진 표시 방식을 참고했다. 대표 이미지로 레이아웃을 먼저 채우고, 실제 프레임이 준비되는 순서대로 교체하는 방식이었다.
 
-| 구간 | seek      | Web Worker | 해석                                              |
-| ---- | --------- | ---------- | ------------------------------------------------- |
-| 10장 | 4246.2ms  | 6381.2ms   | 소량에서는 Web Worker 오버헤드가 커서 오히려 불리 |
-| 60장 | 13394.1ms | 7028.9ms   | 고처리량에서는 Web Worker가 유리 (약 47.5% 개선)  |
+핵심은 모든 결과를 더 빨리 만드는 것이 아니었다.
 
-### [sort2] 3-1. 10장 비교
+> 완성된 결과를 한 번에 보여주지 않고, 최소한의 시각적 피드백을 먼저 보여준다.
 
-- seek: 4246.2ms
-- Web Worker: 6381.2ms
+## [sort1] 6. 첫 작업과 대량 작업을 분리했다
 
-Web Worker 초기화 비용과 메시지 직렬화 비용이 10장을 뽑는 작업량보다 크게 작용했다. 작은 작업을 Web Worker로 옮기면 오히려 손해가 된다는 걸 숫자로 확인한 구간이다.
+세 가지 전략을 같은 조건에서 비교했다.
 
-개선 후 10장
+| 전략               | 동작                               | 첫 비디오 구간 표시 | 전체 생성 | 판단                                |
+| ------------------ | ---------------------------------- | ------------------: | --------: | ----------------------------------- |
+| Worker 우선        | 처음부터 끝까지 Worker에서 생성    |           6,262.2ms | 7,213.3ms | 전체는 빠르지만 첫 표시가 늦음      |
+| seek 1장 → Worker  | 1장을 seek로 표시한 뒤 Worker 실행 |           2,815.8ms | 7,352.5ms | 첫 표시와 전체 시간의 균형이 좋음   |
+| seek 10장 → Worker | 10장을 seek로 만든 뒤 Worker 실행  |           2,513.1ms | 9,193.4ms | 첫 표시는 가장 빠르지만 전체가 늦음 |
 
-10장 기준 Web Worker 이용 시 콘솔 측정 결과
+`seek 1장 → Worker` 전략은 Worker 우선 전략과 비교해 첫 표시 시간을 약 55% 줄였다. 전체 생성 시간은 약 1.9% 늘었다.
 
-10장 기준 Web Worker 이용 시 성능 측정 결과
+`seek 10장 → Worker`는 첫 표시가 약 303ms 더 빨랐지만, 전체 생성은 `seek 1장 → Worker`보다 약 1.84초 늦었다. 첫 화면에 필요한 것은 대표 이미지 한 장이었으므로 10장을 먼저 만들 이유가 부족했다.
 
-### [sort2] 3-2. 60장 비교
+그래서 다음 순서를 선택했다.
 
-- seek: 13394.1ms
-- Web Worker: 7028.9ms
+```mermaid
+flowchart LR
+  A["비디오 import"] --> B["seek로 대표 이미지 1장 생성"]
+  B --> C["타임라인에 즉시 표시"]
+  C --> D["Web Worker에서 나머지 생성"]
+  D --> E["준비된 프레임부터 점진 교체"]
+```
 
-60장 구간에서는 결과가 뒤집혔다. 약 47.5% 개선, 대략 1.9배 수준이었다. 메인 스레드가 해야 할 일을 Web Worker가 대신 처리하는 구조이므로, 작업량이 많을수록 이득이 커지는 것은 자연스러운 결과였다.
+이 선택은 Worker와 seek 중 하나가 절대적으로 우수하다는 뜻이 아니다. **작은 초기 작업과 큰 후속 작업에 서로 다른 경로를 배정한 것**이다.
 
-개선 후 60장
+## [sort1] 7. 빠른 경로보다 완료 가능한 경로를 먼저 만들었다
 
-60장 기준 Web Worker 이용 시 콘솔 측정 결과
-
-60장 기준 Web Worker 이용 시 성능 측정 결과
-
-정리하면, Web Worker는 만능 해법이 아니라 처리량이 커질수록 이득이 커지는 전략이었다.
-
-## [sort1] 4. 하이브리드 전략 실험
-
-### [sort2] 4-1. 체감 지표 재정의
-
-여기서 한 번 멈춰 생각하게 되었다. 60장을 7초에 끝내든 13초에 끝내든, 사용자가 먼저 체감하는 것은 "내 영상이 타임라인에 보이기 시작한 순간"이다. 총 시간이 아무리 짧아도 첫 화면이 6초 동안 텅 비어 있다면 체감은 느리다. 즉, 편집기 관점에서 핵심 지표는 두 가지였다.
-
-- 첫 화면이 언제 보이는가
-- 전체 작업이 언제 끝나는가
-
-두 지표는 트레이드오프 관계에 있다.
-
-### [sort2] 4-2. 레퍼런스: veed.io
-
-이 지점에서 veed.io의 업로드 UX를 참고했다. veed.io는 업로드 직후 타임라인이 같은 썸네일 한 장으로 먼저 채워져 보이고, 이후 실제 프레임이 준비되는 순서대로 한 장씩 교체된다. 핵심은 "완성을 기다리게 하는" 대신 **"레이아웃을 먼저 안정화하고, 내용물은 점진적으로 교체"**하는 방식이었다. 레퍼런스 - veed.io는 초기에 동일 썸네일로 레이아웃을 먼저 안정화한 뒤, 실제 프레임으로 순차 교체한다.
-
-다운로드
-
-### [sort2] 4-3. 세 전략 측정
-
-이 UX를 반영하려면 Web Worker에만 전부 맡겨서는 부족했다. 첫 1장 정도는 seek로 먼저 깔고, 나머지를 Web Worker에 맡기는 구조를 실험해봐야 했다. 그래서 전략을 세 가지로 나눠 측정했다.
-
-- A: worker-first: 처음부터 끝까지 Web Worker로 생성
-- B: seek-first-1-then-worker: t=0 기준 1장을 seek로 먼저 생성 후, 이어서 Web Worker로 전체 생성
-- C: seek-first-10-then-worker: 앞 10장을 seek로 생성 후, 이어서 Web Worker로 나머지 생성
-
-결과는 다음과 같았다.
-
-| 전략                         | first-region | generated | 판단                                    |
-| ---------------------------- | ------------ | --------- | --------------------------------------- |
-| A: worker-first              | 6262.2ms     | 7213.3ms  | 총 시간은 좋지만 첫 노출이 늦다         |
-| B: seek-first-1-then-worker  | 2815.8ms     | 7352.5ms  | 첫 노출 크게 개선 + 총 시간 손해 최소   |
-| C: seek-first-10-then-worker | 2513.1ms     | 9193.4ms  | 첫 노출은 가장 빠르지만 총 시간 손해 큼 |
-
-A는 총 시간은 깔끔했지만 첫 화면이 6초 넘게 비어 있었다. C는 첫 화면이 가장 빨랐지만, seek 10장을 선행하는 동안 Web Worker 작업이 밀리면서 전체 시간 손해가 컸다. B는 첫 화면 속도가 절반 이상 당겨지면서, 총 시간 손해는 A 대비 약 1~2% 수준이었다. 최종적으로 기본 전략을 B (seek-first-1-then-worker) 로 정했다. 이 선택의 기준은 단일 지표가 아니었다.
-
-- 첫 화면 안정화 속도 (first-region)
-- 전체 생성 완료 시간 (generated)
-- 실패 시 폴백 안정성 (Web Worker → seek → FFmpeg)
-
-세 기준을 동시에 만족하는 균형점이 B였다.
-
-Web Worker 만 이용
-
-첫 1장만 DOM seek
-
-첫 10장만 DOM seek
-
-## [sort1] 5. 구현 원칙
-
-성능 경로를 추가할 때는 빠른 경로 자체보다 실패 시 복구 경로를 함께 설계하는 것이 중요했다. 코덱과 브라우저 편차를 고려하면, 최고 성능보다 안정적인 완료 경로가 먼저다.
-
-### [sort2] 5-1. 폴백 체인
+비디오 코덱과 브라우저 지원 범위가 다르기 때문에 Web Worker 경로가 항상 성공한다고 가정할 수 없었다. 실패해도 썸네일 생성을 완료하도록 세 단계의 fallback을 두었다.
 
 ```text
-Web Worker 성공 → 끝
-Web Worker 결과가 비거나 실패 → seek로 전체 복구
-seek도 실패 → FFmpeg로 폴백
+Web Worker 성공 → 완료
+Web Worker 실패 또는 빈 결과 → HTMLVideoElement seek로 전체 재시도
+seek도 실패 → FFmpeg 경로로 재시도
 ```
 
-썸네일이 한 장도 뜨지 않는 것보다, 느리더라도 전부 뜨는 쪽이 낫다.
+이 구조의 목표는 모든 환경에서 최고 속도를 보장하는 것이 아니다. 빠른 경로를 사용할 수 없는 환경에서도 썸네일이 비어 있는 상태로 끝나지 않게 하는 것이다.
 
-### [sort2] 5-2. 메시지 필터링
+### [sort2] 7-1. 이전 요청의 결과를 구분했다
 
-에디터에서는 임포트/취소/재시작이 자주 반복된다. 여러 요청이 Web Worker에서 동시에 돌 수 있고, 이때 이전 요청의 progress 이벤트가 새 요청에 섞여 들어오면 썸네일이 깨진다. 그래서 sourceId 기준으로 progress/complete 이벤트를 필터링했다. 단순한 장치지만 이게 없으면 상태 추적이 금방 어려워진다.
-
-### [sort2] 5-3. 취소 루틴 일관화
-
-취소는 기능이 아니라 기본 동작으로 취급했다. 네 단계를 항상 함께 실행해서 누수를 막았다.
-
-- fetch 취소 (AbortController)
-- Web Worker에 abort 메시지 전송
-- message listener 제거
-- pending promise 종료
-
-한 경로라도 정리가 빠지면 다음 요청에서 이벤트/메모리 누수로 이어진다.
-
-## [sort1] 6. 구현 상세
-
-원칙만으로는 감이 잡히지 않기 때문에, 실제 런타임에서 어떤 순서로 동작하는지를 기준으로 정리했다.
-
-### [sort2] 6-1. 전략 선택 진입점
-
-썸네일 생성의 진입점은 useThumbnailGenerator다. 여기서 전략을 선택한 뒤, 결과를 thumbnailCache에 점진적으로 반영한다.
-
-- worker-first: 처음부터 Web Worker에 전체 생성 요청
-- seek-first-1-then-worker: t=0 기준 1장을 seek로 생성 후 Web Worker로 이어서 생성
-- 공통 규칙: Web Worker 결과가 비거나 실패하면 seek 전체 경로로 복구, seek도 실패하면 FFmpeg로 폴백
-
-즉 전략 선택 → 진행 중 점진 반영 → 실패 시 단계별 복구를 한 함수에서 오케스트레이션한다.
+import, 취소, 재시작이 연달아 발생하면 이전 요청의 진행 이벤트가 새 요청보다 늦게 도착할 수 있다. 이를 막기 위해 모든 요청과 응답에 `sourceId`를 포함했다.
 
 ```ts
-if (strategy === 'seek-first-1-then-worker') {
-  await generateInitialThumbnailsViaSeek(sourceId, objectUrl, 1, abortRef, fallbackDurationSec, markFirstVisible);
-}
+type ThumbnailWorkerRequest =
+  | { type: 'generate'; sourceId: string; videoBuffer: ArrayBuffer; thumbnailCount: number }
+  | { type: 'abort'; sourceId: string };
 
-try {
-  result = await generateThumbnailsInWorker({
-    sourceId,
-    objectUrl,
-    targetThumbnailCount,
-  });
-} catch {
-  result = await generateFixedCountViaSeek(sourceId, objectUrl, abortRef, fallbackDurationSec, markFirstVisible);
-}
-
-if (result.length === 0 && file && isFFmpegAvailable()) {
-  result = await generateFixedCountViaFFmpeg(
-    sourceId,
-    objectUrl,
-    file,
-    abortRef,
-    fallbackDurationSec,
-    markFirstVisible
-  );
-}
+type ThumbnailWorkerResponse =
+  | { type: 'progress'; sourceId: string; bitmaps: ImageBitmap[]; times: number[] }
+  | { type: 'complete'; sourceId: string }
+  | { type: 'error'; sourceId: string; message: string };
 ```
 
-### [sort2] 6-2. 메시지 프로토콜
+메인 스레드는 현재 `sourceId`와 다른 응답을 반영하지 않는다. 이 검사는 Worker의 병렬 실행 자체를 제한하는 mutual exclusion이 아니다. **늦게 도착한 이전 결과를 현재 상태에서 제외하는 요청 식별 규칙**이다.
 
-메인 스레드와 Web Worker 사이 메시지는 단순하지만, 동시 요청 충돌을 막는 장치가 핵심이었다.
+### [sort2] 7-2. 취소할 때 네 경로를 함께 정리했다
 
-- 요청 메시지: generate, abort
-- 응답 메시지: progress, complete, error
-- 식별 키: sourceId
+요청을 취소할 때는 다음 작업을 한 묶음으로 처리했다.
 
-sourceId를 기준으로 수신 이벤트를 필터링해서, 이전 요청의 progress/complete가 현재 요청에 섞이지 않도록 했다.
+1. `AbortController`로 파일 읽기나 fetch를 취소한다.
+2. Worker에 해당 `sourceId`의 `abort` 메시지를 보낸다.
+3. 메인 스레드의 message listener를 제거한다.
+4. 대기 중인 Promise를 reject해 호출자가 종료를 인식하게 한다.
 
-```ts
-// main → Web Worker
-w.postMessage({ type: 'generate', sourceId, videoBuffer, targetThumbnailCount }, [videoBuffer]);
-w.postMessage({ type: 'abort', sourceId });
+Worker는 취소된 `sourceId`의 후속 진행 이벤트를 보내지 않는다. listener와 Promise까지 함께 정리해야 다음 import에서 이전 요청의 이벤트가 섞이거나 대기 상태가 남지 않는다.
 
-// thumbnailWorkerClient
-const onMessage = (event: MessageEvent<ThumbnailWorkerResponse>) => {
-  const msg = event.data;
-  if (msg.sourceId !== sourceId) {
-    return;
-  }
-  // progress / complete / error 처리
-};
+### [sort2] 7-3. 결과는 한 번에 모으지 않고 점진적으로 보냈다
+
+Worker 내부 파이프라인은 다음 순서로 동작했다.
+
+```text
+ArrayBuffer 입력
+→ MP4 demux
+→ 목표 프레임 decode
+→ ImageBitmap 생성
+→ progress 메시지로 전달
 ```
 
-### [sort2] 6-3. Web Worker 내부 파이프라인
+`ArrayBuffer`와 `ImageBitmap`은 가능한 경우 Transferable로 전달해 복사 비용을 피했다. 모든 프레임이 끝날 때까지 기다리지 않고, 준비된 `ImageBitmap`부터 `progress` 메시지로 보냈다.
 
-Web Worker 내부에서는 대략 아래 순서로 처리한다.
+생성 순서도 전체 구간을 성긴 간격으로 먼저 채운 뒤 그 사이를 채우도록 나눴다. 이 방식은 전체 완료 시간을 줄인다고 단정할 수는 없지만, 타임라인 전 구간에 시각적 정보가 점진적으로 분포되도록 한다.
 
-- 비디오 버퍼 입력
-- demux / 디코딩
-- 목표 시점 프레임 추출
-- ImageBitmap 생성
-- progress 이벤트로 메인 스레드에 전달
-
-ImageBitmap 인터페이스는 캔버스에 지연 없이 그릴 수 있는 비트맵 이미지를 나타낸다. 낮은 지연의 렌더링을 제공하기 위해 비동기적으로 생성될 수 있다. 출처: MDN - ImageBitmap 전달 비용을 줄이기 위해 가능한 한 Transferable 경로를 사용했다. 또한 모든 프레임을 한 번에 넘기지 않고 중간 결과를 쪼개서 보내, UI가 "완료까지 대기"하지 않도록 했다. 추가로, coarse 먼저 + fine으로 채우는 순서로 시점을 뽑는다. 타임라인 전체에 굵직한 간격으로 대표 프레임을 먼저 뿌려놓고, 그 사이 빈 구간을 이후에 채운다. 사용자는 타임라인이 골고루 채워지는 느낌을 먼저 받게 된다.
+<details>
+<summary>성긴 간격을 먼저 생성하는 예시 코드</summary>
 
 ```ts
 const coarseInterval = interval * 4;
 const coarseTimestamps: number[] = [];
-for (let t = 0; t < duration; t += coarseInterval) {
-  coarseTimestamps.push(t);
+
+for (let time = 0; time < duration; time += coarseInterval) {
+  coarseTimestamps.push(time);
 }
 
 const fineTimestamps: number[] = [];
-for (let t = 0; t < duration; t += interval) {
-  if (!coarseTimestamps.some(ct => Math.abs(ct - t) < interval * 0.5)) {
-    fineTimestamps.push(t);
+
+for (let time = 0; time < duration; time += interval) {
+  const isAlreadyIncluded = coarseTimestamps.some(coarseTime => Math.abs(coarseTime - time) < interval * 0.5);
+
+  if (!isAlreadyIncluded) {
+    fineTimestamps.push(time);
   }
 }
-
-self.postMessage({ type: 'progress', sourceId, bitmaps: [bitmap], times: [timeSec] }, [bitmap]);
 ```
 
-### [sort2] 6-4. 취소와 정리
+</details>
 
-```ts
-const abort = () => {
-  abortController.abort();
-  worker.postMessage({ type: 'abort', sourceId });
-  worker.removeEventListener('message', onMessage);
-  rejectPending(new Error('thumbnail generation aborted'));
-};
+## [sort1] 8. 확인한 결과와 아직 확인하지 못한 결과
 
-// worker
-if (msg.type === 'abort') {
-  abortedSourceIds.add(msg.sourceId);
-  return;
-}
-```
+선택한 `seek 1장 → Worker` 전략을 기존 60장 seek 경로와 비교하면 전체 생성 시간은 13,394.1ms에서 7,352.5ms로 약 45.1% 줄었다.
 
-Web Worker는 abort 메시지를 받으면 해당 sourceId를 무시 목록에 넣고, 이후 progress를 내보내지 않는다. 메인에서는 listener 제거 + pending reject까지 함께 정리해, 중간 취소가 잦은 편집 흐름에서도 상태가 꼬이지 않게 했다.
+첫 표시 시간은 Worker 우선 경로와 비교해야 한다. 같은 하이브리드 실험에서 6,262.2ms에서 2,815.8ms로 약 55% 줄었다. 기존 60장 seek 경로의 첫 표시 값은 제시된 측정에 없으므로, 그 경로보다 몇 퍼센트 개선됐다고 말할 수는 없다.
 
-### [sort2] 6-5. 점진 반영 UX
+| 판단                                                                  | 근거 상태                      |
+| --------------------------------------------------------------------- | ------------------------------ |
+| 60장 전체 생성은 하이브리드 경로가 기존 seek보다 빨랐다               | 측정으로 확인                  |
+| Worker 우선보다 대표 이미지 1장을 먼저 보여주는 편이 첫 표시가 빨랐다 | 측정으로 확인                  |
+| Web Worker가 편집 중 UI 응답성을 개선했다                             | 이 글의 측정만으로는 결론 불가 |
+| 모든 파일과 기기에서 같은 비율로 개선된다                             | 결론 불가                      |
 
-최종 UX는 "한 번에 완성"이 아니라 **"빠른 첫 노출 + 순차 치환"**에 맞췄다.
+이 구분은 중요했다. 전체 생성 시간이 줄었다는 사실만으로 메인 스레드의 입력 지연까지 줄었다고 추론할 수는 없다.
 
-- 첫 1장은 seek로 빠르게 채워 레이아웃을 먼저 안정화
-- 이후 Web Worker progress마다 캐시를 갱신하며 실제 프레임으로 교체
-- 사용자는 빈 타임라인을 오래 보지 않고, 점점 정밀해지는 결과를 본다
+## [sort1] 9. 한 가지 최적화보다 작업의 목적을 나누는 편이 중요했다
 
-이 방식 덕분에 first-region 지표를 크게 줄이면서도, 전체 생성 시간은 worker-first의 이점을 거의 그대로 유지할 수 있었다.
+처음에는 “Web Worker를 쓰면 더 빠르다”는 답을 기대했다. 실제 결론은 달랐다.
 
-## [sort1] 7. 전체 구조
+- 대표 이미지 1장에는 Worker의 초기 비용이 컸다.
+- 많은 썸네일을 만들 때는 Worker 경로의 전체 생성 시간이 짧았다.
+- 사용자는 전체 완료보다 첫 시각적 피드백을 먼저 체감했다.
+- 빠른 경로가 실패할 수 있으므로 fallback과 취소 규칙이 필요했다.
 
-요약하면, 초기 노출 속도는 seek로 확보하고 전체 처리량은 Web Worker로 개선하는 구조다. 어느 한쪽이 실패해도 아래 단계가 받쳐준다.
+> 최적화의 단위는 기술이 아니라 사용자가 기다리는 단계였다.
 
-## [sort1] 8. 결과
-
-| 지표              | Before (seek 60장) | After (seek-first-1-then-worker) |
-| ----------------- | ------------------ | -------------------------------- |
-| first-region 노출 | 상대적으로 지연    | 2815.8ms                         |
-| generated 총 시간 | 13394.1ms          | 7352.5ms (약 45% 단축)           |
-| 실패 복구 경로    | seek 단일 경로     | Worker → seek → FFmpeg 3단 폴백  |
-| 동시 요청 안전성  | 미보장             | sourceId 기반 필터링             |
-
-첫 화면 노출 시점이 당겨지면서 "영상을 올렸는데 타임라인이 비어 있는 시간"이 체감상 크게 줄었고, 총 생성 시간도 절반 가까이 단축됐다. 동시에 Web Worker가 실패해도 seek, FFmpeg로 이어지는 폴백 경로를 갖추게 됐다.
-
-## [sort1] 9. 마치며
-
-이번 실험에서 가장 크게 배운 것은 단일 해법을 찾는 대신, 트레이드오프를 수치로 비교하고 제품 맥락에 맞는 균형점을 선택하는 과정이었다. Web Worker냐 seek냐의 문제가 아니라, "이 에디터에서 사용자가 무엇을 먼저 체감해야 하는가"라는 질문에 가까웠다. 추가적으로, 무거운 작업이 많은 웹 에디터 특성상, Web Worker로 메인 스레드 점유를 낮추면 썸네일 생성 속도뿐 아니라 에디터 전체 상호작용의 체감 성능까지 함께 개선된다는 점이 인상적이었다. 다음 단계에서는 MOV를 포함한 코덱별 실패 패턴을 더 모아, Web Worker를 언제 조기 중단하고 seek로 전환할지 기준을 자동화할 계획이다. 지금은 Web Worker가 실패한 다음에야 seek로 내려가는데, "성공하지 못할 것 같다"는 신호를 조금 더 빨리 감지하면 폴백 지연도 함께 줄일 수 있을 것이다. 또한 이번 작업을 계기로, 앞으로는 프로젝트 전반에서 Web Worker로 옮길 수 있는 작업들을 하나씩 더 찾아볼 생각이다. 단순히 처리 시간을 줄이는 것보다, 메인 스레드를 오래 붙잡는 구간을 줄여 작업 중 UI가 끊기는 느낌을 덜고, 전체 편집 반응성을 더 매끄럽고 안정적으로 만드는 방향에 집중해보려 한다.
+이 판단 뒤에는 “영상 전체에서 몇 장을 만들 것인가”라는 질문이 남았다. Part 2에서는 생성 개수 대신 현재 화면을 기준으로 썸네일 작업을 다시 나눈다.
 
 ## 참고
 
-브라우저 API
-
-- [Web Worker를 사용한 이미지 로딩](https://blog.rhostem.com/posts/2021-01-03-image-load-by-web-worker)
-- [Web Worker](https://developer.mozilla.org/ko/docs/Web/API/Worker)
-- [Using Web Workers](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Using_web_workers)
 - [Web Workers API](https://developer.mozilla.org/ko/docs/Web/API/Web_Workers_API)
 - [ImageBitmap](https://developer.mozilla.org/en-US/docs/Web/API/ImageBitmap)
 - [Transferable objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)
 - [AbortController](https://developer.mozilla.org/en-US/docs/Web/API/AbortController)
-
-레퍼런스 서비스
-
-- [veed.io](https://www.veed.io)
-
-썸네일 최적화 시도 시리즈는 총 3편으로, 잘못된 판단으로 삽질을 하고, 스스로에게 질문하고 수정해나가는 과정을 담았습니다. 다음 글들은 아래 링크에서 보실 수 있습니다.
-
-- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
-- [[Part 3.] Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
