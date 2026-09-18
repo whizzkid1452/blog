@@ -4,7 +4,7 @@ description: 'SEO를 위해 선택했던 정적 배포를 비공개 Markdown의 
 date: '2026-07-14'
 tags: ['nextjs', 'deployment', 'authentication', 'security', 'seo']
 draft: false
-visibility: authenticated
+visibility: private
 ---
 
 처음에는 SEO를 중요하게 생각해 블로그를 정적 배포로 만들었다. 모든 공개 글을 빌드할 때 HTML로 생성하면 검색 엔진과 사용자가 완성된 문서를 바로 받을 수 있기 때문이다.

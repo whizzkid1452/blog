@@ -53,10 +53,9 @@ visibility: public
 본문을 작성합니다.
 ```
 
-공개 글은 `description`과 최소 1개 이상의 `tags`가 필요하다. `draft: true`인 글은 공개 목록, sitemap, RSS에서 제외되며
-허용된 Google 계정으로 로그인한 경우에만 비공개 글 목록과 상세 페이지에서 볼 수 있다. 비공개 발행 글에는
-`visibility: authenticated`를 사용한다. 설정 방법은
-[Google OAuth 비공개 글 설정](./docs/google-oauth-private-posts-setup.md)을 참고한다.
+공개 글은 `description`과 최소 1개 이상의 `tags`가 필요하다. `draft: true` 또는 `visibility: private`인 글은
+목록, 상세 페이지, 검색, sitemap, RSS와 미리보기 이미지에 노출되지 않는다. 글을 공개하려면
+`draft: false`와 `visibility: public`을 사용한다.
 
 ### 4. 정적 생성 결과 확인
 

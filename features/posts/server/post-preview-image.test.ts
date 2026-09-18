@@ -14,9 +14,9 @@ describe('createPostPreviewImageResponse', () => {
     expect(response.headers.get('content-type')).toBe('image/png');
   });
 
-  it('does not expose a preview for an authenticated post', () => {
+  it('does not expose a preview for a private post', () => {
     const response = createPostPreviewImageResponse({
-      postIndex: new PostIndex([createPost('authenticated')]),
+      postIndex: new PostIndex([createPost('private')]),
       slug: 'post',
     });
 

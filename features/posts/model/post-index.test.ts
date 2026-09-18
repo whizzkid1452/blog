@@ -65,32 +65,14 @@ describe('PostIndex', () => {
     expect(index.getTags()).toEqual(['nextjs']);
   });
 
-  it('does not expose authenticated posts through public lookups', () => {
+  it('does not expose private posts through public lookups', () => {
     const index = new PostIndex([
       createPost({ slug: 'public-post' }),
-      createPost({ slug: 'authenticated-post', visibility: 'authenticated' }),
+      createPost({ slug: 'private-post', visibility: 'private' }),
     ]);
 
     expect(index.getPostSummaries().map(post => post.slug)).toEqual(['public-post']);
-    expect(index.getPostBySlug('authenticated-post')).toBeNull();
-  });
-
-  it('returns private and draft posts only through authorized lookups', () => {
-    const index = new PostIndex([
-      createPost({ slug: 'public-post' }),
-      createPost({ slug: 'authenticated-post', visibility: 'authenticated' }),
-      createPost({ slug: 'authenticated-draft', visibility: 'authenticated', draft: true }),
-      createPost({ slug: 'public-draft', draft: true }),
-    ]);
-
-    expect(index.getAuthorizedPostSummaries().map(post => post.slug)).toEqual([
-      'authenticated-draft',
-      'authenticated-post',
-      'public-draft',
-    ]);
-    expect(index.getPostBySlugForAuthorizedViewer('authenticated-post')?.slug).toBe('authenticated-post');
-    expect(index.getPostBySlugForAuthorizedViewer('authenticated-draft')?.slug).toBe('authenticated-draft');
-    expect(index.getPostBySlugForAuthorizedViewer('public-draft')?.slug).toBe('public-draft');
+    expect(index.getPostBySlug('private-post')).toBeNull();
   });
 
   it('returns related posts by shared tag count, publish time, and slug', () => {
@@ -178,7 +160,7 @@ describe('PostIndex', () => {
   it('returns the previous and next public posts in explicit series order', () => {
     const index = new PostIndex([
       createPost({ slug: 'third-post', series: { name: 'Series', order: 3 } }),
-      createPost({ slug: 'private-post', visibility: 'authenticated', series: { name: 'Series', order: 4 } }),
+      createPost({ slug: 'private-post', visibility: 'private', series: { name: 'Series', order: 4 } }),
       createPost({ slug: 'first-post', series: { name: 'Series', order: 1 } }),
       createPost({ slug: 'draft-post', draft: true, series: { name: 'Series', order: 5 } }),
       createPost({ slug: 'second-post', series: { name: 'Series', order: 2 } }),

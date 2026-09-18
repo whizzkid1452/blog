@@ -25,14 +25,10 @@ export interface PostSeriesNavigation {
 }
 
 export class PostIndex {
-  private readonly posts: Post[];
-  private readonly publishedPosts: Post[];
   private readonly publicPosts: Post[];
 
   constructor(posts: Post[]) {
-    this.posts = [...posts].sort(comparePosts);
-    this.publishedPosts = this.posts.filter(post => !post.draft);
-    this.publicPosts = this.publishedPosts.filter(post => post.visibility === 'public');
+    this.publicPosts = posts.filter(post => !post.draft && post.visibility === 'public').sort(comparePosts);
   }
 
   getPostSummaries(): PostSummary[] {
@@ -41,10 +37,6 @@ export class PostIndex {
 
   getFeaturedPostSummaries(): PostSummary[] {
     return this.publicPosts.filter(post => post.featured === true).map(toPostSummary);
-  }
-
-  getAuthorizedPostSummaries(): PostSummary[] {
-    return this.posts.filter(post => post.draft || post.visibility === 'authenticated').map(toPostSummary);
   }
 
   getPostSummariesByTag(tag: string): PostSummary[] {
@@ -116,10 +108,6 @@ export class PostIndex {
 
   getPostBySlug(slug: string): Post | null {
     return this.publicPosts.find(post => post.slug === slug) ?? null;
-  }
-
-  getPostBySlugForAuthorizedViewer(slug: string): Post | null {
-    return this.posts.find(post => post.slug === slug) ?? null;
   }
 }
 

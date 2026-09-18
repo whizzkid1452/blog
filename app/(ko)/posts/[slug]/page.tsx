@@ -1,5 +1,4 @@
 import { PostView } from '@/features/posts/ui/post-view/post-view';
-import { getViewablePost } from '@/features/authentication/server/post-access';
 import { getPostIndex } from '@/features/posts/server/post-repository';
 import { createPostPageMetadata } from '@/features/posts/seo/seo-metadata';
 import { createPostBreadcrumbJsonLd, createPostJsonLd } from '@/features/posts/seo/structured-data';
@@ -20,25 +19,14 @@ export function generateStaticParams() {
     }));
 }
 
-export const dynamicParams = true;
+export const dynamicParams = false;
 
 export async function generateMetadata({ params }: PostPageProps): Promise<Metadata> {
   const { slug } = await params;
-  const post = await getViewablePost({
-    postIndex: getPostIndex(),
-    slug,
-    returnPath: `/posts/${slug}`,
-  });
+  const post = getPostIndex().getPostBySlug(slug);
 
   if (!post) {
     return {};
-  }
-
-  if (post.draft || post.visibility === 'authenticated') {
-    return {
-      title: post.title,
-      robots: { index: false, follow: false, noarchive: true },
-    };
   }
 
   return createPostPageMetadata(post);
@@ -47,7 +35,7 @@ export async function generateMetadata({ params }: PostPageProps): Promise<Metad
 export default async function PostPage({ params }: PostPageProps) {
   const { slug } = await params;
   const postIndex = getPostIndex();
-  const post = await getViewablePost({ postIndex, slug, returnPath: `/posts/${slug}` });
+  const post = postIndex.getPostBySlug(slug);
 
   if (!post) {
     notFound();

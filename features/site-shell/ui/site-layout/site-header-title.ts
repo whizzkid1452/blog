@@ -28,10 +28,6 @@ export function resolveSiteHeaderTitle({ locale, pathname, posts }: ResolveSiteH
     return messages.posts;
   }
 
-  if (pathname === '/private-posts') {
-    return '비공개 글';
-  }
-
   if (pathname === '/series') {
     return messages.series;
   }

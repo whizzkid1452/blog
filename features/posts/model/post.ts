@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import type { PostThumbnail } from './post-thumbnail';
 
-const POST_VISIBILITIES = ['public', 'authenticated'] as const;
+const POST_VISIBILITIES = ['public', 'private'] as const;
 
 export const postVisibilitySchema = z.enum(POST_VISIBILITIES);
 
