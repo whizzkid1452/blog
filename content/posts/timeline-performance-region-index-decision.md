@@ -10,7 +10,7 @@ coverImage: '/images/anai-project-portfolio/editor-performance-comparison.svg'
 coverAlt: '에디터 성능 개선 전후 비교'
 ---
 
-안녕하세요. 언에이아이(AnAI)에서 브라우저와 Electron 기반 멀티미디어 에디터를 개발하고 있는 프론트엔드 개발자 김승진입니다.
+안녕하세요. 브라우저와 Electron 기반 멀티미디어 에디터를 개발하고 있는 프론트엔드 개발자 김승진입니다.
 
 프론트엔드 개발을 하다 보면 '렌더링 최적화'는 피할 수 없는 숙명과도 같죠. 특히 수많은 오디오와 비디오 트랙이 겹겹이 쌓인 타임라인 UI를 다룰 때는 더욱 그렇습니다.
 
