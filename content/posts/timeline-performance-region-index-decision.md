@@ -6,13 +6,15 @@ tags: ['react', 'performance', 'timeline', 'canvas', 'architecture']
 draft: false
 visibility: public
 featured: true
-coverImage: '/images/anai-project-portfolio/editor-performance-comparison.svg'
-coverAlt: '에디터 성능 개선 전후 비교'
+coverImage: '/images/timeline-performance-region-index-decision/editor-multitrack-timeline.png'
+coverAlt: '영상 미리보기와 자막·오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면'
 ---
 
 안녕하세요. 브라우저와 Electron 기반 멀티미디어 에디터를 개발하고 있는 프론트엔드 개발자 김승진입니다.
 
 프론트엔드 개발을 하다 보면 '렌더링 최적화'는 피할 수 없는 숙명과도 같죠. 특히 수많은 오디오와 비디오 트랙이 겹겹이 쌓인 타임라인 UI를 다룰 때는 더욱 그렇습니다.
+
+![영상 미리보기와 자막·오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면](/images/timeline-performance-region-index-decision/editor-multitrack-timeline.png)
 
 어느 날, 에디터를 사용하시던 분들로부터 이런 피드백이 들려왔어요.
 
@@ -35,8 +37,9 @@ coverAlt: '에디터 성능 개선 전후 비교'
 2. **동시성:** 길이가 5초인 클립 두 개가 있어도 하나는 0초에, 다른 하나는 100초에 시작할 수 있습니다.
 3. **겹침:** 서로 다른 트랙에 있는 클립들은 같은 시간대에 겹쳐서 렌더링 되어야 합니다.
 
-결국 클립들의 길이를 더하는 것만으로는 화면 안의 위치를 계산할 수 없었어요. 그래서 저희는 역할을 나누기로 했습니다.
-TanStack Virtual 같은 범용 라이브러리는 '타임라인을 일정한 폭으로 나누고 화면 주변의 범위를 계산하는 용도'로만 쓰고, 그 범위와 '실제로 겹치는 클립을 찾는 로직'은 직접 구현하기로요.
+결국 클립들의 길이를 더하는 것만으로는 화면 안의 위치를 계산할 수 없었어요. 고민 끝에 저희는 범용적인 가상 스크롤 라이브러리를 완전히 걷어내기로 결정했습니다.
+
+대신, 현재 스크롤 좌표와 줌 배율을 바탕으로 현재 화면(Viewport)이 포괄하는 정확한 시간 범위(시작~종료 시각)를 직접 측정하고, 이 범위에 들어오는 클립들만 고속으로 찾아내는 우리만의 탐색 아키텍처를 바닥부터 구축하기로 한 것이죠.
 
 ### 시작 시각이 정렬되어 있다고, 종료 시각도 정렬된 건 아니다
 
