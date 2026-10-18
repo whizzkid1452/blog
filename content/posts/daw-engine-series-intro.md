@@ -87,7 +87,7 @@ visibility: public
 4. [[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec) — MIDI 교환
 5. [[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline) — 오프라인 파이프라인
 6. [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag) — 처리 Graph
-7. [[Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기](/posts/daw-engine-transport-state-machine) — 재생 전환 제어
+7. [Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기 - 재생 전환 제어 (준비 중)
 
 다음 글은 가변 Tempo에서 Frame과 Beat가 왜 하나의 공식으로 끝나지 않는지부터 시작한다.
 
