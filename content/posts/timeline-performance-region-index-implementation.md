@@ -14,7 +14,7 @@ visibility: public
 1. 화면 범위가 바뀔 때마다 모든 Region을 순회한다.
 2. Canvas를 다시 그리기 위한 값이 TrackRow의 React prop까지 바꾼다.
 
-왜 이진 탐색 기반 시간 인덱스와 rAF 기반 Signal 구독 패턴을 선택했는지는 [1,518개 Region 타임라인: 두 가지 최적화 적용 후 Long Task 73.9% 감소](/posts/timeline-performance-region-index-decision)에서 설명했다.
+DYNA STUDIO의 대규모 타임라인에서 조회 후보를 줄이고 화면 갱신 경로를 나눈 원리는 [대규모 타임라인에서도 부드럽게 동작하는 에디터 만들기](/posts/timeline-performance-region-index-decision)에서 설명했다. 18개 트랙, 1,518개 Region 비교의 Long Task 73.9% 감소는 두 변경을 함께 적용한 결과다.
 
 여기서는 다음 결과를 만든다.
 
@@ -28,7 +28,7 @@ Region 목록 변경
 → TrackRow를 다시 실행하지 않고 Canvas draw 함수 호출
 ```
 
-예제는 핵심 메커니즘을 독립적으로 실행할 수 있도록 프로젝트 내부 이름과 부가 로직을 제거해 재구성했다. 따라서 실제 제품 코드의 전체 복사본은 아니다.
+예제는 핵심 메커니즘을 독립적으로 실행할 수 있도록 프로젝트 내부 이름과 부가 로직을 제거해 재구성했다. 따라서 실제 제품 코드의 전체 복사본은 아니다. 아래 인덱스는 시작 시간순 배열과 누적 최대 종료 시간 배열을 사용한다.
 
 ## [sort1] 2. 준비 사항과 불변 조건
 
@@ -271,7 +271,9 @@ export function queryVisibleRegions(index: VisibleRegionIndex, viewport: TimeRan
 결과 순서 복원: O(V log V)
 ```
 
-`C`는 탐색으로 좁힌 후보 수, `V`는 실제 반환 수다. 이 구조가 유리하려면 Region 목록 변경보다 화면 범위 조회가 충분히 자주 발생해야 한다. Region을 한 건씩 자주 삽입하거나 삭제해야 한다면 동적 interval tree 같은 자료구조를 다시 비교해야 한다.
+`C`는 탐색으로 좁힌 후보 수, `V`는 실제 반환 수다. 긴 Region 하나로 누적 최대 종료 시간이 크게 유지되면 후보 수가 다시 늘어날 수 있다. 제품 측정의 약 98.5% 후보 감소가 모든 배치에서 보장되는 것은 아니다.
+
+이 구조가 유리하려면 Region 목록 변경보다 화면 범위 조회가 충분히 자주 발생해야 한다. Region을 한 건씩 자주 삽입하거나 삭제해야 한다면 동적 interval tree 같은 자료구조를 다시 비교해야 한다.
 
 ## [sort1] 6. 긴 Region과 경계 조건을 테스트했다
 

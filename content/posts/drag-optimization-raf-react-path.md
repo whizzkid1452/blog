@@ -10,7 +10,35 @@ series:
 draft: false
 ---
 
+<details>
+<summary>목차 펼쳐보기</summary>
+
+- [1. 들어가며](#들어가며)
+- [2. 드래그 중 발생한 두 가지 비용](#드래그-중-발생한-두-가지-비용)
+- [3. 병목 지점 확인](#병목-지점-확인)
+- [4. 여러 리전 신호를 한 번의 그리기로 묶기](#여러-리전-신호를-한-번의-그리기로-묶기)
+- [5. React state만 줄여서는 부족했던 이유](#react-state만-줄여서는-부족했던-이유)
+- [6. Canvas 다시 그리기를 React 밖에서 직접 실행하기](#canvas-다시-그리기를-react-밖에서-직접-실행하기)
+- [7. drag visual을 React 밖으로 꺼내기](#drag-visual을-react-밖으로-꺼내기)
+- [8. 변경 후 구조](#변경-후-구조)
+- [9. 변경 결과](#변경-결과)
+- [10. 남은 작업](#남은-작업)
+- [11. 마치며](#마치며)
+
+</details>
+
+<details>
+<summary>시리즈 전체 글 바로가기</summary>
+
+1. [Part 1. React 경로를 줄이고 한 프레임에 한 번만 그리기](/posts/drag-optimization-raf-react-path)
+2. [Part 2. 회고록: 정말 최선이었을까?](/posts/drag-optimization-retrospective-best)
+3. [Part 3. 오버레이 방식으로 드래그 리렌더 제거하기](/posts/drag-optimization-overlay-rerender)
+
+</details>
+
 ## [sort1] 1. 들어가며
+
+이 시리즈는 멀티미디어 에디터의 타임라인에서 드래그 임시 표시와 확정 편집을 나누는 과정을 다룬다. 이 글의 3회 반복 드래그 측정과 [1,518개 Region 스크롤 최적화](/posts/timeline-performance-region-index-decision)의 Long Task 73.9% 감소는 서로 다른 비교다.
 
 타임라인에서 리전을 드래그할 때 화면이 뚝뚝 끊기는 문제가 있었다. 처음에는 캔버스에 그리는 데이터가 많아서 생기는 문제라고 생각했다. 하지만 React DevTools Profiler와 Chrome Performance로 확인해 보니, 단순히 Canvas draw 비용만의 문제는 아니었다. 드래그 중 React commit은 105회 발생했고, canvas clearRect는 104회, drawImage는 25,300회 호출됐다. 같은 드래그 구간에서 메인 스레드 busy time은 1,524ms였다. 이 수치는 드래그 중 React와 Canvas가 모두 자주 깨어나고 있었다는 사실을 보여줬다. 결론부터 적으면, 드래그 중 매번 React를 깨우던 경로를 줄이고, Canvas 다시 그리기와 SVG 위치 이동처럼 직접 처리할 수 있는 작업은 React 밖에서 처리하도록 분리했다. React commit은 React가 계산한 결과를 실제 DOM에 반영하는 단계를 말한다. 이 글에서는 드래그 중 React가 실제 화면 반영 단계까지 몇 번 들어왔는지를 보는 지표로 사용했다.
 
@@ -198,7 +226,7 @@ RAF->>SVG: node.setAttribute('transform', ...)
 
 ## [sort1] 9. 변경 결과
 
-동일 시나리오를 3회 반복 측정한 뒤 중앙값으로 비교했다.
+동일 시나리오를 3회 반복 측정한 뒤 중앙값으로 비교했다. 아래 busy time은 이 드래그 구간의 지표이며, 썸네일 생성의 `Main busy` 비율이나 대규모 타임라인의 Long Task 누적 시간과 구분한다.
 
 | 지표                      | 변경 전 | 변경 후 | 변화 |
 | ------------------------- | ------- | ------- | ---- |

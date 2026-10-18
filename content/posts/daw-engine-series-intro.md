@@ -11,7 +11,36 @@ draft: false
 visibility: public
 ---
 
-이 시리즈는 TypeScript로 만든 DAW 엔진의 핵심 설계를 기록한다. Part 1부터는 Tempo Map, Meter, Automation, MIDI, Export, Processing Graph처럼 개별 문제로 바로 들어간다. 그래서 그 앞에, 이 글이 답할 질문을 먼저 둔다.
+<details>
+<summary>목차 펼쳐보기</summary>
+
+- [1. DAW는 무엇인가](#daw는-무엇인가)
+- [2. 이 도메인이 일반 CRUD와 다른 점](#이-도메인이-일반-crud와-다른-점)
+- [3. 미디 작곡에서 개발로](#미디-작곡에서-개발로)
+- [4. 이 시리즈가 다루는 범위](#이-시리즈가-다루는-범위)
+- [5. 읽는 순서](#읽는-순서)
+- [6. 마치며](#마치며)
+
+</details>
+
+<details>
+<summary>시리즈 전체 글 바로가기</summary>
+
+1. [Part 0. TypeScript DAW 엔진 구현기를 시작하며](/posts/daw-engine-series-intro)
+2. [Part 1. 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까](/posts/daw-engine-tempo-map)
+3. [Part 2. Sample Peak만으로 부족해서 Meter DSP를 설계했다](/posts/daw-engine-meter-dsp)
+4. [Part 3. Automation은 점을 연결하는 기능이 아니었다](/posts/daw-engine-automation-curve)
+5. [Part 4. MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec)
+6. [Part 5. 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline)
+7. [Part 6. Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag)
+
+</details>
+
+이 시리즈는 개인 개발한 TypeScript 오디오 편집 라이브러리 `daw-engine`의 핵심 설계를 기록한다. 제품마다 트랙 편집과 믹스다운, Undo/Redo를 다시 구현하지 않도록 UI와 편집 규칙을 분리했다. 이 코어를 제품 Adapter 뒤에 연결해 사내용 Electron 에디터 DYNA STUDIO와 고객용 웹 에디터 VOIX STUDIO에 적용했다.
+
+현재 코어는 Session·Track·Region·Source와 약 70개 편집 Command를 제공한다. Command는 `{ type, payload }` 형태로 받고 Zod로 실행 전에 입력을 검증한다. 복합 편집은 Transaction으로 묶어 하나의 Undo/Redo 단위로 기록한다. UI·CLI·AI Agent가 같은 편집 계약을 사용할 수 있도록 설계한 것이다.
+
+Part 1부터는 Tempo Map, Meter, Automation, MIDI, Export, Processing Graph처럼 개별 문제로 들어간다. 그래서 그 앞에, 이 글이 답할 질문을 먼저 둔다.
 
 > DAW는 무엇이고, 이 도메인에서 무엇이 어렵고, 왜 이 엔진을 만들기 시작했는가.
 
@@ -81,13 +110,14 @@ visibility: public
 
 처음부터 끝까지 따라가려면 Part 번호 순서가 자연스럽다. 관심사만 고르려면 아래 지도를 쓰면 된다.
 
-1. [[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까](/posts/daw-engine-tempo-map) — 시간 좌표
-2. [[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다](/posts/daw-engine-meter-dsp) — 음량 측정
-3. [[Part 3.] Automation은 점을 연결하는 기능이 아니었다](/posts/daw-engine-automation-curve) — 파라미터 곡선
-4. [[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec) — MIDI 교환
-5. [[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline) — 오프라인 파이프라인
-6. [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag) — 처리 Graph
-7. [[Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기](/posts/daw-engine-transport-state-machine) — 재생 전환 제어
+1. [[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까](/posts/daw-engine-tempo-map) - 시간 좌표
+2. [[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다](/posts/daw-engine-meter-dsp) - 음량 측정
+3. [[Part 3.] Automation은 점을 연결하는 기능이 아니었다](/posts/daw-engine-automation-curve) - 파라미터 곡선
+4. [[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec) - MIDI 교환
+5. [[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline) - 오프라인 파이프라인
+6. [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag) - 처리 Graph
+
+재생 전환 제어는 후속 주제로 남겨 두었다. 발행된 글은 Part 0부터 Part 6까지다.
 
 다음 글은 가변 Tempo에서 Frame과 Beat가 왜 하나의 공식으로 끝나지 않는지부터 시작한다.
 
