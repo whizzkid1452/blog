@@ -11,37 +11,10 @@ draft: false
 featured: true
 ---
 
-<details>
-<summary>목차 펼쳐보기</summary>
+썸네일 생성 최적화 시리즈의 마지막 글이다. 앞선 과정은 다음 글에서 볼 수 있다.
 
-- [1. Web Worker를 다시 의심한 이유](#web-worker를-다시-의심한-이유)
-- [2. 직접 사용한 느낌으로 판단할 수 있는 범위](#직접-사용한-느낌으로-판단할-수-있는-범위)
-- [3. “빠르다”를 세 가지로 나누기](#빠르다-를-세-가지로-나누기)
-- [4. WebCodecs 실행 위치를 분리한 벤치마크](#webcodecs-실행-위치를-분리한-벤치마크)
-- [5. UI 루프 지연을 본 두 지표](#ui-루프-지연을-본-두-지표)
-- [6. 1장·10장·100장 측정 결과](#1장-10장-100장-측정-결과)
-  - [6-1. poster 1장은 HTMLVideoElement seek가 빨랐다](#poster-1장은-htmlvideoelement-seek가-빨랐다)
-  - [6-2. 10장 seek 결과는 이상치로 분리했다](#10장-seek-결과는-이상치로-분리했다)
-  - [6-3. 100장에서는 전체 시간보다 UI 루프 지표가 달랐다](#100장에서는-전체-시간보다-ui-루프-지표가-달랐다)
-- [7. 2편의 구조에서 수정한 판단](#2편의-구조에서-수정한-판단)
-- [8. 실제 에디터에서 추가로 확인할 것](#실제-에디터에서-추가로-확인할-것)
-- [9. Web Worker를 유지해도 필요한 메모리 관리](#web-worker를-유지해도-필요한-메모리-관리)
-- [10. 현재 선택](#현재-선택)
-- [11. 아직 결론 내리지 않은 것](#아직-결론-내리지-않은-것)
-- [12. 마치며](#마치며)
-
-</details>
-
-<details>
-<summary>시리즈 전체 글 바로가기</summary>
-
-1. [Part 1. Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
-2. [Part 2. 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
-3. [Part 3. Web Worker를 다시 의심하고 검증하기](/posts/thumbnail-optimization-worker-verification)
-
-</details>
-
-썸네일 생성 최적화 시리즈의 마지막 글이다. 제품에는 poster 우선 표시, 현재 화면의 seek/capture, 화면 밖의 Worker 키프레임 생성으로 나눈 하이브리드 파이프라인을 적용했다. 이 글에서는 그중 Web Worker를 유지할 근거를 분리된 벤치마크로 다시 확인한다.
+- [[Part 1.] Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
+- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
 
 ## [sort1] 1. Web Worker를 다시 의심한 이유
 
@@ -83,9 +56,7 @@ featured: true
 | 전체 생성 시간   | 요청한 썸네일이 모두 준비되는 데 걸린 시간         |
 | UI 루프 지연     | 생성 중 `requestAnimationFrame` 간격이 밀리는 정도 |
 
-poster-first 구조는 첫 시각적 피드백을 줄이기 위한 선택이다. 1편의 원 로그에서 첫 region 표시는 `6262.2ms → 2815.8ms`로 약 55.0% 단축됐다. 초 단위 요약치인 `6.2초 → 2.8초`로 계산하면 약 54.8%다. 반올림 기준에 따른 차이이며, 모두 첫 표시 시점을 앞당긴 결과를 뜻한다. Worker 단독의 효과로 해석하지 않았다.
-
-1편의 47.5%는 같은 파일에서 60장을 만드는 seek와 Worker의 전체 생성 시간 비교다. 이번 글의 100장 벤치마크와 작업량·비교 경로가 다르므로 같은 개선율을 기대할 수는 없다.
+poster-first 구조는 첫 시각적 피드백을 줄이기 위한 선택이다. 1편의 측정에서는 첫 region 표시가 `6262.2ms`에서 `2815.8ms`로 약 55% 단축됐다. 이 값은 전체 썸네일을 기다리지 않고 poster를 먼저 보여준 결과다. Web Worker 자체의 효과로 해석하면 안 된다.
 
 Web Worker의 역할은 전체 생성 시간과 UI 루프 지연을 함께 비교해야 판단할 수 있다.
 
@@ -131,7 +102,7 @@ _같은 비디오 파일에서 세 경로로 1장, 10장, 100장을 요청한 �
 
 10장 실행에서 `HTMLVideoElement seek`의 전체 시간은 `912348.63ms`, `Max stall`은 `909557ms`였다. 다른 실행과 차이가 지나치게 크다. 현재 자료만으로는 seek queue 정지, 디코더 지연, 백그라운드 탭 제한, 측정 오류 중 무엇이 관여했는지 구분할 수 없다.
 
-따라서 이 값으로 “여러 장의 seek는 항상 느리다”라고 결론 내리지 않았다. 같은 조건의 반복 실행과 Performance trace가 필요하다. 2편에서 적용한 visible tile의 seek queue가 다른 경로보다 빠른지도 이 결과만으로는 검증되지 않았다.
+따라서 이 값으로 “여러 장의 seek는 항상 느리다”라고 결론 내리지 않았다. 같은 조건의 반복 실행과 Performance trace가 필요하다. 2편에서 제안한 “visible tile은 main-thread seek queue로 생성한다”는 설계도 이 결과만으로는 검증되지 않았다.
 
 ### [sort2] 6-3. 100장에서는 전체 시간보다 UI 루프 지표가 달랐다
 
@@ -143,9 +114,7 @@ _같은 비디오 파일에서 세 경로로 1장, 10장, 100장을 요청한 �
 
 `Worker/WebCodecs`와 `Main/WebCodecs`의 전체 시간 차이는 `111.34ms`, 약 2.8%였다. 이 실행만 보면 Web Worker가 전체 처리를 크게 단축했다고 말하기 어렵다.
 
-반면 `Main busy`는 `66% → 11%`로 55%포인트 낮았다. 변경 전 값을 기준으로 한 상대 감소율은 약 83.3%다. `Max stall`은 `1251.81ms → 428.87ms`로 약 65.7% 낮았다. 이 차이는 demux와 decode를 Web Worker로 옮겼을 때 UI 루프 지연이 줄어든다는 해석과 일치한다.
-
-이 값은 **100장 썸네일 생성 중 관찰한 rAF 기반 대리 지표**다. CPU 사용률이나 Export 전체의 메인 스레드 점유율을 직접 측정한 값으로 바꾸어 쓰지 않는다.
+반면 `Main busy`는 `66%`에서 `11%`로 55%포인트 낮았고, `Max stall`은 `1251.81ms`에서 `428.87ms`로 약 65.7% 낮았다. 이 차이는 demux와 decode를 Web Worker로 옮겼을 때 UI 루프 지연이 줄어든다는 해석과 일치한다.
 
 `HTMLVideoElement seek`의 `Main busy`와 `Max stall`은 낮았지만 전체 생성에는 `20844.48ms`가 걸렸다. 이 경로는 브라우저 비디오 디코더의 비동기 seek를 기다리므로, rAF 기반 지표가 낮다는 사실만으로 처리량까지 좋다고 판단할 수 없다.
 
@@ -156,11 +125,11 @@ _같은 비디오 파일에서 세 경로로 1장, 10장, 100장을 요청한 �
 | 작업                          | 현재 판단                                                        |
 | ----------------------------- | ---------------------------------------------------------------- |
 | poster 1장                    | `HTMLVideoElement seek` 사용 근거가 있음                         |
-| visible tile                  | 제품에는 seek를 적용했고, Worker 대비 성능 우위는 별도 검증 필요 |
+| visible tile                  | seek와 Worker 중 어느 경로가 나은지 아직 단정하지 않음           |
 | background thumbnail prefetch | 대량 처리 시 `Worker/WebCodecs`를 유지할 근거가 있음             |
 | `Main/WebCodecs` 단독 전환    | 이번 실행에서는 UI 루프 지연 지표가 커 기본 경로로 선택하지 않음 |
 
-이번 벤치마크는 제품에서 선택한 구조와 각 경로의 성능 우위를 구분하게 해주었다. poster와 background thumbnail prefetch를 분리한 방향을 지지하지만, visible tile의 seek 경로가 더 빠른지는 실제 에디터에서 다시 비교해야 한다.
+즉, 이번 벤치마크는 2편의 구조 전체를 증명하지 않는다. poster와 background thumbnail prefetch를 분리한 방향을 지지하지만, visible tile 경로는 실제 에디터에서 다시 비교해야 한다.
 
 ## [sort1] 8. 실제 에디터에서 추가로 확인할 것
 
@@ -197,8 +166,10 @@ Web Worker는 메인 스레드 점유를 줄일 수 있지만 결과 `ImageBitma
 | ------------------------------- | ------------------------------------------------ | ---------------------------- |
 | poster-first 유지               | 1장 seek가 `51.2ms`에 완료됨                     | poster와 thumbnail 캐시 분리 |
 | `Worker/WebCodecs` 유지         | 100장에서 Main busy와 Max stall이 더 낮게 관찰됨 | message, abort, 메모리 관리  |
-| visible tile은 seek 경로 사용   | 현재 화면의 시점 정확도를 우선한 제품 선택       | seek/Worker 비교 측정 필요   |
+| visible tile 경로는 보류        | 10장 seek 이상치의 원인을 확인하지 못함          | seek/Worker 비교 측정 필요   |
 | background prefetch에 상한 적용 | 화면 밖 썸네일은 즉시 완료할 필요가 없음         | 우선순위와 캐시 정책 필요    |
+
+따라서 현재 결론은 “Web Worker가 더 빠르다”가 아니다.
 
 > 이번 측정에서는 Web Worker를 제거할 근거가 부족했다. Worker/WebCodecs는 Main/WebCodecs와 전체 시간이 비슷했지만, UI 루프 지연 대리 지표는 더 낮았다.
 
@@ -218,6 +189,11 @@ Web Worker는 메인 스레드 점유를 줄일 수 있지만 결과 `ImageBitma
 
 처음에는 Web Worker를 쓰면 썸네일 생성이 빨라질 것이라고 생각했다. 이번 측정에서 100장 전체 생성 시간은 `Worker/WebCodecs`와 `Main/WebCodecs`가 비슷했다. 대신 Main busy와 Max stall에서 차이가 나타났다.
 
-이 결과로 이번 비교에서 확인한 Web Worker의 역할을 대량 디코딩 중 UI 루프 지연 위험 감소로 좁힐 수 있었다. 제품은 poster를 먼저 보여주고, 현재 화면은 seek로, 화면 밖 대량 생성은 Worker로 처리한다. 적용한 구조와 모든 환경에서의 성능 보장은 구분해야 한다.
+이 결과로 Web Worker의 역할을 “처리 시간 단축”에서 “대량 디코딩 중 UI 루프 지연 위험 감소”로 더 좁게 정의할 수 있었다. poster는 seek로 먼저 보여주고, 화면 밖 대량 생성은 Web Worker에 맡긴다. visible tile 경로는 실제 상호작용 측정 전까지 단정하지 않는다.
 
 > 성능 최적화는 가장 빠른 경로 하나를 고르는 일이 아니라, 사용자가 먼저 보는 작업과 나중에 처리할 작업에 서로 다른 기준을 적용하는 일이다.
+
+이전 글:
+
+- [[Part 1.] Web Worker를 이용한 썸네일 생성 최적화](/posts/thumbnail-optimization-web-worker)
+- [[Part 2.] 썸네일 생성 구조 재설계하기](/posts/thumbnail-optimization-structure-redesign)
