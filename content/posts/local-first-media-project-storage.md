@@ -6,11 +6,15 @@ tags: ['local-first', 'indexeddb', 'cloud-sync', 'architecture']
 draft: false
 visibility: public
 featured: true
+coverImage: '/images/local-first-media-project-storage/local-first-outbox-sync.png'
+coverAlt: 'IndexedDB에 로컬 데이터와 Outbox를 저장하고 동기화 서비스가 클라우드로 비동기 전송하는 Local-first 저장 구조'
 ---
 
 고객용 웹 멀티미디어 에디터인 VOIX STUDIO를 설계하면서, 네트워크 장애가 편집 내용의 유실로 이어지는 저장 흐름을 바꾸었다. 기존에는 로컬 저장과 클라우드 전송이 결합되어 서버 응답 여부가 저장 성공 전체를 결정했다.
 
 나는 웹 에디터의 초기 아키텍처와 타임라인, 저장, 내보내기 흐름을 개발했다. 저장에서는 **편집 내용을 로컬에 보존하는 일과 서버에 전달하는 일을 분리**하는 데 집중했다. 로컬 저장과 Outbox 등록을 한 트랜잭션으로 묶고, 전송은 별도 동기화 서비스가 맡도록 했다.
+
+![IndexedDB에 로컬 데이터와 Outbox를 저장하고 동기화 서비스가 클라우드로 비동기 전송하는 Local-first 저장 구조](/images/local-first-media-project-storage/local-first-outbox-sync.png)
 
 ## [sort1] 1. 로컬 저장 완료와 클라우드 동기화 완료를 구분했다
 
