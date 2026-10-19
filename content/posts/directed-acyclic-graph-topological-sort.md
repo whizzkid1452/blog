@@ -269,8 +269,6 @@ DAG는 작업 Scheduling, Data Pipeline, Build System, Package 의존성, Spread
 
 고정된 실행 순서는 Routing이 바뀔 때마다 다시 작성해야 한다. 반면 의존 관계를 Graph로 관리하면 동일한 알고리즘으로 새로운 실행 순서를 계산할 수 있다.
 
-프로젝트 적용 과정과 아직 남은 Buffer·Latency 계약은 [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag)에서 더 자세히 다룬다.
-
 > “복잡한 실행 순서를 직접 관리하고 있다면, 실제로 관리해야 할 대상은 순서가 아니라 의존 관계일 수 있다.”
 
 ## 참고

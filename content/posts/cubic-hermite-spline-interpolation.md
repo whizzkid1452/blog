@@ -291,8 +291,6 @@ Linear, Cubic Hermite, Bézier, Catmull–Rom은 곡선을 정의하거나 접�
 
 프로젝트에서 필요했던 것은 일반적인 Cubic Hermite보다 Monotone Cubic Hermite에 가까웠다. Automation Point를 통과하는 것만큼 Point 사이의 값이 의도한 범위를 유지하는 것도 중요했기 때문이다.
 
-프로젝트에서 전체 Automation 상태와 Curve Cache를 어떻게 구성했는지는 [[Part 3.] Automation은 점을 연결하는 기능이 아니었다](/posts/daw-engine-automation-curve)에서 더 자세히 다룬다.
-
 > “Cubic Hermite의 핵심은 Point 사이를 부드럽게 연결하는 데 그치지 않는다. 각 Point를 어떤 방향으로 통과할지 정의하면서도 접선을 제한해 Data의 의미를 보존하는 데 있다.”
 
 ## 참고
