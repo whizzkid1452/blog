@@ -201,16 +201,8 @@ Offline Export를 구현하면서 각 알고리즘을 따로 만드는 것보다
 
 ## 참고
 
-**표준·공식 자료**
-
 - [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
 - [ITU-R BS.1770-5, Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/rec/R-REC-BS.1770-5-202311-I)
 - [Library of Congress, WAVE Audio File Format](https://www.loc.gov/preservation/digital/formats/fdd/fdd000001.shtml)
-
-**한국어 블로그**
-
 - [Web Audio API와 브라우저 오디오 2026](https://www.youngju.dev/blog/culture/2026-05-16-web-audio-api-browser-audio-2026-audioworklet-tone-js-howler-wavesurfer-peaks-meyda-faust-csound-web-speech-deep-dive)
-
-**해외 블로그**
-
 - [How Browser Audio Works: The Web Audio API Explained](https://trimr.net/web-audio-api-how-browser-audio-works)

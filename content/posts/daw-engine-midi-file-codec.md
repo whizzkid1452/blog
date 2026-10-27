@@ -221,14 +221,6 @@ MIDI 파일을 직접 파싱하면서 가장 어려웠던 부분은 bit 연산�
 
 ## 참고
 
-**표준·공식 자료**
-
 - [MIDI Association, Standard MIDI Files](https://midi.org/standard-midi-files)
-
-**한국어 블로그**
-
 - [MIDI 포맷에 대해 알아보자](https://pubul.tistory.com/108)
-
-**해외 블로그**
-
 - [Standard MIDI file format, updated](https://midimusic.github.io/tech/midispec.html)

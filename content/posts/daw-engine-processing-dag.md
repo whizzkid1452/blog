@@ -225,16 +225,8 @@ DAG를 도입하면 분기와 합류를 명확히 표현하고, Cycle을 실행 
 
 ## 참고
 
-**내부 글·표준 자료**
-
 - [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)
 - [A. B. Kahn, Topological sorting of large networks](https://doi.org/10.1145/368996.369025)
 - [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
-
-**한국어 블로그**
-
 - [방향 비순환 그래프(DAG, Directed Acyclic Graph)](https://jackpot53.tistory.com/84)
-
-**해외 블로그**
-
 - [Topological Sort of Directed Acyclic Graph](https://www.baeldung.com/cs/dag-topological-sort)

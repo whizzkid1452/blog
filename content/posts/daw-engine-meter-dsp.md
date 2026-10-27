@@ -214,15 +214,7 @@ K-weighting coefficient, loudness gate, FIR tap을 구현하는 일은 분명 �
 
 ## 참고
 
-**표준·공식 자료**
-
 - [ITU-R BS.1770-5, Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/rec/R-REC-BS.1770-5-202311-I)
 - [EBU R 128, Loudness normalisation and permitted maximum level of audio signals](https://tech.ebu.ch/publications/r128)
-
-**한국어 블로그**
-
 - [[음향] True Peak와 Inter-sample Peak](https://miing95.tistory.com/46)
-
-**해외 블로그**
-
 - [pyloudnorm: ITU-R BS.1770 알고리즘 구현](https://www.christiansteinmetz.com/projects-blog/pyloudnorm)

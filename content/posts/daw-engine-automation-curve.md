@@ -197,16 +197,8 @@ Automation 구현에서 보간 공식만 보면 절반만 보는 셈이다. 실�
 
 ## 참고
 
-**내부 글·표준 자료**
-
 - [Cubic Hermite Spline이란? 값과 접선으로 만드는 3차 보간](/posts/cubic-hermite-spline-interpolation)
 - [Web Audio API 1.1, AudioParam automation](https://www.w3.org/TR/webaudio-1.1/)
 - [F. N. Fritsch and R. E. Carlson, Monotone Piecewise Cubic Interpolation](https://doi.org/10.1137/0717021)
-
-**한국어 블로그**
-
 - [믹싱 오토메이션 완전 가이드](https://studionol.co.kr/ko/stories/mix-automation1)
-
-**해외 블로그**
-
 - [Creative Mix Automation In Your DAW](https://www.soundonsound.com/techniques/creative-mix-automation-your-daw)

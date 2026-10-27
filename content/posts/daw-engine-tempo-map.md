@@ -195,15 +195,7 @@ describe('TempoMap round trip', () => {
 
 ## 참고
 
-**표준·공식 자료**
-
 - [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
 - [MIDI Association, Standard MIDI Files](https://midi.org/standard-midi-files)
-
-**한국어 블로그**
-
 - [[Audio] Python에서 MIDI 파일 다루기](https://tkayyoo.tistory.com/189)
-
-**해외 블로그**
-
 - [Timing in MIDI files](https://sites.uci.edu/camp2014/2014/05/19/timing-in-midi-files/)
