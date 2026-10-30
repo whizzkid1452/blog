@@ -62,6 +62,9 @@ visibility: public
 
 ### 3-1. TIL / 개발 공부 일지
 
+대화에서 사고 흐름을 재구성하는 방법과 달력·게시판의 표시 기준은
+[TIL 작성·표시 컨벤션](docs/til-convention.md)을 따릅니다.
+
 홈 달력과 `/til` 게시판은 `content/til/YYYY-MM-DD.md`의 공개 일지를 최신순으로 읽습니다.
 날짜는 한국 시간(Asia/Seoul) 기준이며 파일명과 `date`가 같아야 합니다.
 
