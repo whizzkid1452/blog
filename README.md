@@ -37,6 +37,9 @@ pnpm dev
 
 ### 3. 글 작성
 
+글의 문체, 문제의 이유와 선택 근거, 공개 범위는 [글쓰기 컨벤션](docs/writing-convention.md)을 따릅니다.
+시리즈 목차는 [블로그 목차 컨벤션](docs/blog-outline-convention.md)을 함께 참고합니다.
+
 `content/posts` 디렉터리에 Markdown 파일을 추가한다.
 
 ```md
@@ -56,6 +59,30 @@ visibility: public
 공개 글은 `description`과 최소 1개 이상의 `tags`가 필요하다. `draft: true` 또는 `visibility: private`인 글은
 목록, 상세 페이지, 검색, sitemap, RSS와 미리보기 이미지에 노출되지 않는다. 글을 공개하려면
 `draft: false`와 `visibility: public`을 사용한다.
+
+### 3-1. TIL / 개발 공부 일지
+
+홈 달력과 `/til` 게시판은 `content/til/YYYY-MM-DD.md`의 공개 일지를 최신순으로 읽습니다.
+날짜는 한국 시간(Asia/Seoul) 기준이며 파일명과 `date`가 같아야 합니다.
+
+```md
+---
+date: '2026-10-29'
+title: '그날 고민한 핵심 질문'
+description: '확인된 요구사항과 선택을 요약합니다.'
+topics:
+  - 큰 주제
+draft: false
+visibility: public
+---
+
+문제의 이유, 고민과 실제 대안, 선택 근거, 결론과 미확인 범위를 작성합니다.
+```
+
+날짜를 누르면 `/til/YYYY-MM-DD`의 정적 생성 페이지로 이동합니다. 달력은 마우스 호버와
+키보드 포커스에서 요약을 표시하고 Escape로 닫힙니다. 모바일에는 주제 목록도 표시합니다.
+초안과 비공개 일지는 달력·게시판·상세 경로·sitemap에서 제외합니다.
+현재는 파일 기반 예시만 제공하며 대화 수집이나 매일 자동 작성·푸시 작업은 설정하지 않습니다.
 
 ### 4. 정적 생성 결과 확인
 

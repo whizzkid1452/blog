@@ -13,6 +13,7 @@ interface PostListViewProps {
   description?: string;
   emptyMessage?: string;
   headerActions?: ReactNode;
+  beforePosts?: ReactNode;
 }
 
 export function PostListView({
@@ -23,6 +24,7 @@ export function PostListView({
   description = '빠르게 훑고 지나가기보다, 앨리스가 흰 토끼를 따라 토끼굴로 들어가듯 끝까지 파고드는 개발을 지향합니다.',
   emptyMessage = 'No posts published yet.',
   headerActions,
+  beforePosts,
 }: PostListViewProps) {
   return (
     <section className={styles.pageShell}>
@@ -32,6 +34,8 @@ export function PostListView({
         <p className={styles.description}>{description}</p>
         {headerActions}
       </header>
+
+      {beforePosts}
 
       {posts.length > 0 ? (
         <section className={styles.postList} aria-label="Posts">

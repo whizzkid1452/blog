@@ -29,6 +29,9 @@ export function SiteNavigationContent({ locale, githubProfileUrl, resumeUrl, tag
           <Link className={styles.navigationAnchor} href={createLocalizedPath(locale, '/series')}>
             {messages.series}
           </Link>
+          <Link className={styles.navigationAnchor} href="/til">
+            TIL · 공부 일지
+          </Link>
           <a
             className={styles.navigationAnchor}
             href={githubProfileUrl}
