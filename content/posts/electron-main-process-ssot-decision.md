@@ -1,14 +1,42 @@
 ---
-title: '[아키텍처 회고] Electron에서는 공유 데이터를 어디에 둬야 할까?'
+title: '[Part 1.] Electron에서는 공유 데이터를 어디에 둬야 할까?'
 description: '여러 Renderer가 가진 오래된 상태가 최신 SRT 자막을 덮어쓴 원인을 추적하고, Main Process의 ProjectSession을 공유 데이터의 SSOT로 재설계한 과정을 정리합니다.'
 date: '2026-07-15'
 publishedAt: '2026-07-15T09:00:00+09:00'
 tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
+series:
+  name: 'Electron 프로젝트 상태와 저장'
+  order: 1
 draft: false
 featured: true
 coverImage: '/images/electron-multi-window-shared-data-ssot/to-be-project-document-service.png'
 coverAlt: 'Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조 (TO-BE)'
 ---
+
+> 2026-10-28 보완: 이 글은 공유 프로젝트 문서의 확정 권한을 Main에 둔 배경을 다룹니다. 현재 Editor에는 로컬 Store와 문서 투영 경로가 남아 있습니다. 저장·복구·클라우드 전송의 현재 구현은 [후속 글](/posts/electron-main-process-ssot-save-recovery)에서 이어서 설명합니다.
+
+<details>
+<summary>목차 펼쳐보기</summary>
+
+- [1. 문제의 본질: 동기화 누락이 아니라 '소유권'의 부재](#문제의-본질-동기화-누락이-아니라-소유권-의-부재)
+- [2. 대안의 함정: 로컬 파일은 왜 기준점이 될 수 없었나?](#대안의-함정-로컬-파일은-왜-기준점이-될-수-없었나)
+- [3. 핵심 결정: Main Process를 단일 진실 공급원(SSOT)으로](#핵심-결정-main-process를-단일-진실-공급원-ssot-으로)
+- [4. 도구 선택의 디테일: 이유 있는 기술 스택](#도구-선택의-디테일-이유-있는-기술-스택)
+  - [4-1. Main Process에는 왜 Vanilla Zustand 대신 Class를 썼을까?](#main-process에는-왜-vanilla-zustand-대신-class를-썼을까)
+  - [4-2. Renderer 화면에는 왜 새로 Store를 안 파고 TanStack Query를 썼을까?](#renderer-화면에는-왜-새로-store를-안-파고-tanstack-query를-썼을까)
+  - [4-3. 스크롤, 하이라이트 같은 UI 이벤트는 왜 따로 뺐을까?](#스크롤-하이라이트-같은-ui-이벤트는-왜-따로-뺐을까)
+  - [4-4. 현재 자동 저장과 Editor 문서 투영은 어떻게 구분할까?](#현재-자동-저장과-editor-문서-투영은-어떻게-구분할까)
+- [5. 💡 회고를 마치며](#회고를-마치며)
+
+</details>
+
+<details>
+<summary>시리즈 전체 글 바로가기</summary>
+
+1. [Part 1. Electron에서는 공유 데이터를 어디에 둬야 할까?](/posts/electron-main-process-ssot-decision)
+2. [Part 2. Main SSOT를 저장까지 확장한 과정](/posts/electron-main-process-ssot-save-recovery)
+
+</details>
 
 > "SRT 자막을 한참 수정하고 점심을 먹고 왔는데, 수정한 내용이 다 날아갔어요!"
 
@@ -57,17 +85,26 @@ _동기화가 누락될 때마다 IPC를 하나씩 추가하는 방식으로는 
 
 ## [sort1] 3. 핵심 결정: Main Process를 단일 진실 공급원(SSOT)으로
 
-돌고 돌아 제가 내린 결론은 **Main Process의 `ProjectSession`을 프로젝트 데이터의 유일한 원본으로 삼는 것**이었습니다.
+돌고 돌아 제가 내린 결론은 **공유 프로젝트 문서의 최종 변경을 Main Process의 `ProjectSession`에서 승인하는 것**이었습니다.
 
-![Main Process의 ProjectSession을 SSOT로 둔 TO-BE 구조](/images/electron-multi-window-shared-data-ssot/to-be-project-document-service.png)
+```mermaid
+flowchart LR
+    Renderer["SRT 명령 · Editor 문서 투영"] --> Session["Main ProjectSession<br/>프로젝트 문서 확정"]
+    Session --> Snapshot["ProjectSnapshotClient<br/>확정 상태 구독"]
+    Snapshot --> UI["화면 표시"]
+    Preparation["Renderer 저장 준비"] -->|"문서·미디어 목록 승인 요청"| Session
+    Session -->|"저장용 문서 투영"| Save["Main 저장 서비스"]
+    Preparation -->|"승인된 버전·세션으로 저장 요청"| Save
+    Save --> File[("project.json · history · assets")]
+```
 
-_Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조 (TO-BE)_
+_프로젝트 문서의 확정 권한과 저장 요청 경로를 구분한 현재 구조_
 
 - **왜 Main Process를 선택했는가?**
 
-1. **생명주기의 독립성:** 에디터 창을 닫아도, 자막 창을 닫아도 Main Process는 살아있습니다. 특정 UI 창의 생존 여부와 무관하게 프로젝트의 최신 상태를 안전하게 쥐고 있을 수 있는 유일한 공간입니다.
-2. **데이터 흐름의 통제 (단방향):** 이제 Renderer(화면)는 스스로 상태를 결정하지 못합니다. 오직 Main Process에 "나 이거 수정할래"라고 요청(Action)만 합니다. Main이 이를 검증하고, 버전을 올려 **확정**한 뒤에야 모든 창과 파일 시스템에 "이게 진짜 최신 상태야"라고 뿌려줍니다.
-3. **정합성 보장:** 화면에 렌더링되는 데이터와 파일에 저장되는 데이터가 Main이 내려준 '정확히 동일한 Snapshot'을 사용하게 되므로, 과거 데이터가 최신 데이터를 덮어쓰는 악몽을 원천 차단할 수 있습니다.
+1. **창과 분리된 수명:** 앱이 실행되는 동안 Main Process는 특정 Renderer 창과 별도로 프로젝트 문서를 관리할 수 있습니다. 공유 문서의 확정 권한을 개별 UI 창의 Store에 맡기지 않기로 했습니다.
+2. **변경 승인 경로:** SRT와 공유 프로젝트 문서의 변경은 Main이 세션과 기준 revision을 검사해 확정합니다. Editor의 로컬 편집 상태는 별도 문서 투영을 거칩니다. Main의 승인과 화면 갱신, 디스크 쓰기는 서로 다른 단계입니다.
+3. **저장 기준 명시:** 저장 준비를 Main에서 승인한 뒤 그 버전의 문서와 미디어 목록을 고정해 기록합니다. 저장 중 추가 편집이 발생하면 화면은 더 새로울 수 있으며, 그 변경은 다음 미저장 버전으로 구분합니다.
 
 ## [sort1] 4. 도구 선택의 디테일: 이유 있는 기술 스택
 
@@ -77,19 +114,25 @@ _Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조 (TO-BE
 
 Main Process에 상태를 둘 때 Zustand의 도입을 고민했지만, 최종적으로는 **Class의 private field**를 활용했습니다.
 
-- **이유:** 당시 Main Process에는 복잡한 구독(Subscribe) 모델이나 미들웨어가 필요하지 않았습니다. 오직 외부에서 데이터를 함부로 조작하지 못하도록 캡슐화하고, 정해진 `dispatch` 메서드로만 변경을 허용하는 **엄격한 API 경계**가 필요했기 때문에 객체지향적인 Class가 요구사항에 가장 가벼우면서도 완벽하게 부합했습니다.
+- **이유:** 당시 Main Process에는 복잡한 구독(Subscribe) 모델이나 미들웨어가 필요하지 않았습니다. 오직 외부에서 데이터를 함부로 조작하지 못하도록 캡슐화하고, 정해진 `dispatch` 메서드로만 변경을 허용하는 **엄격한 API 경계**가 필요했기 때문에 이 변경 경로를 Class의 공개 메서드로 제한했습니다. 현재는 확정 이벤트 발행과 Undo/Redo 관리도 이 경계에 연결돼 있습니다.
 
 ### [sort2] 4-2. Renderer 화면에는 왜 새로 Store를 안 파고 TanStack Query를 썼을까?
 
 Main이 원본을 가졌다고 해서 화면(Renderer)에 데이터가 아예 없는 것은 아닙니다. 렌더링을 위한 '복사본'이 필요하죠. 하지만 이를 위해 `useSyncExternalStore`나 별도의 전역 상태를 만들지 않았습니다.
 
-- **이유:** Renderer의 역할이 '상태 소유자'에서 '상태 구독자(캐시)'로 격하되었기 때문입니다. 이미 서버 데이터를 다루듯 Main Process의 데이터를 다루게 되었으므로, 기존에 사용 중이던 **TanStack Query의 Cache**를 읽기 전용 복사본으로 활용하는 것으로 충분했습니다.
+- **이유:** Main에서 확정한 공유 문서를 화면에 표시할 때는 기존 **TanStack Query Cache**를 활용할 수 있었습니다. 확정 이벤트의 순서와 누락 복구는 ProjectSnapshotClient가 담당합니다. 다만 Editor Store, 입력 중인 값, 재생 객체까지 모두 읽기 전용 캐시로 바꾼 것은 아닙니다.
 
 ### [sort2] 4-3. 스크롤, 하이라이트 같은 UI 이벤트는 왜 따로 뺐을까?
 
 자막을 클릭했을 때 화면이 스크롤되거나 하이라이트 되는 이벤트는 이 거대한 `ProjectSession` 흐름에서 제외했습니다.
 
-- **이유:** 파일로 저장할 필요가 없는 일회성/휘발성 UI 이벤트까지 Main의 프로젝트 상태를 거치게 하면 불필요한 스냅샷 갱신과 I/O가 발생하기 때문입니다. 이런 이벤트는 IPC나 MessagePort를 통한 별도 채널로 분리하여 거대한 상태 저장소가 병목이 되는 것을 막았습니다.
+- **이유:** 보존할 필요가 없는 일시적 상호작용을 프로젝트 문서 변경이나 디스크 저장과 연결하지 않기 위해서입니다. 이런 이벤트는 UI 전용 경로로 전달합니다. 일부 UI 설정은 문서에 보존하므로, 모든 UI 상태를 저장 대상에서 제외한 것은 아닙니다.
+
+### [sort2] 4-4. 현재 자동 저장과 Editor 문서 투영은 어떻게 구분할까?
+
+현재 수동·자동·종료 전 저장은 Renderer의 공통 저장 조정기를 거칩니다. 자동 저장은 입력·드래그·비동기 작업의 완료 신호로 요청하며, 고정 3초 debounce를 사용하지 않습니다. Editor 문서를 Main 메모리에 투영하는 50ms 대기는 디스크 저장 간격과 다릅니다.
+
+저장 준비에서는 Editor 문서와 Script 내용, 미디어 전송 목록을 같은 명령으로 승인받습니다. 실제 저장 시작 요청은 승인된 버전과 프로젝트 식별자를 전달합니다. 이 경계와 로컬 이력·미디어·클라우드 전송의 연결은 [후속 글](/posts/electron-main-process-ssot-save-recovery)에서 자세히 다룹니다.
 
 ---
 
@@ -101,6 +144,6 @@ Zustand, TanStack Query 같은 훌륭한 도구들을 어떻게 쓸지 고민하
 
 <p style="width: 100%; max-width: 400px; margin-inline: auto;"><img src="/images/electron-multi-window-shared-data-ssot/hate-love-programming-meme.png" alt="프로그래밍을 싫어하다가 코드가 작동하면 다시 좋아하는 개발자 티셔츠 밈" /></p>
 
-_역할을 분리한 뒤 자동 저장은 다시 사용자의 작업을 보호하는 기능이 됐습니다._
+_문서의 변경 승인과 저장 완료는 서로 다른 경계로 다뤄야 했습니다._
 
-땜질식 동기화 코드를 걷어내고 '단일 진실 공급원'이라는 흔들리지 않는 뼈대를 세우고 나서야, 비로소 자동 저장 기능은 사용자의 데이터를 날려먹는 시한폭탄에서 사용자의 노력을 보호하는 든든한 방패로 돌아올 수 있었습니다.
+공유 문서의 확정 권한을 정한 뒤에는 저장이 어느 버전을 읽고, 완료 응답을 어느 변경까지 반영할지 확인할 수 있게 됐습니다. 이 구조만으로 데이터 유실이 모두 사라졌다고 단정할 수는 없습니다. 다중 창 충돌, 저장 중 편집, 실제 파일 복구는 각각의 실행 조건으로 검증해야 합니다.
