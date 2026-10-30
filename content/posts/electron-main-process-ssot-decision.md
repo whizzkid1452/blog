@@ -8,6 +8,7 @@ series:
   name: 'Electron 프로젝트 상태와 저장'
   order: 1
 draft: false
+visibility: private
 featured: true
 coverImage: '/images/electron-multi-window-shared-data-ssot/to-be-project-document-service.png'
 coverAlt: 'Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조 (TO-BE)'

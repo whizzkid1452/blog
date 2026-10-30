@@ -5,6 +5,7 @@ date: '2026-06-02'
 publishedAt: '2026-06-02T17:12:13+09:00'
 tags: ['architecture', 'async', 'race-condition', 'runtime']
 draft: false
+visibility: private
 ---
 
 ## [sort1] 1. 들어가며

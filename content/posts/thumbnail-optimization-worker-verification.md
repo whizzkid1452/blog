@@ -8,6 +8,7 @@ series:
   name: '썸네일 생성 최적화'
   order: 3
 draft: false
+visibility: private
 featured: true
 ---
 

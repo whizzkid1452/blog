@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 5
 draft: false
-visibility: public
+visibility: private
 ---
 
 처음 Export를 생각했을 때는 현재 Session을 하나의 `AudioBuffer`로 만들고 WAV로 바꾸면 끝날 것 같았다. 실제 요구사항에는 Loudness Normalize, True Peak 제한, Bit Depth 변환, Dither, MP3·OGG·FLAC 같은 Format, Track별 Stem이 함께 들어왔다.

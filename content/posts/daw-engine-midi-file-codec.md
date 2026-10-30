@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 4
 draft: false
-visibility: public
+visibility: private
 ---
 
 애플리케이션에서 MIDI Note는 시작 시간과 길이를 가진 객체다. 하지만 Standard MIDI File(SMF) 안에는 그런 객체가 그대로 들어 있지 않다. Note On과 Note Off라는 두 Event가 시간순으로 기록되고, 시간도 절대값이 아니라 이전 Event와의 차이인 Delta Time으로 저장된다.

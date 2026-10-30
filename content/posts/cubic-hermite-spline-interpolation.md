@@ -4,7 +4,7 @@ description: 'Cubic Hermite 보간식과 연속성 조건, 접선 선택에 따�
 date: '2026-08-03'
 tags: ['algorithm', 'math', 'typescript', 'audio', 'automation']
 draft: false
-visibility: public
+visibility: private
 ---
 
 DAW의 Automation Curve를 구현하면서 Cubic Hermite 보간을 공부하게 되었다.

@@ -8,6 +8,7 @@ series:
   name: '웹브라우저 멀티에디터 만들기'
   order: 3
 draft: false
+visibility: private
 ---
 
 관련 글: [[Part 1.] 웹브라우저 멀티에디터 만들기 - 아키텍처 설계](/posts/browser-multieditor-architecture-design)

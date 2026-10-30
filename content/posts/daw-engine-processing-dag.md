@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 6
 draft: false
-visibility: public
+visibility: private
 featured: true
 ---
 

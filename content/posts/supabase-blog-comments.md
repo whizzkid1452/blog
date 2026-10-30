@@ -4,6 +4,7 @@ description: 'Next.js 블로그에 Supabase 댓글 저장소, API Route, RLS 정
 date: '2026-07-14'
 tags: ['nextjs', 'supabase', 'postgresql', 'security']
 draft: true
+visibility: private
 ---
 
 정적 Markdown 글만 제공하던 블로그에 댓글 기능을 추가했다. 글은 파일로 관리할 수 있지만, 방문자가 작성하는 댓글은 요청이 끝난 뒤에도 남아 있어야 한다. 그래서 이번 작업에서는 Supabase의 PostgreSQL을 영구 저장소로 사용했다.
