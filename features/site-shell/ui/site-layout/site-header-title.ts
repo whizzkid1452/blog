@@ -20,6 +20,10 @@ export function resolveSiteHeaderTitle({ locale, pathname, posts }: ResolveSiteH
 
   const messages = getUiMessages(locale);
 
+  if (pathname === '/til' || pathname.startsWith('/til/')) {
+    return 'TIL · 공부 일지';
+  }
+
   if (pathname === '/') {
     return SITE_NAME;
   }
