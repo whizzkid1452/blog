@@ -5,6 +5,7 @@ date: '2026-04-06'
 publishedAt: '2026-04-06T20:04:49+09:00'
 tags: ['ai', 'frontend', 'career', 'architecture']
 draft: false
+visibility: private
 ---
 
 ## [sort1] 1. 들어가며

@@ -4,7 +4,7 @@ description: 'Region을 일반 가상 항목으로 다룰 수 없었던 이유�
 date: '2026-07-24'
 tags: ['react', 'performance', 'timeline', 'canvas', 'architecture']
 draft: false
-visibility: public
+visibility: private
 featured: true
 coverImage: '/images/timeline-performance-region-index-decision/editor-multitrack-timeline.png'
 coverAlt: '영상 미리보기와 자막·오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면'

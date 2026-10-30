@@ -8,6 +8,7 @@ series:
   name: '웹브라우저 멀티에디터 만들기'
   order: 1
 draft: false
+visibility: private
 ---
 
 ## [sort1] 1. 왜 이 프로젝트에서 아키텍처를 고민하게 되었는가?

@@ -7,7 +7,7 @@ series:
   name: 'Electron 프로젝트 상태와 저장'
   order: 2
 draft: false
-visibility: public
+visibility: private
 featured: false
 ---
 

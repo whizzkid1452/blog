@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 2
 draft: false
-visibility: public
+visibility: private
 ---
 
 오디오 Meter를 처음 만들 때는 각 block에서 절댓값이 가장 큰 sample을 찾으면 된다고 생각하기 쉽다. 하지만 sample peak가 같아도 사람이 느끼는 loudness는 다를 수 있고, 저장된 sample 사이를 복원하는 과정에서 더 큰 inter-sample peak가 생길 수도 있다.

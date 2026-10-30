@@ -8,6 +8,7 @@ series:
   name: '드래그 최적화'
   order: 1
 draft: false
+visibility: private
 ---
 
 ## [sort1] 1. 들어가며

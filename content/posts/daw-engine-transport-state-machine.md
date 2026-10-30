@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 7
 draft: false
-visibility: public
+visibility: private
 ---
 
 처음 재생 기능을 만들 때는 `isPlaying` 하나면 충분해 보였다. 재생하면 `true`, 정지하면 `false`로 바꾸면 된다.

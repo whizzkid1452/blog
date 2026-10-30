@@ -5,6 +5,7 @@ date: '2026-02-03'
 publishedAt: '2026-02-03T10:06:23+09:00'
 tags: ['til', 'frontend', 'performance']
 draft: false
+visibility: private
 ---
 
 참고: [rAF로 오디오 에디터 줌 기능 버벅거림 잡기](/posts/audio-editor-zoom-raf-throttling)

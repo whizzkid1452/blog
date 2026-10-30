@@ -4,6 +4,7 @@ description: "이 글에서는 디자인 시스템을 기획하면서, 당연하
 date: '2026-07-10'
 tags: ['design-system', 'shadcn', 'tokens-studio', 'frontend', 'architecture']
 draft: false
+visibility: private
 featured: true
 ---
 

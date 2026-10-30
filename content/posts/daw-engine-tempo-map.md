@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 1
 draft: false
-visibility: public
+visibility: private
 ---
 
 DAW의 시간은 하나가 아니다. 오디오 파일과 재생 장치는 Frame으로 움직이지만, 사용자는 17,280,000 Frame보다 13마디 2박을 더 쉽게 이해한다. 문제는 Tempo가 바뀌는 순간 두 좌표의 비율도 달라진다는 점이다.

@@ -5,6 +5,7 @@ date: '2026-04-15'
 publishedAt: '2026-04-15T18:04:30+09:00'
 tags: ['timeline', 'canvas', 'svg', 'editor']
 draft: false
+visibility: private
 ---
 
 ## [sort1] 1. 들어가며

@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 3
 draft: false
-visibility: public
+visibility: private
 ---
 
 Automation은 시간에 따라 Volume이나 Pan 같은 Parameter 값을 바꾸는 기능이다. 화면에는 점과 선으로 보이지만 엔진에서는 세 문제가 동시에 발생한다.

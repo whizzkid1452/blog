@@ -4,7 +4,7 @@ description: 'DAG의 방향성과 비순환 조건, 위상 정렬과 Cycle 탐�
 date: '2026-08-03'
 tags: ['algorithm', 'graph', 'typescript', 'daw', 'audio']
 draft: false
-visibility: public
+visibility: private
 ---
 
 DAW 엔진의 Audio Routing을 구현하면서 DAG를 공부하게 되었다.
