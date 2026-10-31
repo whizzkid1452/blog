@@ -46,59 +46,7 @@ featured: true
 
 ### [sort2] 2-1. 목표 구조도
 
-```mermaid
-flowchart TB
-    subgraph MAC [Mac]
-        subgraph BROWSER [웹 브라우저]
-            UI["웹 UI (작업 화면)"]
-        end
-    end
-
-    subgraph UBUNTU [Ubuntu 서버]
-        subgraph SERVER [Node.js 서버]
-            API["API 서버"]
-            JOB["작업 관리자"]
-        end
-
-        subgraph CHILD [자식 프로세스]
-            MEDIA["미디어 처리 (FFmpeg)"]
-        end
-
-        subgraph DISK [로컬 디스크]
-            INPUT[("입력 원본")]
-            OUTPUT[("패키징 결과물")]
-            RECORD[("작업 기록")]
-        end
-    end
-
-    subgraph NAS_DEVICE [NAS]
-        NAS[("NAS 원본 저장소")]
-    end
-
-    subgraph CLOUD [Google Drive]
-        DRIVE[("최종 납품 드라이브")]
-    end
-
-    UI <--> |"요청 및 응답"| API
-    API --> |"작업 지시"| JOB
-    INPUT --> |"파일 확인"| JOB
-    JOB <--> |"프로세스 실행"| MEDIA
-    INPUT --> |"소스 읽기"| MEDIA
-    MEDIA --> |"미디어 저장"| OUTPUT
-    JOB --> |"자막 저장 및 검사"| OUTPUT
-    JOB <--> |"상태 기록"| RECORD
-    NAS -.-> |"원본 복사"| INPUT
-    JOB -.-> |"최종 업로드"| DRIVE
-
-    style MAC fill:#f8fafc,stroke:#475569,stroke-width:2px,stroke-dasharray:6 4
-    style UBUNTU fill:#f8fafc,stroke:#475569,stroke-width:2px,stroke-dasharray:6 4
-    style BROWSER fill:#eff6ff,stroke:#64748b,stroke-dasharray:6 4
-    style SERVER fill:#f0fdf4,stroke:#64748b,stroke-dasharray:6 4
-    style CHILD fill:#fff7ed,stroke:#64748b,stroke-dasharray:6 4
-    style DISK fill:#f8fafc,stroke:#64748b,stroke-dasharray:6 4
-    style NAS_DEVICE fill:#fafafa,stroke:#94a3b8,stroke-dasharray:6 4
-    style CLOUD fill:#fafafa,stroke:#94a3b8,stroke-dasharray:6 4
-```
+![Mac 웹 UI와 Ubuntu 서버의 API·작업 관리자·FFmpeg·로컬 저장소, 이후 추가할 NAS·Google Drive 경로를 나타낸 목표 구조도](/images/media-delivery-packaging-automation/target-architecture.png)
 
 ---
 
