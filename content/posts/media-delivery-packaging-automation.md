@@ -1,7 +1,7 @@
 ---
 title: '150시간의 수작업, 0시간으로 자동화하기 (프론트엔드 개발자의 백엔드·인프라 구축기)'
 description: '삼성 TV Plus AI 더빙 납품의 반복 패키징 작업을 자동화하며 저장소·서버 구성과 CORS, SSE, 프로세스 관리, 쿠키 인증을 고민한 경험을 공유합니다.'
-date: '2026-09-30'
+date: '2026-10-06'
 tags: ['automation', 'nodejs', 'ffmpeg', 'infrastructure']
 draft: false
 visibility: public
