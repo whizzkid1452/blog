@@ -4,7 +4,7 @@ description: '프로젝트 문서와 미디어를 로컬 파일에 확정하고,
 date: '2026-08-07'
 tags: ['electron', 'local-first', 'cloud-sync', 'architecture']
 draft: false
-visibility: private
+visibility: public
 featured: true
 ---
 

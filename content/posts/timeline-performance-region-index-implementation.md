@@ -4,7 +4,7 @@ description: 'Viewport 내 Region만 조회하는 시간 인덱스와 React 실�
 date: '2026-07-24'
 tags: ['react', 'performance', 'timeline', 'canvas', 'typescript']
 draft: false
-visibility: private
+visibility: public
 ---
 
 ## [sort1] 1. 구현 목표와 범위
