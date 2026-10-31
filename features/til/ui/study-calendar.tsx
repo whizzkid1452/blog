@@ -3,6 +3,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import Link from 'next/link';
 import { useState } from 'react';
+import { IS_TIL_PUBLISHED } from '../config/til-publication';
 import { formatStudyMonth, getStudyMonthWeeks, moveStudyMonth, type StudyEntrySummary } from '../model/study-entry';
 import styles from './study-calendar.module.css';
 
@@ -14,24 +15,33 @@ interface StudyCalendarProps {
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-export function StudyCalendar({ entries, today, title = '개발 공부 일지' }: StudyCalendarProps) {
-  const [month, setMonth] = useState(() => (entries[0]?.date ?? today).slice(0, 7));
-  const entriesByDate = new Map(entries.map(entry => [entry.date, entry]));
-  const monthEntries = entries.filter(entry => entry.date.startsWith(`${month}-`));
+export function StudyCalendar({
+  entries,
+  today,
+  title = IS_TIL_PUBLISHED ? '개발 공부 일지' : '캘린더',
+}: StudyCalendarProps) {
+  const publicEntries = IS_TIL_PUBLISHED ? entries : [];
+  const [month, setMonth] = useState(() => (publicEntries[0]?.date ?? today).slice(0, 7));
+  const entriesByDate = new Map(publicEntries.map(entry => [entry.date, entry]));
+  const monthEntries = publicEntries.filter(entry => entry.date.startsWith(`${month}-`));
   const monthLabel = formatStudyMonth(month);
 
   return (
     <section className={styles.calendar} aria-label={title}>
       <div className={styles.heading}>
         <div>
-          <p className={styles.eyebrow}>TODAY I LEARNED</p>
+          {IS_TIL_PUBLISHED && <p className={styles.eyebrow}>TODAY I LEARNED</p>}
           <h2>{title}</h2>
         </div>
-        <Link className={styles.boardLink} href="/til">
-          TIL 게시판 <span aria-hidden="true">↗</span>
-        </Link>
+        {IS_TIL_PUBLISHED && (
+          <Link className={styles.boardLink} href="/til">
+            TIL 게시판 <span aria-hidden="true">↗</span>
+          </Link>
+        )}
       </div>
-      <p className={styles.description}>무엇을 고민했고, 왜 그 선택을 했는지. 하루의 생각을 날짜로 모읍니다.</p>
+      {IS_TIL_PUBLISHED && (
+        <p className={styles.description}>무엇을 고민했고, 왜 그 선택을 했는지. 하루의 생각을 날짜로 모읍니다.</p>
+      )}
       <div className={styles.toolbar}>
         <h3 aria-live="polite" aria-atomic="true">
           {monthLabel}
@@ -58,12 +68,14 @@ export function StudyCalendar({ entries, today, title = '개발 공부 일지' }
           </button>
         </div>
       </div>
-      <p className={styles.hint}>
-        날짜를 누르면 일지로 이동합니다. 마우스를 올리거나 키보드로 선택하면 요약을 볼 수 있어요.
-      </p>
+      {IS_TIL_PUBLISHED && (
+        <p className={styles.hint}>
+          날짜를 누르면 일지로 이동합니다. 마우스를 올리거나 키보드로 선택하면 요약을 볼 수 있어요.
+        </p>
+      )}
       <Tooltip.Provider delayDuration={200}>
         <table className={styles.month}>
-          <caption className={styles.srOnly}>{monthLabel} 공부 일지 달력 · 한국 시간 기준</caption>
+          <caption className={styles.srOnly}>{monthLabel} 달력 · 한국 시간 기준</caption>
           <thead>
             <tr>
               {WEEKDAYS.map(day => (
@@ -121,30 +133,31 @@ export function StudyCalendar({ entries, today, title = '개발 공부 일지' }
         </table>
       </Tooltip.Provider>
       <div className={styles.footer}>
-        <span>{monthEntries.length}일의 기록</span>
+        {IS_TIL_PUBLISHED && <span>{monthEntries.length}일의 기록</span>}
         <span>한국 시간 · Asia/Seoul</span>
       </div>
-      {monthEntries.length === 0 ? (
-        <p className={styles.empty} role="status">
-          이 달에는 아직 공개된 공부 일지가 없습니다.
-        </p>
-      ) : (
-        <ul className={styles.mobileAgenda} aria-label={`${monthLabel} 주제 목록`}>
-          {monthEntries.map(entry => (
-            <li key={entry.date}>
-              <Link href={`/til/${entry.date}`}>
-                <time dateTime={entry.date}>{Number(entry.date.slice(-2))}일</time>
-                <ul>
-                  {entry.topics.map(topic => (
-                    <li key={topic}>{topic}</li>
-                  ))}
-                </ul>
-                <span className={styles.agendaDescription}>{entry.description}</span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      {IS_TIL_PUBLISHED &&
+        (monthEntries.length === 0 ? (
+          <p className={styles.empty} role="status">
+            이 달에는 아직 공개된 공부 일지가 없습니다.
+          </p>
+        ) : (
+          <ul className={styles.mobileAgenda} aria-label={`${monthLabel} 주제 목록`}>
+            {monthEntries.map(entry => (
+              <li key={entry.date}>
+                <Link href={`/til/${entry.date}`}>
+                  <time dateTime={entry.date}>{Number(entry.date.slice(-2))}일</time>
+                  <ul>
+                    {entry.topics.map(topic => (
+                      <li key={topic}>{topic}</li>
+                    ))}
+                  </ul>
+                  <span className={styles.agendaDescription}>{entry.description}</span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ))}
     </section>
   );
 }

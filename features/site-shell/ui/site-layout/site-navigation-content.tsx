@@ -1,6 +1,7 @@
 import type { Locale } from '@/shared/i18n/i18n';
 import { createLocalizedPath, getUiMessages } from '@/shared/i18n/i18n';
 import Link from 'next/link';
+import { IS_TIL_PUBLISHED } from '@/features/til/config/til-publication';
 import { SidebarProfile } from './sidebar-profile';
 import { SidebarSearchForm } from './sidebar-search-form';
 import { SidebarTopicsSection } from './sidebar-topics-section';
@@ -29,9 +30,11 @@ export function SiteNavigationContent({ locale, githubProfileUrl, resumeUrl, tag
           <Link className={styles.navigationAnchor} href={createLocalizedPath(locale, '/series')}>
             {messages.series}
           </Link>
-          <Link className={styles.navigationAnchor} href="/til">
-            TIL · 공부 일지
-          </Link>
+          {IS_TIL_PUBLISHED && (
+            <Link className={styles.navigationAnchor} href="/til">
+              TIL · 공부 일지
+            </Link>
+          )}
           <a
             className={styles.navigationAnchor}
             href={githubProfileUrl}

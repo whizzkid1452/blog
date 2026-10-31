@@ -1,4 +1,5 @@
 import type { PostSummary } from '@/features/posts/model/post';
+import { IS_TIL_PUBLISHED } from '@/features/til/config/til-publication';
 import { SITE_NAME } from '@/shared/config/site-config';
 import type { Locale } from '@/shared/i18n/i18n';
 import { getUiMessages } from '@/shared/i18n/i18n';
@@ -20,7 +21,7 @@ export function resolveSiteHeaderTitle({ locale, pathname, posts }: ResolveSiteH
 
   const messages = getUiMessages(locale);
 
-  if (pathname === '/til' || pathname.startsWith('/til/')) {
+  if (IS_TIL_PUBLISHED && (pathname === '/til' || pathname.startsWith('/til/'))) {
     return 'TIL · 공부 일지';
   }
 

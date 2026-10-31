@@ -22,6 +22,12 @@
   font-size: 26px;
   letter-spacing: -0.04em;
 }
+.heading + .toolbar {
+  margin-top: 24px;
+}
+.toolbar + .month {
+  margin-top: 20px;
+}
 .boardLink {
   flex-shrink: 0;
   color: var(--color-text-secondary);

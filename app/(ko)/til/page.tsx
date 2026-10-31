@@ -1,18 +1,23 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import { notFound } from 'next/navigation';
+import { IS_TIL_PUBLISHED } from '@/features/til/config/til-publication';
 import { createAbsoluteUrl } from '@/shared/config/site-config';
 import { getKoreanToday } from '@/features/til/model/study-entry';
 import { getStudySummaries } from '@/features/til/server/study-repository';
 import { StudyCalendar } from '@/features/til/ui/study-calendar';
 import styles from '@/features/til/ui/study-pages.module.css';
 
-export const metadata: Metadata = {
-  title: 'TIL · 개발 공부 일지',
-  description: '프로젝트의 요구사항부터 고민과 선택, 결론까지 날짜별로 모은 개발 공부 일지입니다.',
-  alternates: { canonical: createAbsoluteUrl('/til') },
-};
+export const metadata: Metadata = IS_TIL_PUBLISHED
+  ? {
+      title: 'TIL · 개발 공부 일지',
+      description: '프로젝트의 요구사항부터 고민과 선택, 결론까지 날짜별로 모은 개발 공부 일지입니다.',
+      alternates: { canonical: createAbsoluteUrl('/til') },
+    }
+  : { robots: { index: false, follow: false } };
 
 export default function TilPage() {
+  if (!IS_TIL_PUBLISHED) notFound();
   const entries = getStudySummaries();
   return (
     <div className={styles.page}>

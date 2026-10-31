@@ -16,7 +16,8 @@ describe('SiteNavigationContent', () => {
     expect(markup).toContain('profile-avatar.png');
     expect(markup).toContain('href="/posts"');
     expect(markup).toContain('href="/series"');
-    expect(markup).toContain('href="/til"');
+    expect(markup).not.toContain('href="/til"');
+    expect(markup).not.toContain('TIL');
     expect(markup).toContain('>GitHub</a>');
     expect(markup).toContain('>About</a>');
     expect(markup).not.toContain('/auth/login');

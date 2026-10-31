@@ -1,12 +1,16 @@
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getStudyEntry, getStudySummaries, readStudyEntries } from './study-repository';
+
+const publication = vi.hoisted(() => ({ IS_TIL_PUBLISHED: true }));
+vi.mock('../config/til-publication', () => publication);
 
 let directory: string;
 
 beforeEach(() => {
+  publication.IS_TIL_PUBLISHED = true;
   directory = fs.mkdtempSync(path.join(os.tmpdir(), 'til-test-'));
 });
 afterEach(() => {
@@ -49,5 +53,13 @@ describe('study repository', () => {
     expect(getStudyEntry('2026-10-29')?.content).toBeTruthy();
     expect(getStudyEntry('2026-02-29')).toBeNull();
     expect(getStudyEntry('../2026-10-29')).toBeNull();
+  });
+
+  it('hides summaries and direct entry lookups while TIL publication is disabled', () => {
+    publication.IS_TIL_PUBLISHED = false;
+
+    expect(getStudySummaries()).toEqual([]);
+    expect(getStudyEntry('2026-10-29')).toBeNull();
+    expect(readStudyEntries().map(entry => entry.date)).toContain('2026-10-29');
   });
 });

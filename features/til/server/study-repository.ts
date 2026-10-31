@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import matter from 'gray-matter';
 import { z } from 'zod';
+import { IS_TIL_PUBLISHED } from '../config/til-publication';
 import { isStudyDate, type StudyEntry, type StudyEntrySummary } from '../model/study-entry';
 
 const entrySchema = z.object({
@@ -32,10 +33,11 @@ export function readStudyEntries(directory = path.join(process.cwd(), 'content',
 }
 
 export function getStudySummaries(): StudyEntrySummary[] {
+  if (!IS_TIL_PUBLISHED) return [];
   return readStudyEntries().map(({ date, title, description, topics }) => ({ date, title, description, topics }));
 }
 
 export function getStudyEntry(date: string): StudyEntry | null {
-  if (!isStudyDate(date)) return null;
+  if (!IS_TIL_PUBLISHED || !isStudyDate(date)) return null;
   return readStudyEntries().find(entry => entry.date === date) ?? null;
 }

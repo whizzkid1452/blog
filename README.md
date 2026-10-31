@@ -62,6 +62,10 @@ visibility: public
 
 ### 3-1. TIL / 개발 공부 일지
 
+현재 `features/til/config/til-publication.ts`의 `IS_TIL_PUBLISHED`는 `false`입니다.
+TIL 메뉴·목록·상세·요약·sitemap 노출을 숨기고 홈 캘린더와 월 이동만 유지합니다.
+글 파일은 보존하며, 설정을 `true`로 바꾸면 아래 공개 기준을 다시 적용합니다.
+
 대화에서 사고 흐름을 재구성하는 방법과 달력·게시판의 표시 기준은
 [TIL 작성·표시 컨벤션](docs/til-convention.md)을 따릅니다.
 
