@@ -92,26 +92,34 @@
   vertical-align: top;
 }
 .dayLink,
+.keywordDay,
 .emptyDay {
   display: block;
   min-height: 110px;
   padding: 10px 8px;
   font-size: 13px;
 }
-.dayLink {
+.dayLink,
+.keywordDay {
   position: relative;
   background: color-mix(in srgb, var(--color-link) 6%, var(--background));
 }
 .dayLink:hover {
   background: color-mix(in srgb, var(--color-link) 12%, var(--background));
 }
-.dayLink time {
+.dayLink time,
+.keywordDay time {
   font-weight: 700;
+}
+.dayLink time {
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 .emptyDay {
   color: var(--color-text-muted);
 }
 .dayLink[aria-current='date'] time,
+.keywordDay[aria-current='date'] time,
 .emptyDay[aria-current='date'] time {
   border-bottom: 2px solid var(--color-link);
 }
@@ -203,6 +211,7 @@
 }
 @media (max-width: 1200px) {
   .dayLink,
+  .keywordDay,
   .emptyDay {
     min-height: 84px;
   }
@@ -236,6 +245,7 @@
     font-size: 19px;
   }
   .dayLink,
+  .keywordDay,
   .emptyDay {
     min-height: 48px;
     padding: 14px 4px;
@@ -251,7 +261,8 @@
     padding: 0;
     list-style: none;
   }
-  .mobileAgenda > li > a {
+  .mobileAgenda > li > a,
+  .keywordAgenda {
     display: block;
     border-top: 1px solid var(--color-border);
     padding: 18px 4px 0;

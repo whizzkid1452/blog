@@ -9,6 +9,15 @@ export interface StudyEntry extends StudyEntrySummary {
   content: string;
 }
 
+export interface StudyKeywords {
+  date: string;
+  topics: string[];
+}
+
+export interface StudyCalendarRecord extends StudyKeywords {
+  entry: StudyEntrySummary | null;
+}
+
 export function isStudyDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const parsed = new Date(`${value}T00:00:00Z`);

@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { createAbsoluteUrl } from '@/shared/config/site-config';
 import { getKoreanToday } from '@/features/til/model/study-entry';
 import { getStudySummaries } from '@/features/til/server/study-repository';
+import { getStudyCalendarRecords } from '@/features/til/server/study-calendar-repository';
 import { StudyCalendar } from '@/features/til/ui/study-calendar';
 import styles from '@/features/til/ui/study-pages.module.css';
 
@@ -21,7 +22,7 @@ export default function TilPage() {
         <h1>TIL · 개발 공부 일지</h1>
         <p className={styles.description}>프로젝트의 요구사항에서 출발해, 고민과 선택의 이유를 남깁니다.</p>
       </header>
-      <StudyCalendar entries={entries} today={getKoreanToday()} title="날짜로 돌아보기" />
+      <StudyCalendar records={getStudyCalendarRecords()} today={getKoreanToday()} title="날짜로 돌아보기" />
       <section aria-labelledby="study-list-heading">
         <h2 id="study-list-heading">
           모든 일지 <span className={styles.muted}>· {entries.length}편</span>

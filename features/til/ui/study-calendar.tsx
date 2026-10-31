@@ -3,21 +3,21 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import Link from 'next/link';
 import { useState } from 'react';
-import { formatStudyMonth, getStudyMonthWeeks, moveStudyMonth, type StudyEntrySummary } from '../model/study-entry';
+import { formatStudyMonth, getStudyMonthWeeks, moveStudyMonth, type StudyCalendarRecord } from '../model/study-entry';
 import styles from './study-calendar.module.css';
 
 interface StudyCalendarProps {
-  entries: StudyEntrySummary[];
+  records: StudyCalendarRecord[];
   today: string;
   title?: string;
 }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-export function StudyCalendar({ entries, today, title = '개발 공부 일지' }: StudyCalendarProps) {
-  const [month, setMonth] = useState(() => (entries[0]?.date ?? today).slice(0, 7));
-  const entriesByDate = new Map(entries.map(entry => [entry.date, entry]));
-  const monthEntries = entries.filter(entry => entry.date.startsWith(`${month}-`));
+export function StudyCalendar({ records, today, title = '개발 공부 일지' }: StudyCalendarProps) {
+  const [month, setMonth] = useState(() => (records[0]?.date ?? today).slice(0, 7));
+  const recordsByDate = new Map(records.map(record => [record.date, record]));
+  const monthRecords = records.filter(record => record.date.startsWith(`${month}-`));
   const monthLabel = formatStudyMonth(month);
 
   return (
@@ -59,7 +59,8 @@ export function StudyCalendar({ entries, today, title = '개발 공부 일지' }
         </div>
       </div>
       <p className={styles.hint}>
-        날짜를 누르면 일지로 이동합니다. 마우스를 올리거나 키보드로 선택하면 요약을 볼 수 있어요.
+        날짜별로 다룬 키워드를 모았습니다. 밑줄이 있는 날짜는 일지로 연결되며, 마우스를 올리거나 키보드로 선택하면
+        요약을 볼 수 있어요.
       </p>
       <Tooltip.Provider delayDuration={200}>
         <table className={styles.month}>
@@ -77,36 +78,11 @@ export function StudyCalendar({ entries, today, title = '개발 공부 일지' }
             {getStudyMonthWeeks(month).map((week, index) => (
               <tr key={index}>
                 {week.map((date, dayIndex) => {
-                  const entry = date == null ? undefined : entriesByDate.get(date);
+                  const record = date == null ? undefined : recordsByDate.get(date);
                   return (
-                    <td key={date ?? `empty-${dayIndex}`} data-recorded={entry ? true : undefined}>
-                      {date == null ? null : entry ? (
-                        <Tooltip.Root>
-                          <Tooltip.Trigger asChild>
-                            <Link
-                              className={styles.dayLink}
-                              href={`/til/${date}`}
-                              aria-label={`${date} 공부 일지: ${entry.topics.join(', ')}`}
-                              aria-current={date === today ? 'date' : undefined}
-                            >
-                              <time dateTime={date}>{Number(date.slice(-2))}</time>
-                              <span className={styles.recordDot} aria-hidden="true" />
-                              <ul className={styles.topics}>
-                                {entry.topics.map(topic => (
-                                  <li key={topic}>{topic}</li>
-                                ))}
-                              </ul>
-                            </Link>
-                          </Tooltip.Trigger>
-                          <Tooltip.Portal>
-                            <Tooltip.Content className={styles.preview} sideOffset={8} collisionPadding={16}>
-                              <p className={styles.previewDate}>{date} · 공부 일지</p>
-                              <p className={styles.previewTitle}>{entry.title}</p>
-                              <p>{entry.description}</p>
-                              <Tooltip.Arrow className={styles.previewArrow} />
-                            </Tooltip.Content>
-                          </Tooltip.Portal>
-                        </Tooltip.Root>
+                    <td key={date ?? `empty-${dayIndex}`} data-recorded={record ? true : undefined}>
+                      {date == null ? null : record ? (
+                        <RecordedDay record={record} today={today} />
                       ) : (
                         <span className={styles.emptyDay} aria-current={date === today ? 'date' : undefined}>
                           <time dateTime={date}>{Number(date.slice(-2))}</time>
@@ -121,30 +97,85 @@ export function StudyCalendar({ entries, today, title = '개발 공부 일지' }
         </table>
       </Tooltip.Provider>
       <div className={styles.footer}>
-        <span>{monthEntries.length}일의 기록</span>
+        <span>{monthRecords.length}일의 기록</span>
         <span>한국 시간 · Asia/Seoul</span>
       </div>
-      {monthEntries.length === 0 ? (
+      {monthRecords.length === 0 ? (
         <p className={styles.empty} role="status">
-          이 달에는 아직 공개된 공부 일지가 없습니다.
+          이 달에는 아직 기록된 키워드나 일지가 없습니다.
         </p>
       ) : (
         <ul className={styles.mobileAgenda} aria-label={`${monthLabel} 주제 목록`}>
-          {monthEntries.map(entry => (
-            <li key={entry.date}>
-              <Link href={`/til/${entry.date}`}>
-                <time dateTime={entry.date}>{Number(entry.date.slice(-2))}일</time>
+          {monthRecords.map(record => {
+            const content = (
+              <>
+                <time dateTime={record.date}>{Number(record.date.slice(-2))}일</time>
                 <ul>
-                  {entry.topics.map(topic => (
+                  {record.topics.map(topic => (
                     <li key={topic}>{topic}</li>
                   ))}
                 </ul>
-                <span className={styles.agendaDescription}>{entry.description}</span>
-              </Link>
-            </li>
-          ))}
+                {record.entry ? <span className={styles.agendaDescription}>{record.entry.description}</span> : null}
+              </>
+            );
+            return (
+              <li key={record.date}>
+                {record.entry ? (
+                  <Link href={`/til/${record.date}`}>{content}</Link>
+                ) : (
+                  <div className={styles.keywordAgenda}>{content}</div>
+                )}
+              </li>
+            );
+          })}
         </ul>
       )}
     </section>
+  );
+}
+
+function RecordedDay({ record, today }: { record: StudyCalendarRecord; today: string }) {
+  const { date, topics, entry } = record;
+  const content = (
+    <>
+      <time dateTime={date}>{Number(date.slice(-2))}</time>
+      <span className={styles.recordDot} aria-hidden="true" />
+      <ul className={styles.topics}>
+        {topics.map(topic => (
+          <li key={topic}>{topic}</li>
+        ))}
+      </ul>
+    </>
+  );
+
+  if (!entry) {
+    return (
+      <div className={styles.keywordDay} aria-current={date === today ? 'date' : undefined}>
+        {content}
+      </div>
+    );
+  }
+
+  return (
+    <Tooltip.Root>
+      <Tooltip.Trigger asChild>
+        <Link
+          className={styles.dayLink}
+          href={`/til/${date}`}
+          aria-label={`${date} 공부 일지: ${topics.join(', ')}`}
+          aria-current={date === today ? 'date' : undefined}
+        >
+          {content}
+        </Link>
+      </Tooltip.Trigger>
+      <Tooltip.Portal>
+        <Tooltip.Content className={styles.preview} sideOffset={8} collisionPadding={16}>
+          <p className={styles.previewDate}>{date} · 공부 일지</p>
+          <p className={styles.previewTitle}>{entry.title}</p>
+          <p>{entry.description}</p>
+          <Tooltip.Arrow className={styles.previewArrow} />
+        </Tooltip.Content>
+      </Tooltip.Portal>
+    </Tooltip.Root>
   );
 }
