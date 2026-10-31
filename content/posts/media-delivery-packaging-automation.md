@@ -44,6 +44,62 @@ featured: true
 - 단순 백엔드 스크립트만 짜면 제 공수는 줄어들지만, 비개발자인 실무진이 작업 상태를 확인하거나 설정을 바꾸기엔 진입 장벽이 너무 높습니다.
 - **결정:** 회사에서 지원해 주신 남는 PC에 Ubuntu 서버를 띄우고, **프론트엔드 웹뷰와 Node.js 백엔드 API를 완벽히 분리한 풀스택 환경**을 구축하기로 했습니다. 실무자는 브라우저에서 버튼 하나만 누르면, 백엔드에서 FFmpeg 자식 프로세스가 돌아가며 영상을 패키징하는 구조입니다.
 
+### [sort2] 2-1. 목표 구조도
+
+```mermaid
+flowchart TB
+    subgraph MAC [Mac]
+        subgraph BROWSER [웹 브라우저]
+            UI["웹 UI (작업 화면)"]
+        end
+    end
+
+    subgraph UBUNTU [Ubuntu 서버]
+        subgraph SERVER [Node.js 서버]
+            API["API 서버"]
+            JOB["작업 관리자"]
+        end
+
+        subgraph CHILD [자식 프로세스]
+            MEDIA["미디어 처리 (FFmpeg)"]
+        end
+
+        subgraph DISK [로컬 디스크]
+            INPUT[("입력 원본")]
+            OUTPUT[("패키징 결과물")]
+            RECORD[("작업 기록")]
+        end
+    end
+
+    subgraph NAS_DEVICE [NAS]
+        NAS[("NAS 원본 저장소")]
+    end
+
+    subgraph CLOUD [Google Drive]
+        DRIVE[("최종 납품 드라이브")]
+    end
+
+    UI <--> |"요청 및 응답"| API
+    API --> |"작업 지시"| JOB
+    INPUT --> |"파일 확인"| JOB
+    JOB <--> |"프로세스 실행"| MEDIA
+    INPUT --> |"소스 읽기"| MEDIA
+    MEDIA --> |"미디어 저장"| OUTPUT
+    JOB --> |"자막 저장 및 검사"| OUTPUT
+    JOB <--> |"상태 기록"| RECORD
+    NAS -.-> |"원본 복사"| INPUT
+    JOB -.-> |"최종 업로드"| DRIVE
+
+    style MAC fill:#f8fafc,stroke:#475569,stroke-width:2px,stroke-dasharray:6 4
+    style UBUNTU fill:#f8fafc,stroke:#475569,stroke-width:2px,stroke-dasharray:6 4
+    style BROWSER fill:#eff6ff,stroke:#64748b,stroke-dasharray:6 4
+    style SERVER fill:#f0fdf4,stroke:#64748b,stroke-dasharray:6 4
+    style CHILD fill:#fff7ed,stroke:#64748b,stroke-dasharray:6 4
+    style DISK fill:#f8fafc,stroke:#64748b,stroke-dasharray:6 4
+    style NAS_DEVICE fill:#fafafa,stroke:#94a3b8,stroke-dasharray:6 4
+    style CLOUD fill:#fafafa,stroke:#94a3b8,stroke-dasharray:6 4
+```
+
 ---
 
 ## [sort1] 3. 프론트엔드 우물 밖으로: 인프라와 백엔드 트러블슈팅
