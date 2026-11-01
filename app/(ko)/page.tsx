@@ -9,7 +9,7 @@ import { StudyCalendar } from '@/features/til/ui/study-calendar';
 export const metadata: Metadata = createHomeMetadata();
 
 export default function Home() {
-  const posts = getPostIndex().getFeaturedPostSummaries();
+  const posts = getPostIndex().getPostSummaries();
 
   return (
     <PostListView
