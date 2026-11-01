@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { getStudyEntry, getStudySummaries, readStudyEntries } from './study-repository';
+import { getStudyCalendarEntries, getStudyEntry, getStudySummaries, readStudyEntries } from './study-repository';
 
 const publication = vi.hoisted(() => ({ IS_TIL_PUBLISHED: true }));
 vi.mock('../config/til-publication', () => publication);
@@ -55,9 +55,15 @@ describe('study repository', () => {
     expect(getStudyEntry('../2026-10-29')).toBeNull();
   });
 
-  it('hides summaries and direct entry lookups while TIL publication is disabled', () => {
+  it('keeps only dates and topics public while hiding articles and their summaries', () => {
     publication.IS_TIL_PUBLISHED = false;
 
+    const calendarEntries = getStudyCalendarEntries();
+    expect(calendarEntries.map(entry => entry.date)).toContain('2026-10-29');
+    for (const entry of calendarEntries) {
+      expect(Object.keys(entry).sort()).toEqual(['date', 'topics']);
+      expect(entry.topics.length).toBeGreaterThan(0);
+    }
     expect(getStudySummaries()).toEqual([]);
     expect(getStudyEntry('2026-10-29')).toBeNull();
     expect(readStudyEntries().map(entry => entry.date)).toContain('2026-10-29');

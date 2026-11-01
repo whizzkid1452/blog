@@ -1,8 +1,13 @@
-export interface StudyEntrySummary {
+export interface StudyCalendarEntry {
   date: string;
+  topics: string[];
+  title?: string;
+  description?: string;
+}
+
+export interface StudyEntrySummary extends StudyCalendarEntry {
   title: string;
   description: string;
-  topics: string[];
 }
 
 export interface StudyEntry extends StudyEntrySummary {

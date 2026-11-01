@@ -3,7 +3,7 @@ import path from 'node:path';
 import matter from 'gray-matter';
 import { z } from 'zod';
 import { IS_TIL_PUBLISHED } from '../config/til-publication';
-import { isStudyDate, type StudyEntry, type StudyEntrySummary } from '../model/study-entry';
+import { isStudyDate, type StudyCalendarEntry, type StudyEntry, type StudyEntrySummary } from '../model/study-entry';
 
 const entrySchema = z.object({
   date: z.string().refine(isStudyDate, 'Expected a valid YYYY-MM-DD date in Asia/Seoul'),
@@ -30,6 +30,12 @@ export function readStudyEntries(directory = path.join(process.cwd(), 'content',
       return [{ ...summary, content: content.trim() }];
     })
     .sort((a, b) => b.date.localeCompare(a.date));
+}
+
+export function getStudyCalendarEntries(): StudyCalendarEntry[] {
+  return readStudyEntries().map(({ date, title, description, topics }) =>
+    IS_TIL_PUBLISHED ? { date, title, description, topics } : { date, topics }
+  );
 }
 
 export function getStudySummaries(): StudyEntrySummary[] {

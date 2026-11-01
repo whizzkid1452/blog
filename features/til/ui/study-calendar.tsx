@@ -4,11 +4,11 @@ import * as Tooltip from '@radix-ui/react-tooltip';
 import Link from 'next/link';
 import { useState } from 'react';
 import { IS_TIL_PUBLISHED } from '../config/til-publication';
-import { formatStudyMonth, getStudyMonthWeeks, moveStudyMonth, type StudyEntrySummary } from '../model/study-entry';
+import { formatStudyMonth, getStudyMonthWeeks, moveStudyMonth, type StudyCalendarEntry } from '../model/study-entry';
 import styles from './study-calendar.module.css';
 
 interface StudyCalendarProps {
-  entries: StudyEntrySummary[];
+  entries: StudyCalendarEntry[];
   today: string;
   title?: string;
 }
@@ -20,10 +20,9 @@ export function StudyCalendar({
   today,
   title = IS_TIL_PUBLISHED ? '개발 공부 일지' : '캘린더',
 }: StudyCalendarProps) {
-  const publicEntries = IS_TIL_PUBLISHED ? entries : [];
-  const [month, setMonth] = useState(() => (publicEntries[0]?.date ?? today).slice(0, 7));
-  const entriesByDate = new Map(publicEntries.map(entry => [entry.date, entry]));
-  const monthEntries = publicEntries.filter(entry => entry.date.startsWith(`${month}-`));
+  const [month, setMonth] = useState(() => (entries[0]?.date ?? today).slice(0, 7));
+  const entriesByDate = new Map(entries.map(entry => [entry.date, entry]));
+  const monthEntries = entries.filter(entry => entry.date.startsWith(`${month}-`));
   const monthLabel = formatStudyMonth(month);
 
   return (
@@ -90,9 +89,25 @@ export function StudyCalendar({
               <tr key={index}>
                 {week.map((date, dayIndex) => {
                   const entry = date == null ? undefined : entriesByDate.get(date);
+                  const dayContent =
+                    date == null ? null : (
+                      <>
+                        <time dateTime={date}>{Number(date.slice(-2))}</time>
+                        {entry && (
+                          <>
+                            <span className={styles.recordDot} aria-hidden="true" />
+                            <ul className={styles.topics}>
+                              {entry.topics.map(topic => (
+                                <li key={topic}>{topic}</li>
+                              ))}
+                            </ul>
+                          </>
+                        )}
+                      </>
+                    );
                   return (
                     <td key={date ?? `empty-${dayIndex}`} data-recorded={entry ? true : undefined}>
-                      {date == null ? null : entry ? (
+                      {date == null ? null : entry && IS_TIL_PUBLISHED ? (
                         <Tooltip.Root>
                           <Tooltip.Trigger asChild>
                             <Link
@@ -101,28 +116,25 @@ export function StudyCalendar({
                               aria-label={`${date} 공부 일지: ${entry.topics.join(', ')}`}
                               aria-current={date === today ? 'date' : undefined}
                             >
-                              <time dateTime={date}>{Number(date.slice(-2))}</time>
-                              <span className={styles.recordDot} aria-hidden="true" />
-                              <ul className={styles.topics}>
-                                {entry.topics.map(topic => (
-                                  <li key={topic}>{topic}</li>
-                                ))}
-                              </ul>
+                              {dayContent}
                             </Link>
                           </Tooltip.Trigger>
                           <Tooltip.Portal>
                             <Tooltip.Content className={styles.preview} sideOffset={8} collisionPadding={16}>
                               <p className={styles.previewDate}>{date} · 공부 일지</p>
-                              <p className={styles.previewTitle}>{entry.title}</p>
+                              <p className={styles.previewTitle}>{entry.title ?? '공부 일지'}</p>
                               <p>{entry.description}</p>
                               <Tooltip.Arrow className={styles.previewArrow} />
                             </Tooltip.Content>
                           </Tooltip.Portal>
                         </Tooltip.Root>
                       ) : (
-                        <span className={styles.emptyDay} aria-current={date === today ? 'date' : undefined}>
-                          <time dateTime={date}>{Number(date.slice(-2))}</time>
-                        </span>
+                        <div
+                          className={entry ? styles.recordedDay : styles.emptyDay}
+                          aria-current={date === today ? 'date' : undefined}
+                        >
+                          {dayContent}
+                        </div>
                       )}
                     </td>
                   );
@@ -133,31 +145,41 @@ export function StudyCalendar({
         </table>
       </Tooltip.Provider>
       <div className={styles.footer}>
-        {IS_TIL_PUBLISHED && <span>{monthEntries.length}일의 기록</span>}
+        <span>{monthEntries.length}일의 기록</span>
         <span>한국 시간 · Asia/Seoul</span>
       </div>
-      {IS_TIL_PUBLISHED &&
-        (monthEntries.length === 0 ? (
-          <p className={styles.empty} role="status">
-            이 달에는 아직 공개된 공부 일지가 없습니다.
-          </p>
-        ) : (
-          <ul className={styles.mobileAgenda} aria-label={`${monthLabel} 주제 목록`}>
-            {monthEntries.map(entry => (
+      {monthEntries.length === 0 ? (
+        <p className={styles.empty} role="status">
+          {IS_TIL_PUBLISHED ? '이 달에는 아직 공개된 공부 일지가 없습니다.' : '이 달에는 아직 기록이 없습니다.'}
+        </p>
+      ) : (
+        <ul className={styles.mobileAgenda} aria-label={`${monthLabel} 주제 목록`}>
+          {monthEntries.map(entry => {
+            const agendaContent = (
+              <>
+                <time dateTime={entry.date}>{Number(entry.date.slice(-2))}일</time>
+                <ul>
+                  {entry.topics.map(topic => (
+                    <li key={topic}>{topic}</li>
+                  ))}
+                </ul>
+                {IS_TIL_PUBLISHED && <span className={styles.agendaDescription}>{entry.description}</span>}
+              </>
+            );
+            return (
               <li key={entry.date}>
-                <Link href={`/til/${entry.date}`}>
-                  <time dateTime={entry.date}>{Number(entry.date.slice(-2))}일</time>
-                  <ul>
-                    {entry.topics.map(topic => (
-                      <li key={topic}>{topic}</li>
-                    ))}
-                  </ul>
-                  <span className={styles.agendaDescription}>{entry.description}</span>
-                </Link>
+                {IS_TIL_PUBLISHED ? (
+                  <Link className={styles.agendaEntry} href={`/til/${entry.date}`}>
+                    {agendaContent}
+                  </Link>
+                ) : (
+                  <div className={styles.agendaEntry}>{agendaContent}</div>
+                )}
               </li>
-            ))}
-          </ul>
-        ))}
+            );
+          })}
+        </ul>
+      )}
     </section>
   );
 }
