@@ -1,12 +1,9 @@
 ---
-title: '[Part 1.] Electron에서는 공유 데이터를 어디에 둬야 할까?'
+title: 'Electron에서는 공유 데이터를 어디에 둬야 할까?'
 description: '여러 Renderer가 가진 오래된 상태가 최신 SRT 자막을 덮어쓴 원인을 추적하고, Main Process의 ProjectSession을 공유 데이터의 SSOT로 재설계한 과정을 정리합니다.'
 date: '2026-07-15'
 publishedAt: '2026-07-15T09:00:00+09:00'
 tags: ['electron', 'state-management', 'zustand', 'ssot', 'autosave']
-series:
-  name: 'Electron 프로젝트 상태와 저장'
-  order: 1
 draft: false
 visibility: public
 featured: true
@@ -28,13 +25,6 @@ coverAlt: 'Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구
   - [4-3. 스크롤, 하이라이트 같은 UI 이벤트는 왜 따로 뺐을까?](#스크롤-하이라이트-같은-ui-이벤트는-왜-따로-뺐을까)
   - [4-4. 현재 자동 저장과 Editor 문서 투영은 어떻게 구분할까?](#현재-자동-저장과-editor-문서-투영은-어떻게-구분할까)
 - [5. 💡 회고를 마치며](#회고를-마치며)
-
-</details>
-
-<details>
-<summary>시리즈 전체 글 바로가기</summary>
-
-1. [Part 1. Electron에서는 공유 데이터를 어디에 둬야 할까?](/posts/electron-main-process-ssot-decision)
 
 </details>
 
