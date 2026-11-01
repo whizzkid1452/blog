@@ -14,7 +14,6 @@ export default function Home() {
   return (
     <PostListView
       posts={posts}
-      eyebrow="대표 글"
       beforePosts={<StudyCalendar entries={getStudyCalendarEntries()} today={getKoreanToday()} />}
     />
   );
