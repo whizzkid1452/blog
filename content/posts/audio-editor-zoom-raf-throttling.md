@@ -5,7 +5,7 @@ date: '2026-02-02'
 publishedAt: '2026-02-02T18:44:37+09:00'
 tags: ['performance', 'request-animation-frame', 'audio-editor', 'frontend']
 draft: false
-visibility: public
+visibility: private
 ---
 
 ## [sort1] 1. 문제 상황
