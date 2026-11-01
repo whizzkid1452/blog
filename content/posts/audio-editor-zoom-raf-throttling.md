@@ -5,10 +5,8 @@ date: '2026-02-02'
 publishedAt: '2026-02-02T18:44:37+09:00'
 tags: ['performance', 'request-animation-frame', 'audio-editor', 'frontend']
 draft: false
-visibility: private
+visibility: public
 ---
-
-rAF에 대한 추가적인 정보는 이 글을 참고해주세요: [TIL | rAF란?](/posts/request-animation-frame)
 
 ## [sort1] 1. 문제 상황
 
