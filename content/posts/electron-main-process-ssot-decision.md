@@ -14,7 +14,7 @@ coverImage: '/images/electron-multi-window-shared-data-ssot/to-be-project-docume
 coverAlt: 'Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구조 (TO-BE)'
 ---
 
-> 2026-10-28 보완: 이 글은 공유 프로젝트 문서의 확정 권한을 Main에 둔 배경을 다룹니다. 현재 Editor에는 로컬 Store와 문서 투영 경로가 남아 있습니다. 저장·복구·클라우드 전송의 현재 구현은 [후속 글](/posts/electron-main-process-ssot-save-recovery)에서 이어서 설명합니다.
+> 2026-10-28 보완: 이 글은 공유 프로젝트 문서의 확정 권한을 Main에 둔 배경을 다룹니다. 현재 Editor에는 로컬 Store와 문서 투영 경로가 남아 있습니다.
 
 <details>
 <summary>목차 펼쳐보기</summary>
@@ -35,7 +35,6 @@ coverAlt: 'Main Process의 ProjectSession이 최신 Snapshot을 확정하는 구
 <summary>시리즈 전체 글 바로가기</summary>
 
 1. [Part 1. Electron에서는 공유 데이터를 어디에 둬야 할까?](/posts/electron-main-process-ssot-decision)
-2. [Part 2. Main SSOT를 저장까지 확장한 과정](/posts/electron-main-process-ssot-save-recovery)
 
 </details>
 
@@ -133,7 +132,7 @@ Main이 원본을 가졌다고 해서 화면(Renderer)에 데이터가 아예 �
 
 현재 수동·자동·종료 전 저장은 Renderer의 공통 저장 조정기를 거칩니다. 자동 저장은 입력·드래그·비동기 작업의 완료 신호로 요청하며, 고정 3초 debounce를 사용하지 않습니다. Editor 문서를 Main 메모리에 투영하는 50ms 대기는 디스크 저장 간격과 다릅니다.
 
-저장 준비에서는 Editor 문서와 Script 내용, 미디어 전송 목록을 같은 명령으로 승인받습니다. 실제 저장 시작 요청은 승인된 버전과 프로젝트 식별자를 전달합니다. 이 경계와 로컬 이력·미디어·클라우드 전송의 연결은 [후속 글](/posts/electron-main-process-ssot-save-recovery)에서 자세히 다룹니다.
+저장 준비에서는 Editor 문서와 Script 내용, 미디어 전송 목록을 같은 명령으로 승인받습니다. 실제 저장 시작 요청은 승인된 버전과 프로젝트 식별자를 전달합니다.
 
 ---
 
