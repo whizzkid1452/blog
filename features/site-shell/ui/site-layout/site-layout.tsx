@@ -14,7 +14,7 @@ interface SiteLayoutProps {
 }
 
 const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
-const RESUME_URL = 'https://elderly-mosquito-87f.notion.site/38073b56612a80efb6e1f5f7055e5c15?source=copy_link';
+const RESUME_URL = 'https://app.notion.com/p/Frontend-Developer-3e473b56612a817da9d4f8ec18e9e537';
 export function SiteLayout({ children, locale, tags, posts }: SiteLayoutProps) {
   const messages = getUiMessages(locale);
 
