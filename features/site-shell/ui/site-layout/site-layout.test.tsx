@@ -43,7 +43,7 @@ describe('SiteLayout', () => {
     expect(markup).toContain('>Example post</p>');
   });
 
-  it('기본 메뉴에 전체 글과 시리즈 링크를 표시하고 비공개 글 링크는 표시하지 않는다', () => {
+  it('기본 메뉴에 전체 글을 표시하고 시리즈와 비공개 글 메뉴는 표시하지 않는다', () => {
     currentPathname.value = '/';
     const markup = renderToStaticMarkup(
       <SiteLayout locale="ko" tags={[]} posts={[]}>
@@ -51,7 +51,7 @@ describe('SiteLayout', () => {
       </SiteLayout>
     );
 
-    expect(markup).toContain('href="/series"');
+    expect(markup).not.toContain('href="/series"');
     expect(markup).toContain('href="/posts"');
     expect(markup).not.toContain('href="/private-posts"');
   });
@@ -78,7 +78,7 @@ describe('SiteLayout', () => {
     expect(sidebarMarkup).not.toContain('>홈</a>');
     expect(sidebarMarkup).not.toContain('>글</a>');
     expect(sidebarMarkup).toContain('>전체 글</a>');
-    expect(sidebarMarkup).toContain('>시리즈</a>');
+    expect(sidebarMarkup).not.toContain('>시리즈</a>');
     expect(sidebarMarkup).toContain('>GitHub</a>');
     expect(sidebarMarkup).toContain('>About</a>');
     expect(sidebarMarkup).not.toContain('>English</a>');
