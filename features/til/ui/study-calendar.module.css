@@ -1,8 +1,9 @@
 .calendar {
   min-width: 0;
+  max-width: 880px;
   border: 1px solid var(--color-border);
-  border-radius: 20px;
-  padding: 28px;
+  border-radius: 16px;
+  padding: 18px;
 }
 .heading {
   display: flex;
@@ -19,14 +20,14 @@
 }
 .heading h2 {
   margin: 0;
-  font-size: 26px;
+  font-size: 20px;
   letter-spacing: -0.04em;
 }
 .heading + .toolbar {
-  margin-top: 24px;
+  margin-top: 14px;
 }
 .toolbar + .month {
-  margin-top: 20px;
+  margin-top: 12px;
 }
 .boardLink {
   flex-shrink: 0;
@@ -49,7 +50,7 @@
 }
 .toolbar h3 {
   margin: 0;
-  font-size: 21px;
+  font-size: 17px;
   letter-spacing: -0.03em;
 }
 .controls {
@@ -87,7 +88,7 @@
   border-collapse: collapse;
 }
 .month th {
-  padding: 12px 0;
+  padding: 8px 0;
   color: var(--color-text-secondary);
   font-size: 12px;
   font-weight: 500;
@@ -101,9 +102,9 @@
 .recordedDay,
 .emptyDay {
   display: block;
-  min-height: 110px;
-  padding: 10px 8px;
-  font-size: 13px;
+  min-height: 64px;
+  padding: 6px;
+  font-size: 12px;
 }
 .dayLink,
 .recordedDay {
@@ -135,17 +136,17 @@
   vertical-align: middle;
 }
 .topics {
-  margin: 12px 0 0;
-  padding-left: 14px;
+  margin: 6px 0 0;
+  padding-left: 12px;
   color: var(--color-text-primary);
-  font-size: 16px;
+  font-size: 13px;
   font-weight: 650;
-  line-height: 1.5;
+  line-height: 1.35;
   overflow-wrap: anywhere;
   word-break: keep-all;
 }
 .topics li + li {
-  margin-top: 6px;
+  margin-top: 3px;
 }
 .topics li::marker,
 .mobileAgenda li::marker {
@@ -155,12 +156,12 @@
   display: flex;
   justify-content: space-between;
   gap: 8px;
-  margin-top: 14px;
+  margin-top: 10px;
   color: var(--color-text-muted);
   font-size: 11px;
 }
 .empty {
-  margin: 24px 0 0;
+  margin: 14px 0 0;
   color: var(--color-text-secondary);
   font-size: 14px;
   line-height: 1.7;
@@ -215,22 +216,22 @@
   .dayLink,
   .recordedDay,
   .emptyDay {
-    min-height: 84px;
+    min-height: 56px;
   }
   .topics {
-    font-size: 14px;
+    font-size: 12px;
   }
 }
 @media (max-width: 640px) {
   .calendar {
-    padding: 18px 12px;
-    border-radius: 16px;
+    padding: 14px 10px;
+    border-radius: 12px;
   }
   .heading {
     align-items: flex-start;
   }
   .heading h2 {
-    font-size: 22px;
+    font-size: 18px;
   }
   .boardLink {
     padding: 10px 0;
@@ -244,13 +245,13 @@
     flex-wrap: wrap;
   }
   .toolbar h3 {
-    font-size: 19px;
+    font-size: 16px;
   }
   .dayLink,
   .recordedDay,
   .emptyDay {
-    min-height: 48px;
-    padding: 14px 4px;
+    min-height: 44px;
+    padding: 10px 4px;
     text-align: center;
   }
   .topics {
@@ -259,25 +260,25 @@
   .mobileAgenda {
     display: grid;
     gap: 12px;
-    margin: 20px 0 0;
+    margin: 14px 0 0;
     padding: 0;
     list-style: none;
   }
   .agendaEntry {
     display: block;
     border-top: 1px solid var(--color-border);
-    padding: 18px 4px 0;
+    padding: 12px 4px 0;
   }
   .mobileAgenda time {
     color: var(--color-text-muted);
-    font-size: 13px;
+    font-size: 12px;
   }
   .mobileAgenda ul {
     display: grid;
-    gap: 6px;
-    margin: 12px 0;
+    gap: 4px;
+    margin: 8px 0;
     padding-left: 20px;
-    font-size: 18px;
+    font-size: 15px;
     font-weight: 650;
     line-height: 1.5;
   }

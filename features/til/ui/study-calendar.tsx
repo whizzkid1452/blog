@@ -15,11 +15,7 @@ interface StudyCalendarProps {
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-export function StudyCalendar({
-  entries,
-  today,
-  title = IS_TIL_PUBLISHED ? '개발 공부 일지' : '캘린더',
-}: StudyCalendarProps) {
+export function StudyCalendar({ entries, today, title = 'Study Stamp' }: StudyCalendarProps) {
   const [month, setMonth] = useState(() => (entries[0]?.date ?? today).slice(0, 7));
   const entriesByDate = new Map(entries.map(entry => [entry.date, entry]));
   const monthEntries = entries.filter(entry => entry.date.startsWith(`${month}-`));
@@ -74,7 +70,7 @@ export function StudyCalendar({
       )}
       <Tooltip.Provider delayDuration={200}>
         <table className={styles.month}>
-          <caption className={styles.srOnly}>{monthLabel} 달력 · 한국 시간 기준</caption>
+          <caption className={styles.srOnly}>{monthLabel} 달력</caption>
           <thead>
             <tr>
               {WEEKDAYS.map(day => (
@@ -146,7 +142,6 @@ export function StudyCalendar({
       </Tooltip.Provider>
       <div className={styles.footer}>
         <span>{monthEntries.length}일의 기록</span>
-        <span>한국 시간 · Asia/Seoul</span>
       </div>
       {monthEntries.length === 0 ? (
         <p className={styles.empty} role="status">

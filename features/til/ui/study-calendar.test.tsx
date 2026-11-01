@@ -18,7 +18,9 @@ describe('StudyCalendar with hidden TIL content', () => {
       />
     );
 
-    expect(markup).toContain('aria-label="캘린더"');
+    expect(markup).toContain('aria-label="Study Stamp"');
+    expect(markup).not.toContain('한국 시간');
+    expect(markup).not.toContain('Asia/Seoul');
     expect(markup).toContain('2026년 11월');
     expect(markup).toContain('aria-label="이전 달"');
     expect(markup).toContain('aria-label="다음 달"');
