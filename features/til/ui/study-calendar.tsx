@@ -140,9 +140,6 @@ export function StudyCalendar({ entries, today, title = 'Study Stamp' }: StudyCa
           </tbody>
         </table>
       </Tooltip.Provider>
-      <div className={styles.footer}>
-        <span>{monthEntries.length}일의 기록</span>
-      </div>
       {monthEntries.length === 0 ? (
         <p className={styles.empty} role="status">
           {IS_TIL_PUBLISHED ? '이 달에는 아직 공개된 공부 일지가 없습니다.' : '이 달에는 아직 기록이 없습니다.'}

@@ -152,14 +152,6 @@
 .mobileAgenda li::marker {
   color: var(--color-link);
 }
-.footer {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  margin-top: 10px;
-  color: var(--color-text-muted);
-  font-size: 11px;
-}
 .empty {
   margin: 14px 0 0;
   color: var(--color-text-secondary);

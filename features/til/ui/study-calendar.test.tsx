@@ -31,7 +31,7 @@ describe('StudyCalendar with hidden TIL content', () => {
     expect(markup).not.toContain('TODAY I LEARNED');
     expect(markup).not.toContain('공부 일지');
     expect(markup).toContain('보여줄 학습 주제');
-    expect(markup).toContain('1일의 기록');
+    expect(markup).not.toContain('일의 기록');
     expect(markup).toContain('data-recorded="true"');
     expect(markup).not.toContain('숨길 일지 제목');
     expect(markup).not.toContain('숨길 일지 요약');
