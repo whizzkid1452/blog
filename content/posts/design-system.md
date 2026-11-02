@@ -62,17 +62,29 @@ Registry 배포 방식과 유연한 API 설계를 뒷받침할 기술 스택은 
 - **CLI 배포 방식 + Emotion 스타일링:** shadcn이 보여준 훌륭한 'CLI 배포 방식(npx 툴로 코드를 프로젝트에 직접 복사해주는 구조)'은 차용하되, Tailwind 기반 스타일링은 제외했습니다. 기존 앱들이 이미 Emotion을 사용하고 있는 점을 고려해 혼선을 줄이기 위함입니다.
 - **Radix UI:** Dialog, DropdownMenu 등 복잡한 WAI-ARIA 상호작용은 직접 구현하지 않고 Radix UI Primitive에 위임하여 접근성과 안정성을 확보했습니다.
 
-### [sort2] 3-1. CSS 변수와 Tokens Studio 연동
+### [sort2] 3-1. Tokens Studio와 GitHub 연동
 
-가장 중요한 시각적 일관성은 토큰(Token)으로 관리합니다. 색상, 간격, 모서리 반경 등의 토큰을 Emotion theme에 가두지 않고 순수 CSS 변수로 추출했습니다. 이를 통해 다크모드 전환을 유연하게 처리하고, 향후 다른 프레임워크에서도 공통 토큰을 재사용할 수 있는 기반을 마련했습니다.
+색상, 간격, 모서리 반경처럼 반복해서 사용하는 디자인 값을 토큰(Token)으로 관리했습니다. 연동 과정은 [프론트엔드에 디자인 시스템 적용하기](https://velog.io/@seo__namu/프론트엔드에-디자인-시스템-적용하기)를 참고했습니다.
 
-특히 디자이너와 프론트엔드 개발자 간의 싱크를 맞추기 위해 Tokens Studio의 GitHub 연동 기능을 활용했습니다.
+Figma의 Tokens Studio 플러그인에 GitHub 저장소, 대상 브랜치, 토큰 JSON 파일 경로를 설정했습니다. 디자이너가 플러그인에서 토큰을 수정한 뒤 Push하면, 지정한 브랜치에 JSON 변경 사항이 커밋됩니다.
 
-Figma 내의 Tokens Studio 플러그인에는 디자인 속성을 JSON 형태로 변환하여 GitHub Repository로 직접 커밋하고 Push할 수 있는 UI가 내장되어 있습니다.
+### [sort2] 3-2. Token Transformer로 참조를 해석한 JSON 생성
 
-초기 기획에서는 디자이너가 Push하면 GitHub Actions가 이를 감지해 CSS 변수 파일로 자동 변환하는 CI 파이프라인을 구상했습니다. 하지만 실제 운영을 고민해 보니, 극단적인 자동화 과정에서 발생한 예기치 않은 토큰 변경이 제품 전체의 UI를 의도치 않게 망가뜨릴 리스크가 컸습니다.
+토큰 JSON에는 `{colors.white}`처럼 다른 토큰을 참조하는 값이 포함됩니다. Emotion 스타일에서 사용하려면 이 참조를 실제 값으로 바꾸는 과정이 필요했습니다. 이를 위해 Token Transformer로 JSON을 변환했습니다.
 
-따라서 현재는 수동 동기화(Manual Sync) 방식으로 운영하고 있습니다. 디자이너가 GitHub에 토큰 JSON을 Push하여 PR을 올리면, 프론트엔드 개발자가 변경 사항이 UI에 미칠 영향을 직접 리뷰하고 스크립트를 돌려 CSS 변수로 변환한 뒤 머지(Merge)합니다. 자동화의 편리함보다는 프로덕트의 안정성을 택한 결과입니다.
+예를 들어 `global` 토큰 세트를 변환하는 명령은 다음과 같습니다.
+
+```bash
+npx token-transformer tokens.json ./src/global.json global
+```
+
+변환 결과는 참조가 실제 값으로 해석된 JSON이며, 이를 Emotion 스타일에서 사용하도록 연결했습니다.
+
+### [sort2] 3-3. GitHub Actions로 변환과 PR 생성 자동화
+
+토큰 변환과 PR 생성은 GitHub Actions로 자동화했습니다. Tokens Studio에서 Push한 JSON의 변경을 감지하면, Actions가 Token Transformer를 실행하고 변환 결과를 커밋한 뒤 `main`을 대상으로 PR을 생성하는 흐름입니다.
+
+자동화 범위는 변환 결과를 포함한 PR 생성까지입니다. 제품에 반영할 변경 사항은 PR에서 검토한 뒤 머지하도록 했습니다. 이 구조에서는 개발자가 매번 변환 스크립트를 직접 실행하지 않아도 원본 토큰과 변환 결과를 함께 확인할 수 있습니다.
 
 ## [sort1] 4. 제공 단위의 재정의와 현실적인 리스크 관리
 
