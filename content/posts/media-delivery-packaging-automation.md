@@ -60,7 +60,7 @@ featured: true
 
 그렇게 설레는 마음으로 도출해 낸 최종 자동화 아키텍처 구조는 아래와 같습니다.
 
-![Mac 웹 UI와 Ubuntu 서버의 API·작업 관리자·FFmpeg·로컬 저장소, 이후 추가할 NAS·Google Drive 경로를 나타낸 목표 구조도](/images/media-delivery-packaging-automation/target-architecture.png)
+![Mac 웹 UI와 Ubuntu 서버의 API, 작업 관리자, FFmpeg, 로컬 저장소, 이후 추가할 NAS, Google Drive 경로를 나타낸 목표 구조도](/images/media-delivery-packaging-automation/target-architecture.png)
 
 ## [sort1] 3. 프론트엔드 우물 밖으로: 모르면 물어봐라
 

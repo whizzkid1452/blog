@@ -41,7 +41,7 @@ featured: true
 | 추가 스케줄링의 우선순위 결정            | 가능                     |
 | 성능 문제가 모든 환경에서 없다고 단정    | 불가능                   |
 | Web Worker 제거 후 회귀가 없다고 단정    | 불가능                   |
-| 대용량·고해상도 영상에서도 안전한지 판단 | 불가능                   |
+| 대용량, 고해상도 영상에서도 안전한지 판단 | 불가능                   |
 
 이번 검증에서 확인할 질문은 다음과 같이 좁혔다.
 
@@ -83,7 +83,7 @@ Web Worker의 역할은 전체 생성 시간과 UI 루프 지연을 함께 비�
 
 따라서 두 값은 실제 입력 지연을 직접 측정한 결과가 아니다. 값이 클수록 UI 루프가 길게 밀렸을 가능성과 일치하지만, 실제 에디터의 스크롤과 드래그가 느려졌다는 결론에는 별도의 상호작용 측정이 필요하다.
 
-## [sort1] 6. 1장·10장·100장 측정 결과
+## [sort1] 6. 1장, 10장, 100장 측정 결과
 
 ![HTMLVideoElement seek, Main/WebCodecs, Worker/WebCodecs 썸네일 생성 벤치마크](/images/thumbnail-optimization-worker-verification/thumbnail-generation-benchmark.png)
 

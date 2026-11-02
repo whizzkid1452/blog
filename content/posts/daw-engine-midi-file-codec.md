@@ -13,7 +13,7 @@ visibility: private
 
 애플리케이션에서 MIDI Note는 시작 시간과 길이를 가진 객체다. 하지만 Standard MIDI File(SMF) 안에는 그런 객체가 그대로 들어 있지 않다. Note On과 Note Off라는 두 Event가 시간순으로 기록되고, 시간도 절대값이 아니라 이전 Event와의 차이인 Delta Time으로 저장된다.
 
-그래서 MIDI Import는 JSON을 읽는 작업이 아니었다. Byte offset을 이동하며 Chunk와 Event를 해석하고, 서로 떨어진 Note On·Off를 하나의 도메인 객체로 조립하는 작업이었다.
+그래서 MIDI Import는 JSON을 읽는 작업이 아니었다. Byte offset을 이동하며 Chunk와 Event를 해석하고, 서로 떨어진 Note On과 Note Off를 하나의 도메인 객체로 조립하는 작업이었다.
 
 이번 구현은 SMF Header와 Track Chunk, Note Event, Track Name, Tempo, SysEx 건너뛰기, Variable-Length Quantity(VLQ), Running Status를 처리한다. 다만 Control Change와 Pitch Bend 등은 읽어서 보존하지 않고, 외부 DAW와의 호환성 자동 테스트도 없다.
 
@@ -150,7 +150,7 @@ const channel = statusByte & 0x0f;
 
 현재 구현이 보존하는 주요 정보는 다음과 같다.
 
-- Note On·Off
+- Note On과 Note Off
 - Track Name Meta Event
 - Tempo Meta Event
 - Track 종료 위치
@@ -199,13 +199,13 @@ flowchart LR
 
 현재 MIDI Parser와 Writer에는 자동 테스트가 없다. 최소 검증 세트는 다음과 같다.
 
-- VLQ의 1·2·3·4 Byte 경계값 왕복
+- VLQ의 1, 2, 3, 4 Byte 경계값 왕복
 - Running Status가 있는 Note 연속 입력
 - Velocity 0 Note On
 - Note Off가 없는 Track 종료
 - 여러 Track을 가진 Format 1 파일
 - PPQN과 SMPTE division Header
-- Meta·SysEx 이후 offset과 Running Status
+- Meta, SysEx 이후 offset과 Running Status
 - Parser→Writer→Parser Note 왕복
 - 서로 다른 DAW에서 생성한 fixture와 결과 비교
 

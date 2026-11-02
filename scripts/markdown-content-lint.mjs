@@ -8,13 +8,21 @@ const EXCLUDED_ELEMENTS = new Set(['code', 'pre', 'script', 'style']);
 
 /**
  * @param {{ source: string }} options
- * @returns {{ marker: string, line: number, column: number }[]}
+ * @returns {{ symbol: string, line: number, column: number }[]}
  */
-export function findRawMarkdownMarkers({ source }) {
+export function findContentTextViolations({ source }) {
   const { content } = matter(source);
   const contentStart = source.length - content.trimStart().length;
   const sourcePrefixLines = source.slice(0, contentStart).split('\n');
-  const violations = [];
+  const violations = Array.from(source.matchAll(/·/g), match => {
+    const precedingLines = source.slice(0, match.index).split('\n');
+
+    return {
+      symbol: match[0],
+      line: precedingLines.length,
+      column: precedingLines.at(-1).length + 1,
+    };
+  });
 
   Markdown({
     children: content.trim(),
@@ -22,7 +30,7 @@ export function findRawMarkdownMarkers({ source }) {
     rehypePlugins: [rehypeRaw, collectRawMarkers],
   });
 
-  return violations;
+  return violations.sort((left, right) => left.line - right.line || left.column - right.column);
 
   function collectRawMarkers() {
     return tree => visitRenderedText({ node: tree });
@@ -41,7 +49,7 @@ export function findRawMarkdownMarkers({ source }) {
         const sourceColumnOffset = contentLine === 1 ? sourcePrefixLines.at(-1).length : 0;
 
         violations.push({
-          marker: match[0],
+          symbol: match[0],
           line: sourcePrefixLines.length - 1 + contentLine,
           column: sourceColumnOffset + (precedingLines.length === 1 ? start.column : 1) + precedingLines.at(-1).length,
         });

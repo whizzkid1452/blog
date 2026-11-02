@@ -1,6 +1,6 @@
 ---
 title: '[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까'
-description: 'Tempo와 박자표가 바뀌는 DAW 타임라인에서 Frame·Beat·BBT 변환을 구간 누적으로 설계한 과정과 남은 검증 범위를 설명합니다.'
+description: 'Tempo와 박자표가 바뀌는 DAW 타임라인에서 Frame, Beat, BBT 변환을 구간 누적으로 설계한 과정과 남은 검증 범위를 설명합니다.'
 date: '2025-10-12'
 publishedAt: '2025-10-12T10:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'timeline', 'algorithm']
@@ -15,7 +15,7 @@ DAW의 시간은 하나가 아니다. 오디오 파일과 재생 장치는 Frame
 
 처음에는 `beats * 60 / bpm * sampleRate` 공식이면 충분해 보였다. 이 공식은 Tempo가 하나일 때만 맞는다. 타임라인 중간에서 120 BPM이 90 BPM으로 바뀌면 목표 지점까지 지나온 각 Tempo 구간을 따로 계산해야 한다.
 
-이 글에서 Frame은 채널별 PCM sample의 시간 위치, Beat는 4분음표를 기준으로 누적한 음악적 위치, BBT는 Bar·Beat·Tick 표기를 뜻한다. 구현은 1 Beat를 1,920 Tick으로 표현한다.
+이 글에서 Frame은 채널별 PCM sample의 시간 위치, Beat는 4분음표를 기준으로 누적한 음악적 위치, BBT는 Bar, Beat, Tick 표기를 뜻한다. 구현은 1 Beat를 1,920 Tick으로 표현한다.
 
 ## [sort1] 1. 왜 고정 BPM 공식만으로는 부족했는가
 
@@ -154,7 +154,7 @@ const swungFrame = Math.round(previousFrame + ratio * intervalFrames);
 
 ## [sort1] 6. 아직 무엇이 검증되지 않았는가
 
-현재 `TempoMap`은 `Session`이 생성하고 Tempo 편집 명령과 Session 저장·복원 경로에서 사용한다. 타입 검사와 전체 빌드는 통과하지만 `TempoMap` 자체 자동 테스트는 없다.
+현재 `TempoMap`은 `Session`이 생성하고 Tempo 편집 명령과 Session 저장과 복원 경로에서 사용한다. 타입 검사와 전체 빌드는 통과하지만 `TempoMap` 자체 자동 테스트는 없다.
 
 최소한 다음 왕복 조건을 테스트해야 한다.
 
@@ -177,7 +177,7 @@ describe('TempoMap round trip', () => {
 
 추가로 필요한 검증은 다음과 같다.
 
-- Tempo 변경 Frame의 직전·정확한 위치·직후
+- Tempo 변경 Frame의 직전, 정확한 위치, 직후
 - 여러 Meter 변경을 통과하는 BBT 왕복
 - 3/4, 6/8, 12/8의 Beat 번호 정책
 - Grid 종료 경계와 Swing 최댓값

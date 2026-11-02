@@ -47,7 +47,7 @@ function insertSorted(points: AutomationPoint[], point: AutomationPoint): void {
 }
 ```
 
-이 선택은 편집보다 조회가 더 자주 실행된다는 전제에 맞는다. 재생 중 `getValueAt()`은 반복되지만 Point 추가·이동은 사용자 편집 시점에만 발생한다.
+이 선택은 편집보다 조회가 더 자주 실행된다는 전제에 맞는다. 재생 중 `getValueAt()`은 반복되지만 Point 추가, 이동은 사용자 편집 시점에만 발생한다.
 
 Point의 시간이 바뀌면 배열에서 제거한 뒤 새 위치에 다시 삽입한다. 값만 바뀌면 정렬 순서가 달라지지 않으므로 제자리에서 갱신한다.
 
@@ -101,13 +101,13 @@ flowchart LR
   E --> F["현재 시간의 값 평가"]
 ```
 
-핵심은 “가장 부드러운 곡선”보다 “Point가 표현한 증가·감소 방향을 뒤집지 않는 곡선”을 선택한 것이다.
+핵심은 “가장 부드러운 곡선”보다 “Point가 표현한 증가와 감소 방향을 뒤집지 않는 곡선”을 선택한 것이다.
 
 ## [sort1] 4. 순차 조회에는 Segment Cache를 사용했다
 
 Point가 정렬돼 있으므로 현재 시간이 속한 구간은 이진 탐색으로 찾을 수 있다. 하지만 재생 시간은 대부분 앞으로 조금씩 이동한다. 같은 두 Point 사이를 여러 번 조회할 가능성이 높다.
 
-현재 구간의 왼쪽·오른쪽 index를 cache하면 같은 구간에서는 이진 탐색도 생략할 수 있다.
+현재 구간의 왼쪽과 오른쪽 index를 cache하면 같은 구간에서는 이진 탐색도 생략할 수 있다.
 
 ```ts
 interface LookupCache {
@@ -121,7 +121,7 @@ function isCacheHit(cache: LookupCache, points: AutomationPoint[], time: number)
 }
 ```
 
-Point를 추가·이동·삭제하면 index와 구간이 달라진다. 이때 lookup cache와 spline coefficient를 함께 무효화해야 한다.
+Point를 추가, 이동, 삭제하면 index와 구간이 달라진다. 이때 lookup cache와 spline coefficient를 함께 무효화해야 한다.
 
 > “Cache의 정확성은 빠른 조회보다 무효화 조건을 먼저 정의하는 데서 시작한다.”
 
@@ -162,7 +162,7 @@ function triangleArea(a: AutomationPoint, b: AutomationPoint, c: AutomationPoint
 }
 ```
 
-하지만 Write 구간 안의 Point만 정리하면 구간 밖 곡선까지 달라질 수 있다. 그래서 Write 경계 직전·직후의 기존 값을 Guard Point로 추가해 바깥 구간의 형태를 보존한다.
+하지만 Write 구간 안의 Point만 정리하면 구간 밖 곡선까지 달라질 수 있다. 그래서 Write 경계 직전, 직후의 기존 값을 Guard Point로 추가해 바깥 구간의 형태를 보존한다.
 
 이 구조에도 tradeoff가 있다. 시간과 값의 단위 비율이 달라지면 같은 면적 threshold의 의미도 바뀐다. 0~~1 Volume과 20~~20,000Hz Frequency에 같은 threshold를 쓰면 thinning 강도가 달라진다. Parameter 범위를 정규화한 뒤 면적을 계산하는 방식이 필요하다.
 
@@ -170,8 +170,8 @@ function triangleArea(a: AutomationPoint, b: AutomationPoint, c: AutomationPoint
 
 Automation List는 Processor와 AudioEngine의 parameter binding 경로에 연결돼 있다. 그러나 자동 테스트는 없다. 다음 동작을 검증하기 전에는 완전한 Automation 동작을 주장할 수 없다.
 
-- Point 추가·이동 후 시간순 정렬 유지
-- Hold·Linear·Exponential·Logarithmic 경계값
+- Point 추가, 이동 후 시간순 정렬 유지
+- Hold, Linear, Exponential, Logarithmic 경계값
 - Curved 구간에서 두 Point의 값 범위를 벗어나지 않는지
 - Point 변경 후 lookup cache와 spline cache가 무효화되는지
 - TOUCH가 손을 뗀 뒤 기존 곡선으로 돌아오는지

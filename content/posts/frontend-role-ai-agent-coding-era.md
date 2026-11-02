@@ -77,7 +77,7 @@ AI로 초안 리뷰를 자동화하면서 리뷰 시간을 절반으로 줄였�
 
 ### [sort2] 6-4. 테스트 자동화
 
-유닛 테스트는 AI로 생성하고 있다. 비즈니스 로직의 테스트를 AI가 쓰고, 사람이 엣지 케이스를 보강하는 흐름. E2E 테스트도 AI 자동화를 검토·진행 중이다. 시각적 결함, 크로스 브라우저 호환성 같은 수동 QA 영역을 AI가 보조하도록 전환하려는 시도다. 빌드·린트·타입 체크는 이미 CI/CD 파이프라인에서 자동화되어 있고, 이 위에 AI 기반 검증 레이어를 쌓아가고 있다.
+유닛 테스트는 AI로 생성하고 있다. 비즈니스 로직의 테스트를 AI가 쓰고, 사람이 엣지 케이스를 보강하는 흐름. E2E 테스트도 AI 자동화를 검토, 진행 중이다. 시각적 결함, 크로스 브라우저 호환성 같은 수동 QA 영역을 AI가 보조하도록 전환하려는 시도다. 빌드, 린트, 타입 체크는 이미 CI/CD 파이프라인에서 자동화되어 있고, 이 위에 AI 기반 검증 레이어를 쌓아가고 있다.
 
 ### [sort2] 6-5. 기록
 
@@ -89,7 +89,7 @@ AI로 초안 리뷰를 자동화하면서 리뷰 시간을 절반으로 줄였�
 
 ### [sort2] 7-1. 명세를 잘 쓰기
 
-AI한테 좋은 결과를 받으려면 좋은 입력을 줘야 한다. 엣지 케이스까지 기술하는 것. 도메인을 깊이 아는 만큼 잘 쓸 수 있다. 이건 곧 "기획자·디자이너와 소통하는 능력"이기도 하다.
+AI한테 좋은 결과를 받으려면 좋은 입력을 줘야 한다. 엣지 케이스까지 기술하는 것. 도메인을 깊이 아는 만큼 잘 쓸 수 있다. 이건 곧 "기획자, 디자이너와 소통하는 능력"이기도 하다.
 
 ### [sort2] 7-2. 시스템 전체를 보는 시야
 
@@ -125,7 +125,7 @@ AI 시대 개발자 역할 변화
 - [AI 코딩 시대의 프론트엔드 개발자 생존 및 성장 전략: 2026년 생태계 심층 분석 보고서](https://imwh0im.tistory.com/45)
 - ["AI 시대, 프로그래머 역할이 바뀐다" 신입 개발자 수요는 급감 중: CIO Korea](https://www.cio.com/article/4062887)
 
-AI 코드 품질·신뢰도 데이터
+AI 코드 품질, 신뢰도 데이터
 
 - [CodeRabbit: State of AI vs Human Code Generation Report](https://www.coderabbit.ai/blog/state-of-ai-vs-human-code-generation-report)
 - [Stack Overflow: 2025 Developer Survey](https://stackoverflow.blog/2025/12/29/developers-remain-willing-but-reluctant-to-use-ai-the-2025-developer-survey-results-are-here/)
@@ -134,7 +134,7 @@ AI 코드 품질·신뢰도 데이터
 - [SecondTalent: AI-Generated Code Quality Metrics and Statistics 2026](https://www.secondtalent.com/resources/ai-generated-code-quality-metrics-and-statistics-for-2026/)
 - [Qodo: State of AI Code Quality 2025](https://www.qodo.ai/reports/state-of-ai-code-quality/)
 
-AI 코딩 채택률·생산성 통계
+AI 코딩 채택률, 생산성 통계
 
 - [Panto: AI Coding Assistant Statistics 2026](https://www.getpanto.ai/blog/ai-coding-assistant-statistics)
 - [Index.dev: Developer Productivity Statistics with AI Tools 2026](https://www.index.dev/blog/developer-productivity-statistics-with-ai-tools)

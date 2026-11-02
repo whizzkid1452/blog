@@ -79,13 +79,13 @@ _동기화가 누락될 때마다 IPC를 하나씩 추가하는 방식으로는 
 
 ```mermaid
 flowchart LR
-    Renderer["SRT 명령 · Editor 문서 투영"] --> Session["Main ProjectSession<br/>프로젝트 문서 확정"]
+    Renderer["SRT 명령, Editor 문서 투영"] --> Session["Main ProjectSession<br/>프로젝트 문서 확정"]
     Session --> Snapshot["ProjectSnapshotClient<br/>확정 상태 구독"]
     Snapshot --> UI["화면 표시"]
-    Preparation["Renderer 저장 준비"] -->|"문서·미디어 목록 승인 요청"| Session
+    Preparation["Renderer 저장 준비"] -->|"문서, 미디어 목록 승인 요청"| Session
     Session -->|"저장용 문서 투영"| Save["Main 저장 서비스"]
-    Preparation -->|"승인된 버전·세션으로 저장 요청"| Save
-    Save --> File[("project.json · history · assets")]
+    Preparation -->|"승인된 버전, 세션으로 저장 요청"| Save
+    Save --> File[("project.json, history, assets")]
 ```
 
 _프로젝트 문서의 확정 권한과 저장 요청 경로를 구분한 현재 구조_
@@ -120,7 +120,7 @@ Main이 원본을 가졌다고 해서 화면(Renderer)에 데이터가 아예 �
 
 ### [sort2] 4-4. 현재 자동 저장과 Editor 문서 투영은 어떻게 구분할까?
 
-현재 수동·자동·종료 전 저장은 Renderer의 공통 저장 조정기를 거칩니다. 자동 저장은 입력·드래그·비동기 작업의 완료 신호로 요청하며, 고정 3초 debounce를 사용하지 않습니다. Editor 문서를 Main 메모리에 투영하는 50ms 대기는 디스크 저장 간격과 다릅니다.
+현재 수동, 자동, 종료 전 저장은 Renderer의 공통 저장 조정기를 거칩니다. 자동 저장은 입력, 드래그, 비동기 작업의 완료 신호로 요청하며, 고정 3초 debounce를 사용하지 않습니다. Editor 문서를 Main 메모리에 투영하는 50ms 대기는 디스크 저장 간격과 다릅니다.
 
 저장 준비에서는 Editor 문서와 Script 내용, 미디어 전송 목록을 같은 명령으로 승인받습니다. 실제 저장 시작 요청은 승인된 버전과 프로젝트 식별자를 전달합니다.
 

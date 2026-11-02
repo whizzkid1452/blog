@@ -1,6 +1,6 @@
 ---
 title: '[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유'
-description: '분기와 합류가 있는 Audio Processing 의존성을 DAG로 표현하고, 위상 정렬·Cycle 탐지·병렬 Group을 계산한 구조를 설명합니다.'
+description: '분기와 합류가 있는 Audio Processing 의존성을 DAG로 표현하고, 위상 정렬, Cycle 탐지, 병렬 Group을 계산한 구조를 설명합니다.'
 date: '2026-04-13'
 publishedAt: '2026-04-13T15:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'graph', 'algorithm']
@@ -16,7 +16,7 @@ EQ 다음 Compressor, 그다음 Output처럼 Audio Processing을 일렬로만 �
 
 이 구조에서 필요한 것은 “몇 번째 Processor인가”가 아니라 “어떤 Processor가 먼저 끝나야 하는가”다. 그래서 실행 순서를 Directed Acyclic Graph(DAG), 즉 방향은 있지만 Cycle은 허용하지 않는 Graph로 모델링했다.
 
-DAG의 방향성·비순환 조건과 위상 정렬의 기본 원리는 [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)에서 먼저 설명한다.
+DAG의 방향성, 비순환 조건과 위상 정렬의 기본 원리는 [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)에서 먼저 설명한다.
 
 현재 `ProcessingGraph`는 Node와 의존성, 위상 정렬, Cycle 탐지, 병렬 실행 후보 Group을 계산하는 독립 utility다. 실제 AudioEngine이 이 Graph를 실행하는 경로는 확인되지 않는다. 이 글은 Graph 알고리즘 구현과 통합 전에 남은 계약을 설명한다.
 
@@ -197,16 +197,16 @@ function removeNode(nodeId: string): void {
 구조 utility로서 필요한 테스트는 다음과 같다.
 
 - 선형 Chain의 실행 순서
-- 분기·합류 Graph의 순서
+- 분기, 합류 Graph의 순서
 - 가능한 순서가 여러 개일 때 결정적 결과
 - Self Cycle과 여러 Node Cycle
-- Node 삭제 후 incoming·outgoing Edge 정리
+- Node 삭제 후 incoming, outgoing Edge 정리
 - 독립 Node의 Parallel Group
 - 존재하지 않는 Node를 연결할 때의 정책
 
 실제 Audio Graph로 통합하려면 다음 계약이 추가돼야 한다.
 
-- Node별 input·output Buffer
+- Node별 input, output Buffer
 - Channel layout과 Sample Rate
 - Processor latency와 compensation
 - Tail과 bypass 처리

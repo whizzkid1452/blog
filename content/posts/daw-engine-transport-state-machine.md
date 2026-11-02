@@ -1,6 +1,6 @@
 ---
 title: '[Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기'
-description: '재생·정지·탐색 사이의 중간 상태를 Transport FSM으로 표현하고, Controller·transitionId·타임아웃으로 비동기 Audio Backend의 완료 결과를 통제한 과정을 설명합니다.'
+description: '재생, 정지, 탐색 사이의 중간 상태를 Transport FSM으로 표현하고, Controller, transitionId, 타임아웃으로 비동기 Audio Backend의 완료 결과를 통제한 과정을 설명합니다.'
 date: '2026-08-25'
 publishedAt: '2026-08-25T12:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'state-machine', 'architecture']
@@ -72,13 +72,13 @@ export enum DirectionState {
 }
 ```
 
-`MotionState`는 재생·정지·Locate 전환 단계를 나타낸다. `DirectionState`는 재생 방향과 방향 전환을 나타낸다. 두 상태의 수명이 다르기 때문에 하나의 큰 enum으로 합치지 않았다.
+`MotionState`는 재생, 정지, Locate 전환 단계를 나타낸다. `DirectionState`는 재생 방향과 방향 전환을 나타낸다. 두 상태의 수명이 다르기 때문에 하나의 큰 enum으로 합치지 않았다.
 
 상태를 나누는 것만으로 모든 조합이 유효해지는 것은 아니다. 예를 들어 `STOPPED + REVERSING`을 허용할지는 별도의 전이 규칙으로 제한해야 한다. 분리의 목적은 상태 수를 줄이는 것이 아니라, 동작과 방향의 변경 규칙을 각각 관리하는 데 있다.
 
 ## [sort1] 3. 전환 중 입력은 FIFO 대기열에 보관했다
 
-Declick 도중 새 재생·정지·Locate Event를 즉시 처리하면, 진행 중인 전환과 새 전환이 같은 상태를 변경할 수 있다. 그래서 Declick 완료 Event만 즉시 처리하고 사용자 입력은 FIFO(First In, First Out) 대기열에 보관했다.
+Declick 도중 새 재생, 정지, Locate Event를 즉시 처리하면, 진행 중인 전환과 새 전환이 같은 상태를 변경할 수 있다. 그래서 Declick 완료 Event만 즉시 처리하고 사용자 입력은 FIFO(First In, First Out) 대기열에 보관했다.
 
 ```ts
 public enqueue(event: TransportEvent): void {
@@ -207,7 +207,7 @@ private async handleDeclickRequested(request: DeclickRequest): Promise<void> {
 
 ## [sort1] 8. 상태는 값보다 전환 규칙에 가까웠다
 
-이번 설계의 핵심은 enum 항목을 늘린 것이 아니다. 재생·정지·Locate·방향 전환 사이에서 허용할 순서를 FSM에 모으고, 비동기 부수 효과를 Controller 경계 밖으로 분리한 데 있다.
+이번 설계의 핵심은 enum 항목을 늘린 것이 아니다. 재생, 정지, Locate, 방향 전환 사이에서 허용할 순서를 FSM에 모으고, 비동기 부수 효과를 Controller 경계 밖으로 분리한 데 있다.
 
 > “상태 머신은 무엇을 실행할지뿐 아니라, 현재 상태에서 그 Event를 받아도 되는지를 결정한다.”
 

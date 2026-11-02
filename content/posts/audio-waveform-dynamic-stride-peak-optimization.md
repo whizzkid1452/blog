@@ -448,8 +448,8 @@ function runExtractPeaksWithStride(channelData, totalBars, step, strideMode) {
 
 | 방식                  | 특징                                                                                                          | 적합한 경우                                               |
 | --------------------- | ------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
-| j++ (stride 1)    | 구간 내 모든 샘플 순회. 연산량·시간이 오디오 길이에 비례해 가장 많이 증가.                                    | 실사용 비권장 (긴 파일에서 체감 지연)                     |
-| j+=10 (stride 10) | 10개마다 한 번만 샘플링. 짧은 파일에서는 가장 빠르게 나올 수 있으나, 길이가 길어지면 연산량·시간이 계속 증가. | 짧은 오디오만 쓸 때 고려 가능                             |
+| j++ (stride 1)    | 구간 내 모든 샘플 순회. 연산량, 시간이 오디오 길이에 비례해 가장 많이 증가.                                    | 실사용 비권장 (긴 파일에서 체감 지연)                     |
+| j+=10 (stride 10) | 10개마다 한 번만 샘플링. 짧은 파일에서는 가장 빠르게 나올 수 있으나, 길이가 길어지면 연산량, 시간이 계속 증가. | 짧은 오디오만 쓸 때 고려 가능                             |
 | 동적 stride       | 바당 약 20회로 고정해 샘플링. 오디오 길이와 관계없이 바당 연산량이 일정.                                      | 전 구간(짧은/긴 오디오) 공통으로 사용하기에 가장 적합 |
 
 > 질문: 왜 짧은 오디오에서는 동적 stride 가 stride 10 보다 더 느리게 나왔을까?
@@ -508,7 +508,7 @@ const stride = strideMode === 'dynamic' ? Math.max(1, Math.floor(step / 20)) : s
 
 최종 결론
 
-- 95분 오디오에서도 동적 stride는 약 35ms로, j++(428ms)·j+=10(108ms)보다 훨씬 빠르고, 길이에 비해 선형으로 잘 스케일함.
+- 95분 오디오에서도 동적 stride는 약 35ms로, j++(428ms), j+=10(108ms)보다 훨씬 빠르고, 길이에 비해 선형으로 잘 스케일함.
 - 20초 재측정에서는 동적 stride가 0.16ms로 가장 빠름 → 짧은 구간에서 처음에 동적이 더 느리게 나온 것은 측정 오차(분산) 로 보는 게 타당함.
 - 실사용 권장: 짧은/긴 구간 모두 동적 stride를 쓰는 것이 가장 일관되고 유리함.
 
@@ -711,7 +711,7 @@ return peaks;
 
 - [CNN 기본 전문 용어 모음](https://sdk17586.tistory.com/83)
 - [https://www.npmjs.com/package/webaudio-peaks](https://www.npmjs.com/package/webaudio-peaks)
-- [How can I make bbc/audiowaveform peaks match wavesurfer.js'? · katspaugh wavesurfer.js · Discussion #2769](https://github.com/katspaugh/wavesurfer.js/discussions/2769)
+- [How can I make bbc/audiowaveform peaks match wavesurfer.js'?, katspaugh wavesurfer.js, Discussion #2769](https://github.com/katspaugh/wavesurfer.js/discussions/2769)
 - [Reduce memory consumption by chunking mediaenhancement](https://github.com/katspaugh/wavesurfer.js/issues/557)
 
 참고 사례

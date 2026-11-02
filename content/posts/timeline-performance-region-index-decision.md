@@ -7,14 +7,14 @@ draft: false
 visibility: public
 featured: true
 coverImage: '/images/timeline-performance-region-index-decision/editor-multitrack-timeline.png'
-coverAlt: '영상 미리보기와 자막·오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면'
+coverAlt: '영상 미리보기와 자막, 오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면'
 ---
 
 안녕하세요. 브라우저와 Electron 기반 멀티미디어 에디터를 개발하고 있는 프론트엔드 개발자 김승진입니다.
 
 프론트엔드 개발을 하다 보면 '렌더링 최적화'는 피할 수 없는 숙명과도 같죠. 특히 수많은 오디오와 비디오 트랙이 겹겹이 쌓인 타임라인 UI를 다룰 때는 더욱 그렇습니다.
 
-![영상 미리보기와 자막·오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면](/images/timeline-performance-region-index-decision/editor-multitrack-timeline.png)
+![영상 미리보기와 자막, 오디오 클립이 배치된 멀티트랙 타임라인 에디터 화면](/images/timeline-performance-region-index-decision/editor-multitrack-timeline.png)
 
 어느 날, 에디터를 사용하시던 분들로부터 이런 피드백이 들려왔어요.
 

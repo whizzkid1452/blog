@@ -4,7 +4,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { findRawMarkdownMarkers } from './markdown-content-lint.mjs';
+import { findContentTextViolations } from './markdown-content-lint.mjs';
 
 describe('Markdown content lint', () => {
   it.each([
@@ -16,8 +16,29 @@ describe('Markdown content lint', () => {
     ['\\*\\*이스케이프한 기호', '**'],
     ['&#35;&#35; 엔티티로 작성한 기호', '##'],
     ['[##잘못된 링크 문구](https://example.com)', '##'],
-  ])('reports markers exposed in rendered text: %s', (source, marker) => {
-    expect(findRawMarkdownMarkers({ source })).toEqual(expect.arrayContaining([expect.objectContaining({ marker })]));
+  ])('reports markers exposed in rendered text: %s', (source, symbol) => {
+    expect(findContentTextViolations({ source })).toEqual(
+      expect.arrayContaining([expect.objectContaining({ symbol })])
+    );
+  });
+
+  it.each([
+    '기능·상태',
+    "---\ntitle: '기능·상태'\n---\n\n본문",
+    '![기능·상태](https://example.com/image.png)',
+    '`기능·상태`',
+    '```mermaid\nflowchart LR\nA["기능·상태"]\n```',
+  ])('rejects middle dots throughout the content source: %s', source => {
+    expect(findContentTextViolations({ source })).toEqual(
+      expect.arrayContaining([expect.objectContaining({ symbol: '·' })])
+    );
+  });
+
+  it('reports both rules in source order', () => {
+    expect(findContentTextViolations({ source: '##제목\n\n기능·상태' })).toEqual([
+      { symbol: '##', line: 1, column: 1 },
+      { symbol: '·', line: 3, column: 3 },
+    ]);
   });
 
   it('allows valid headings, emphasis, and code examples', () => {
@@ -42,19 +63,19 @@ describe('Markdown content lint', () => {
       '[문서](https://example.com/##fragment)',
     ].join('\n');
 
-    expect(findRawMarkdownMarkers({ source })).toEqual([]);
+    expect(findContentTextViolations({ source })).toEqual([]);
   });
 
   it('reports source lines including frontmatter and skips frontmatter values', () => {
     const source = ['---', "title: '**제목의 메타데이터**'", '---', '', '정상 본문', '##잘못된 제목'].join('\n');
 
-    expect(findRawMarkdownMarkers({ source })).toEqual([{ marker: '##', line: 6, column: 1 }]);
+    expect(findContentTextViolations({ source })).toEqual([{ symbol: '##', line: 6, column: 1 }]);
   });
 
   it('matches the page renderer trimming leading whitespace while retaining source locations', () => {
     const source = '\n\n    ##제목';
 
-    expect(findRawMarkdownMarkers({ source })).toEqual([{ marker: '##', line: 3, column: 5 }]);
+    expect(findContentTextViolations({ source })).toEqual([{ symbol: '##', line: 3, column: 5 }]);
   });
 
   it('fails the CLI for private posts and nested TIL files, then passes after correction', () => {
@@ -67,13 +88,14 @@ describe('Markdown content lint', () => {
 
     try {
       writeFileSync(path.join(postsDirectory, 'private.md'), '---\nvisibility: private\n---\n\n**미완성 강조');
-      writeFileSync(path.join(tilDirectory, 'entry.md'), '##잘못된 제목');
+      writeFileSync(path.join(tilDirectory, 'entry.md'), '##잘못된 제목\n\n기능·상태');
 
       const failed = spawnSync(process.execPath, [scriptPath], { cwd: directory, encoding: 'utf8' });
 
       expect(failed.status).toBe(1);
       expect(failed.stderr).toContain('content/posts/private.md:5:1 error');
       expect(failed.stderr).toContain('content/til/archive/entry.md:1:1 error');
+      expect(failed.stderr).toContain('content/til/archive/entry.md:3:3 error 가운뎃점(·)은 사용할 수 없습니다.');
 
       writeFileSync(path.join(postsDirectory, 'private.md'), '수정한 본문');
       writeFileSync(path.join(tilDirectory, 'entry.md'), '## 정상 제목');

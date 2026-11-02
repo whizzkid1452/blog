@@ -1,6 +1,6 @@
 ---
 title: '[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다'
-description: 'Render, Normalize, True Peak Limit, Dither, Encode 순서를 고정한 Offline Export 파이프라인과 진행 상태·Stem 처리의 한계를 설명합니다.'
+description: 'Render, Normalize, True Peak Limit, Dither, Encode 순서를 고정한 Offline Export 파이프라인과 진행 상태, Stem 처리의 한계를 설명합니다.'
 date: '2026-03-07'
 publishedAt: '2026-03-07T14:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'export', 'architecture']
@@ -11,7 +11,7 @@ draft: false
 visibility: private
 ---
 
-처음 Export를 생각했을 때는 현재 Session을 하나의 `AudioBuffer`로 만들고 WAV로 바꾸면 끝날 것 같았다. 실제 요구사항에는 Loudness Normalize, True Peak 제한, Bit Depth 변환, Dither, MP3·OGG·FLAC 같은 Format, Track별 Stem이 함께 들어왔다.
+처음 Export를 생각했을 때는 현재 Session을 하나의 `AudioBuffer`로 만들고 WAV로 바꾸면 끝날 것 같았다. 실제 요구사항에는 Loudness Normalize, True Peak 제한, Bit Depth 변환, Dither, MP3, OGG, FLAC 같은 Format, Track별 Stem이 함께 들어왔다.
 
 각 기능보다 어려웠던 점은 순서였다. Normalize 뒤에 Peak가 다시 커질 수 있고, Dither는 양자화 직전에 적용해야 의미가 있다. Track별 Stem은 같은 파이프라인을 반복하지만 진행률과 중단 지점이 달라진다.
 
@@ -179,10 +179,10 @@ Master Export는 내부 오류를 잡아 `ExportStatus`의 Error 상태로 바�
 - 무음과 최대 진폭 PCM의 Peak Normalize
 - 목표 LUFS 적용 전후의 측정값
 - True Peak Limit 이후 ceiling 초과 여부
-- 16·24·32 bit WAV Header와 PCM 길이
+- 16, 24, 32 bit WAV Header와 PCM 길이
 - Dither 적용 전후 양자화 오차 분포
-- MP3·OGG·FLAC Decode Round Trip
-- Mono·Stereo·다채널 파일
+- MP3, OGG, FLAC Decode Round Trip
+- Mono, Stereo, 다채널 파일
 - Master와 Stem의 동일 Track 결과 비교
 - 중단 요청 시 새 Track Render가 시작되지 않는지
 - Render와 Encode 오류가 UI 상태와 호출자에게 전달되는지
@@ -191,9 +191,9 @@ Codec 호환성은 Blob의 MIME Type이나 파일 확장자만으로 검증할 �
 
 ## [sort1] 9. Export는 음질 정책을 실행 순서로 표현하는 작업이었다
 
-Offline Export를 구현하면서 각 알고리즘을 따로 만드는 것보다 처리 순서를 고정하고, Backend·UI·Encoder 사이의 실패 계약을 정하는 일이 더 어려웠다.
+Offline Export를 구현하면서 각 알고리즘을 따로 만드는 것보다 처리 순서를 고정하고, Backend, UI, Encoder 사이의 실패 계약을 정하는 일이 더 어려웠다.
 
-현재 구조는 Render와 후처리 책임을 분리하고 Master·Stem 경로를 제공한다. 반면 Format별 검증과 단계 내부 취소는 남아 있다.
+현재 구조는 Render와 후처리 책임을 분리하고 Master, Stem 경로를 제공한다. 반면 Format별 검증과 단계 내부 취소는 남아 있다.
 
 > “Export 완료는 Blob을 만들었다는 뜻이 아니라, 선택한 음질 정책과 파일 계약을 검증했다는 뜻이어야 한다.”
 
