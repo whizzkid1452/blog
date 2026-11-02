@@ -4,12 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "node scripts/lint-content.mjs && next build",
     "start": "next start",
     "test": "vitest run",
     "test:watch": "vitest",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "eslint . && node scripts/lint-content.mjs",
+    "lint:content": "node scripts/lint-content.mjs",
+    "lint:fix": "eslint . --fix && node scripts/lint-content.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "typecheck": "tsc --noEmit"

@@ -60,6 +60,12 @@ visibility: public
 목록, 상세 페이지, 검색, sitemap, RSS와 미리보기 이미지에 노출되지 않는다. 글을 공개하려면
 `draft: false`와 `visibility: public`을 사용한다.
 
+작성 후 `pnpm lint:content`로 본문에 `**`, `##` 같은 마크다운 기호가 그대로 표시되는지 확인한다.
+검사는 `content/posts`와 `content/til`의 모든 Markdown 파일에 적용하며 초안과 비공개 글도 포함한다.
+정상적인 제목·강조와 인라인 코드·코드 블록은 허용한다. 기호 자체를 설명할 때는 코드로 감싼다.
+오류가 있으면 파일·줄·열을 출력하고 종료 코드 1로 실패한다. `pnpm lint`, `pnpm lint:fix`, `pnpm build`에서도
+같은 검사를 실행하므로 노출된 기호가 남아 있으면 검증과 빌드를 통과할 수 없다.
+
 ### 3-1. TIL / 개발 공부 일지
 
 현재 `features/til/config/til-publication.ts`의 `IS_TIL_PUBLISHED`는 `false`입니다.
