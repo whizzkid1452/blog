@@ -41,7 +41,7 @@ flowchart LR
   D --> E
 ```
 
-현재 API에서 `addEdge(from, to)`는 일반적인 signal 방향과 다르게 **from이 to에 의존한다**는 뜻이다.
+현재 API에서 `addEdge(from, to)`는 일반적인 signal 방향과 다르게 from이 to에 의존한다는 뜻이다.
 
 ```ts
 graph.addEdge('eq', 'input');
@@ -168,7 +168,7 @@ while (currentLevel.length > 0) {
 - Plugin이 thread-safe한가
 - Group 실행 후 결과를 어떤 순서로 합치는가
 
-따라서 정확한 이름은 **병렬 실행 가능성 후보 Group**이다. Graph Edge가 모든 공유 자원 의존성을 표현한다는 전제가 있어야 실제 병렬 실행이 안전하다.
+따라서 정확한 이름은 병렬 실행 가능성 후보 Group이다. Graph Edge가 모든 공유 자원 의존성을 표현한다는 전제가 있어야 실제 병렬 실행이 안전하다.
 
 ## [sort1] 6. Node 삭제에서는 양방향 Edge 정리가 필요했다
 

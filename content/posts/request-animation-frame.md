@@ -16,7 +16,7 @@ requestAnimationFrame(RAF)은 다음 화면을 그리기 바로 전에 콜백(�
 
 ## [sort1] 1. requestAnimationFrame이 하는 일
 
-브라우저가 **다음 화면을 그리기 직전**에 지정한 콜백을 실행해 줍니다.
+브라우저가 다음 화면을 그리기 직전에 지정한 콜백을 실행해 줍니다.
 
 ```ts
 const rafId = requestAnimationFrame(() => {
@@ -36,7 +36,7 @@ const rafId = requestAnimationFrame(() => {
 
 > rAFId란?
 
-**rafId**는 requestAnimationFrame이 반환하는 **숫자 ID**를 저장하는 변수입니다.
+rafId는 requestAnimationFrame이 반환하는 숫자 ID를 저장하는 변수입니다.
 
 ---
 
@@ -49,7 +49,7 @@ const rafId = requestAnimationFrame(() => {
 // rafId → 예: 1234 (브라우저가 부여한 숫자)
 ```
 
-requestAnimationFrame은 **예약 ID**를 숫자로 반환합니다.
+requestAnimationFrame은 예약 ID를 숫자로 반환합니다.
 
 ---
 
@@ -66,11 +66,11 @@ if (rafId !== null) {
 }
 ```
 
-cancelAnimationFrame(rafId)로 **아직 실행되지 않은 예약**을 취소할 수 있습니다.
+cancelAnimationFrame(rafId)로 아직 실행되지 않은 예약을 취소할 수 있습니다.
 
 ## [sort1] 3. rAF 스로틀링 방식
 
-이 코드에서는 **“한 번에 하나의 RAF만 예약”**하는 방식으로 스로틀링합니다.
+이 코드에서는 “한 번에 하나의 RAF만 예약”하는 방식으로 스로틀링합니다.
 
 ---
 
@@ -84,7 +84,7 @@ pointermove 3회 → pending 업데이트 → rafId 있음 → 새 RAF 예약 �
 다음 프레임 → RAF 콜백 실행 → addTrimRegion 1회 호출 → rafId = null
 ```
 
-핵심: **이미 RAF가 예약되어 있으면(rafId !== null) 새로 예약하지 않고, pending 값만 갱신**합니다.
+핵심: 이미 RAF가 예약되어 있으면(rafId !== null) 새로 예약하지 않고, pending 값만 갱신합니다.
 
 ---
 
@@ -114,7 +114,7 @@ if (rafId.current === null) {
 | 다음 프레임                    | RAF 콜백 실행 → addTrimRegion 1회 호출 → rafId = null |
 | 그 다음 pointermove            | 다시 rafId === null → RAF 예약                        |
 
-그래서 **프레임당 최대 1번만** addTrimRegion이 호출됩니다.
+그래서 프레임당 최대 1번만 addTrimRegion이 호출됩니다.
 
 ---
 
@@ -122,10 +122,10 @@ if (rafId.current === null) {
 
 여러 번의 pointermove가 한 프레임 안에 들어와도:
 
-- RAF 콜백은 **한 번만** 실행되고
-- 그때 pendingStart, pendingEnd는 **가장 마지막 값**을 사용합니다.
+- RAF 콜백은 한 번만 실행되고
+- 그때 pendingStart, pendingEnd는 가장 마지막 값을 사용합니다.
 
-즉, **마지막 위치만 반영**하고, **호출 횟수는 프레임당 1회로 제한**하는 구조입니다.
+즉, 마지막 위치만 반영하고, 호출 횟수는 프레임당 1회로 제한하는 구조입니다.
 
 ---
 

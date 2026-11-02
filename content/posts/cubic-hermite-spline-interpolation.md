@@ -235,7 +235,7 @@ beta  = m[i + 1] / delta[i]
 - 경계 접선은 한쪽 구간의 할선 기울기를 사용한다.
 - 이후 Fritsch–Carlson 형태의 크기 제한을 적용한다.
 
-따라서 **Kruger의 내부 접선 계산과 Fritsch–Carlson 형태의 제한을 조합한 Cubic Hermite 보간**이라고 표현하는 것이 정확하다.
+따라서 Kruger의 내부 접선 계산과 Fritsch–Carlson 형태의 제한을 조합한 Cubic Hermite 보간이라고 표현하는 것이 정확하다.
 
 ## [sort1] 8. Power Basis로 변환하면 계수를 재사용할 수 있다
 
@@ -264,7 +264,7 @@ const value =
 
 Automation Point가 추가되거나 이동하면 기존 계수는 더 이상 유효하지 않다. `AutomationList`는 Point 변경 시 저장된 계수를 무효화하고 다음 조회에서 다시 계산하도록 구성했다.
 
-이 과정에서 보간 공식뿐 아니라 **계산 결과의 유효 조건과 Cache 무효화 시점도 함께 설계해야 한다**는 점을 알게 되었다.
+이 과정에서 보간 공식뿐 아니라 계산 결과의 유효 조건과 Cache 무효화 시점도 함께 설계해야 한다는 점을 알게 되었다.
 
 ## [sort1] 9. Cubic Hermite와 Cubic Bézier는 서로 변환할 수 있다
 

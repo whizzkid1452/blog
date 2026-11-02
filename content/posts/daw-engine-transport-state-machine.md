@@ -19,7 +19,7 @@ let isPlaying = false;
 
 하지만 DAW의 Transport에는 재생과 정지 사이의 전환이 있다. 클릭 노이즈를 줄이기 위한 Declick, 새로운 위치로 이동하는 Locate, 재생 방향 전환은 즉시 끝나지 않는다. 이 과정에서 새 입력까지 들어오면 `isPlaying`은 현재 무엇을 기다리는지 설명하지 못한다.
 
-그래서 재생 여부가 아니라 **현재 진행 중인 전환**을 유한 상태 머신(Finite State Machine, FSM)으로 표현했다. 비동기 `AudioProvider` 호출은 `TransportController`로 분리하고, `transitionId`와 타임아웃으로 늦거나 끝나지 않는 완료 결과를 처리했다.
+그래서 재생 여부가 아니라 현재 진행 중인 전환을 유한 상태 머신(Finite State Machine, FSM)으로 표현했다. 비동기 `AudioProvider` 호출은 `TransportController`로 분리하고, `transitionId`와 타임아웃으로 늦거나 끝나지 않는 완료 결과를 처리했다.
 
 > “재생 상태에서 중요한 것은 소리가 나는가만이 아니라, 지금 어떤 전환을 진행하고 있는가였다.”
 
@@ -96,7 +96,7 @@ public enqueue(event: TransportEvent): void {
 }
 ```
 
-Declick 전환이 끝나면 보관한 Event를 입력 순서대로 다시 처리한다. 이 방식은 **queued sequential execution**, 즉 대기열을 사용한 순차 처리다. 실행 중인 Backend 작업을 취소하거나 여러 요청을 하나로 합치는 방식은 아니다.
+Declick 전환이 끝나면 보관한 Event를 입력 순서대로 다시 처리한다. 이 방식은 queued sequential execution, 즉 대기열을 사용한 순차 처리다. 실행 중인 Backend 작업을 취소하거나 여러 요청을 하나로 합치는 방식은 아니다.
 
 FIFO가 항상 사용자 의도와 일치하는 것도 아니다. 짧은 시간에 Locate가 여러 번 들어오면 모든 중간 위치를 방문하기보다 마지막 위치만 적용하는 편이 나을 수 있다. 이 경우에는 Queue에 넣기 전에 같은 종류의 Event를 병합하는 별도 정책이 필요하다.
 
@@ -144,7 +144,7 @@ private handleDeclickDone(event: DeclickDoneEvent): void {
 }
 ```
 
-`transitionId`는 요청과 완료를 연결하는 **상관관계 식별자(correlation identifier)** 다. 현재 기다리는 ID와 일치하는 결과만 상태 전이에 반영한다.
+`transitionId`는 요청과 완료를 연결하는 상관관계 식별자(correlation identifier) 다. 현재 기다리는 ID와 일치하는 결과만 상태 전이에 반영한다.
 
 이 검사는 이전 작업을 취소하지 않는다. 같은 Backend 자원을 동시에 변경할 수 있다면 취소 신호, 단일 실행 제한 또는 Backend 내부의 세대 검사도 별도로 필요하다. `transitionId`가 보장하는 범위는 낡은 완료 Event가 현재 FSM 상태를 변경하지 못하게 하는 것까지다.
 

@@ -15,7 +15,7 @@ DAW의 시간은 하나가 아니다. 오디오 파일과 재생 장치는 Frame
 
 처음에는 `beats * 60 / bpm * sampleRate` 공식이면 충분해 보였다. 이 공식은 Tempo가 하나일 때만 맞는다. 타임라인 중간에서 120 BPM이 90 BPM으로 바뀌면 목표 지점까지 지나온 각 Tempo 구간을 따로 계산해야 한다.
 
-이 글에서 **Frame**은 채널별 PCM sample의 시간 위치, **Beat**는 4분음표를 기준으로 누적한 음악적 위치, **BBT**는 Bar·Beat·Tick 표기를 뜻한다. 구현은 1 Beat를 1,920 Tick으로 표현한다.
+이 글에서 Frame은 채널별 PCM sample의 시간 위치, Beat는 4분음표를 기준으로 누적한 음악적 위치, BBT는 Bar·Beat·Tick 표기를 뜻한다. 구현은 1 Beat를 1,920 Tick으로 표현한다.
 
 ## [sort1] 1. 왜 고정 BPM 공식만으로는 부족했는가
 

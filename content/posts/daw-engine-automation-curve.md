@@ -19,7 +19,7 @@ Automation은 시간에 따라 Volume이나 Pan 같은 Parameter 값을 바꾸�
 
 처음에는 `time`과 `value` 배열만 있으면 충분해 보였다. 하지만 Point 편집, TOUCH와 LATCH 같은 Write mode, 촘촘하게 기록된 Point 정리까지 추가하자 단순 배열은 상태 모델이 됐다.
 
-이 글에서 **Automation Point**는 특정 시간의 Parameter 값, **Write Pass**는 재생 중 사용자 입력을 곡선에 기록하는 구간을 뜻한다.
+이 글에서 Automation Point는 특정 시간의 Parameter 값, Write Pass는 재생 중 사용자 입력을 곡선에 기록하는 구간을 뜻한다.
 
 ## [sort1] 1. 왜 Point를 항상 시간순으로 유지했는가
 
