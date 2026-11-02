@@ -81,12 +81,12 @@ DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고,
 
 처음부터 끝까지 따라가려면 Part 번호 순서가 자연스럽다. 관심사만 고르려면 아래 지도를 쓰면 된다.
 
-1. [[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까](/posts/daw-engine-tempo-map) — 시간 좌표
-2. [[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다](/posts/daw-engine-meter-dsp) — 음량 측정
-3. [[Part 3.] Automation은 점을 연결하는 기능이 아니었다](/posts/daw-engine-automation-curve) — 파라미터 곡선
-4. [[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec) — MIDI 교환
-5. [[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline) — 오프라인 파이프라인
-6. [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag) — 처리 Graph
+1. [[Part 1.] 가변 Tempo DAW에서 Frame과 Beat를 어떻게 변환할까](/posts/daw-engine-tempo-map) - 시간 좌표
+2. [[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다](/posts/daw-engine-meter-dsp) - 음량 측정
+3. [[Part 3.] Automation은 점을 연결하는 기능이 아니었다](/posts/daw-engine-automation-curve) - 파라미터 곡선
+4. [[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec) - MIDI 교환
+5. [[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline) - 오프라인 파이프라인
+6. [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag) - 처리 Graph
 7. [Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기 - 재생 전환 제어 (준비 중)
 
 다음 글은 가변 Tempo에서 Frame과 Beat가 왜 하나의 공식으로 끝나지 않는지부터 시작한다.

@@ -136,9 +136,9 @@ Menu, Preview, Timeline, Project로 도메인을 나누기에는 스펙에는 vi
 
 참고 블로그 / 문서
 
-- [양성훈 님, 펼치는 공간 — 프론트엔드 아키텍처](https://de-velop-humus.tistory.com/32)
+- [양성훈 님, 펼치는 공간 - 프론트엔드 아키텍처](https://de-velop-humus.tistory.com/32)
 - [퍼사드 패턴](https://velog.io/@bagt/Design-Pattern-Facade-Pattern-%ED%8D%BC%EC%82%AC%EB%93%9C-%ED%8C%A8%ED%84%B4)
-- [SSOT — 안드로이드 케이스](https://declan.tistory.com/103)
+- [SSOT - 안드로이드 케이스](https://declan.tistory.com/103)
 - [단일 진실 공급원 개념](https://onlyfor-me-blog.tistory.com/696)
 - [도메인 개념 정리](https://ldd6cr-adness.tistory.com/entry/도메인-Domain은-뭘까)
 - [프론트엔드 아키텍처 설계](https://velog.io/@khjbest/%ED%94%84%EB%A1%A0%ED%8A%B8%EC%97%94%EB%93%9C-%EC%95%84%ED%82%A4%ED%85%8D%EC%B2%98-%EC%84%A4%EA%B3%84)

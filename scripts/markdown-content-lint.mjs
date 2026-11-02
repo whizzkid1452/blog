@@ -4,6 +4,7 @@ import rehypeRaw from 'rehype-raw';
 import remarkGfm from 'remark-gfm';
 
 const RAW_MARKDOWN_MARKER_PATTERN = /\*{2,}|#{2,}/g;
+const FORBIDDEN_CONTENT_CHARACTER_PATTERN = /[·\u2014]/g;
 const EXCLUDED_ELEMENTS = new Set(['code', 'pre', 'script', 'style']);
 
 /**
@@ -14,7 +15,7 @@ export function findContentTextViolations({ source }) {
   const { content } = matter(source);
   const contentStart = source.length - content.trimStart().length;
   const sourcePrefixLines = source.slice(0, contentStart).split('\n');
-  const violations = Array.from(source.matchAll(/·/g), match => {
+  const violations = Array.from(source.matchAll(FORBIDDEN_CONTENT_CHARACTER_PATTERN), match => {
     const precedingLines = source.slice(0, match.index).split('\n');
 
     return {

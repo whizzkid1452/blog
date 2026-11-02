@@ -3,6 +3,10 @@ import path from 'node:path';
 import { findContentTextViolations } from './markdown-content-lint.mjs';
 
 const CONTENT_DIRECTORIES = ['content/posts', 'content/til'];
+const FORBIDDEN_CHARACTER_MESSAGES = {
+  '·': '가운뎃점(·)은 사용할 수 없습니다. 쉼표나 자연스러운 연결 표현으로 바꿔 주세요.',
+  '\u2014': '긴 대시(U+2014)는 사용할 수 없습니다. 하이픈(-)으로 바꿔 주세요.',
+};
 let fileCount = 0;
 let violationCount = 0;
 
@@ -20,9 +24,8 @@ for (const directory of CONTENT_DIRECTORIES) {
     for (const violation of violations) {
       violationCount += 1;
       const message =
-        violation.symbol === '·'
-          ? '가운뎃점(·)은 사용할 수 없습니다. 쉼표나 자연스러운 연결 표현으로 바꿔 주세요.'
-          : `본문에 마크다운 기호 "${violation.symbol}"가 그대로 표시됩니다. 문법을 수정하거나 예제를 코드로 감싸 주세요.`;
+        FORBIDDEN_CHARACTER_MESSAGES[violation.symbol] ??
+        `본문에 마크다운 기호 "${violation.symbol}"가 그대로 표시됩니다. 문법을 수정하거나 예제를 코드로 감싸 주세요.`;
 
       console.error(`${filePath}:${violation.line}:${violation.column} error ${message}`);
     }

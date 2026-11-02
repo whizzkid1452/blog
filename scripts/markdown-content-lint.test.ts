@@ -34,10 +34,23 @@ describe('Markdown content lint', () => {
     );
   });
 
+  it.each([
+    '기능\u2014상태',
+    "---\ntitle: '기능\u2014상태'\n---\n\n본문",
+    '![기능\u2014상태](https://example.com/image.png)',
+    '`기능\u2014상태`',
+    '```mermaid\nflowchart LR\nA["기능\u2014상태"]\n```',
+  ])('rejects em dashes throughout the content source: %s', source => {
+    expect(findContentTextViolations({ source })).toEqual(
+      expect.arrayContaining([expect.objectContaining({ symbol: '\u2014' })])
+    );
+  });
+
   it('reports both rules in source order', () => {
-    expect(findContentTextViolations({ source: '##제목\n\n기능·상태' })).toEqual([
+    expect(findContentTextViolations({ source: '##제목\n\n기능·상태\n\n설명\u2014결론' })).toEqual([
       { symbol: '##', line: 1, column: 1 },
       { symbol: '·', line: 3, column: 3 },
+      { symbol: '\u2014', line: 5, column: 3 },
     ]);
   });
 
@@ -61,6 +74,8 @@ describe('Markdown content lint', () => {
       '<code>**인라인 코드**</code>',
       '',
       '[문서](https://example.com/##fragment)',
+      '',
+      '하이픈 - 과 코드의 음수 `-1`은 허용합니다.',
     ].join('\n');
 
     expect(findContentTextViolations({ source })).toEqual([]);
@@ -88,7 +103,7 @@ describe('Markdown content lint', () => {
 
     try {
       writeFileSync(path.join(postsDirectory, 'private.md'), '---\nvisibility: private\n---\n\n**미완성 강조');
-      writeFileSync(path.join(tilDirectory, 'entry.md'), '##잘못된 제목\n\n기능·상태');
+      writeFileSync(path.join(tilDirectory, 'entry.md'), '##잘못된 제목\n\n기능·상태\n\n설명\u2014결론');
 
       const failed = spawnSync(process.execPath, [scriptPath], { cwd: directory, encoding: 'utf8' });
 
@@ -96,6 +111,7 @@ describe('Markdown content lint', () => {
       expect(failed.stderr).toContain('content/posts/private.md:5:1 error');
       expect(failed.stderr).toContain('content/til/archive/entry.md:1:1 error');
       expect(failed.stderr).toContain('content/til/archive/entry.md:3:3 error 가운뎃점(·)은 사용할 수 없습니다.');
+      expect(failed.stderr).toContain('content/til/archive/entry.md:5:3 error 긴 대시(U+2014)는 사용할 수 없습니다.');
 
       writeFileSync(path.join(postsDirectory, 'private.md'), '수정한 본문');
       writeFileSync(path.join(tilDirectory, 'entry.md'), '## 정상 제목');
