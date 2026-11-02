@@ -25,4 +25,14 @@ describe('study dates', () => {
     expect(moveStudyMonth('2026-12', 1)).toBe('2027-01');
     expect(moveStudyMonth('2026-01', -1)).toBe('2025-12');
   });
+
+  it.each(['2026-02', '2026-10', '2026-08'])('keeps a six-week calendar grid for %s', month => {
+    const weeks = getStudyMonthWeeks(month);
+
+    expect(weeks).toHaveLength(6);
+    expect(weeks.every(week => week.length === 7)).toBe(true);
+    expect(new Set(weeks.flat().filter(Boolean)).size).toBe(
+      new Date(`${month}-01T00:00:00Z`).getUTCMonth() === 1 ? 28 : 31
+    );
+  });
 });

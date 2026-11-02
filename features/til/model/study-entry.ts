@@ -14,6 +14,8 @@ export interface StudyEntry extends StudyEntrySummary {
   content: string;
 }
 
+const MONTH_GRID_CELL_COUNT = 42;
+
 export function isStudyDate(value: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
   const parsed = new Date(`${value}T00:00:00Z`);
@@ -36,7 +38,7 @@ export function getStudyMonthWeeks(month: string): (string | null)[][] {
   last.setUTCMonth(last.getUTCMonth() + 1, 0);
   const cells: (string | null)[] = Array.from({ length: first.getUTCDay() }, () => null);
   for (let day = 1; day <= last.getUTCDate(); day += 1) cells.push(`${month}-${String(day).padStart(2, '0')}`);
-  while (cells.length % 7 !== 0) cells.push(null);
+  while (cells.length < MONTH_GRID_CELL_COUNT) cells.push(null);
   return Array.from({ length: cells.length / 7 }, (_, week) => cells.slice(week * 7, week * 7 + 7));
 }
 
