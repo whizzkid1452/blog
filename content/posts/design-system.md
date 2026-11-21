@@ -1,6 +1,6 @@
 ---
 title: 'npm 패키지를 버리고 선택한 디자인 시스템: 마이크로 SaaS를 위한 Registry 구축기'
-description: '이 글에서는 디자인 시스템을 기획하면서 당연하게 여겼던 npm 패키지 배포 방식을 과감히 버리고 shadcn 스타일의 Registry 방식을 선택한 이유와, 프론트엔드 API 설계 및 운영 리스크를 어떻게 풀어냈는지 공유해 볼게요.'
+description: '컴포넌트는 각 프로젝트가 소유하고, 디자인 토큰은 팀이 함께 관리하는 구조를 설계했어요.'
 date: '2026-07-10'
 tags: ['design-system', 'shadcn', 'tokens-studio', 'frontend', 'architecture']
 draft: false
