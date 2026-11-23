@@ -8,15 +8,13 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 6
 draft: false
-visibility: private
+visibility: public
 featured: true
 ---
 
 EQ 다음 Compressor, 그다음 Output처럼 Audio Processing을 일렬로만 연결한다면 배열 하나로 충분하다. 실제 Mixer에는 Send, Bus, Sidechain, 여러 Track의 합류가 있다. 하나의 Processor가 여러 입력을 기다리거나, 같은 입력이 여러 경로로 나뉠 수 있다.
 
 이 구조에서 필요한 것은 “몇 번째 Processor인가”가 아니라 “어떤 Processor가 먼저 끝나야 하는가”다. 그래서 실행 순서를 Directed Acyclic Graph(DAG), 즉 방향은 있지만 Cycle은 허용하지 않는 Graph로 모델링했다.
-
-DAG의 방향성, 비순환 조건과 위상 정렬의 기본 원리는 [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)에서 먼저 설명한다.
 
 현재 `ProcessingGraph`는 Node와 의존성, 위상 정렬, Cycle 탐지, 병렬 실행 후보 Group을 계산하는 독립 utility다. 실제 AudioEngine이 이 Graph를 실행하는 경로는 확인되지 않는다. 이 글은 Graph 알고리즘 구현과 통합 전에 남은 계약을 설명한다.
 
@@ -225,7 +223,6 @@ DAG를 도입하면 분기와 합류를 명확히 표현하고, Cycle을 실행 
 
 ## 참고
 
-- [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)
 - [A. B. Kahn, Topological sorting of large networks](https://doi.org/10.1145/368996.369025)
 - [Web Audio API 1.1](https://www.w3.org/TR/webaudio-1.1/)
 - [방향 비순환 그래프(DAG, Directed Acyclic Graph)](https://jackpot53.tistory.com/84)

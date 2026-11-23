@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 3
 draft: false
-visibility: private
+visibility: public
 ---
 
 Automation은 시간에 따라 Volume이나 Pan 같은 Parameter 값을 바꾸는 기능이다. 화면에는 점과 선으로 보이지만 엔진에서는 세 문제가 동시에 발생한다.
@@ -79,8 +79,6 @@ Exponential 보간은 값이 0이거나 부호가 다를 때 단순한 기하 �
 ## [sort1] 3. 자연스러운 곡선보다 값의 범위를 지키는 곡선이 중요했다
 
 일반 cubic spline은 Point를 부드럽게 통과하지만, Point 사이에서 최솟값보다 작거나 최댓값보다 큰 overshoot가 생길 수 있다. Volume이 의도보다 커지거나 0~1 범위의 Parameter가 범위를 벗어나면 단순한 시각 문제가 아니다.
-
-Cubic Hermite의 보간식, 연속성 조건과 접선 제한 원리는 [Cubic Hermite Spline이란? 값과 접선으로 만드는 3차 보간](/posts/cubic-hermite-spline-interpolation)에서 먼저 설명한다.
 
 Curved 보간은 인접 구간의 기울기를 계산한 뒤 부호와 크기를 제한한다.
 
@@ -197,7 +195,6 @@ Automation 구현에서 보간 공식만 보면 절반만 보는 셈이다. 실�
 
 ## 참고
 
-- [Cubic Hermite Spline이란? 값과 접선으로 만드는 3차 보간](/posts/cubic-hermite-spline-interpolation)
 - [Web Audio API 1.1, AudioParam automation](https://www.w3.org/TR/webaudio-1.1/)
 - [F. N. Fritsch and R. E. Carlson, Monotone Piecewise Cubic Interpolation](https://doi.org/10.1137/0717021)
 - [믹싱 오토메이션 완전 가이드](https://studionol.co.kr/ko/stories/mix-automation1)

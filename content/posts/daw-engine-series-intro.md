@@ -8,7 +8,7 @@ series:
   name: 'TypeScript DAW 엔진 구현기'
   order: 0
 draft: false
-visibility: private
+visibility: public
 ---
 
 이 시리즈는 TypeScript로 만든 DAW 엔진의 핵심 설계를 기록한다. Part 1부터는 Tempo Map, Meter, Automation, MIDI, Export, Processing Graph처럼 개별 문제로 바로 들어간다. 그래서 그 앞에, 이 글이 답할 질문을 먼저 둔다.
@@ -72,11 +72,6 @@ DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고,
 - Meter, Export, Graph의 표준 적합성 최종 증명
 - React 화면 컴포넌트 자체의 구현 세부
 
-기초 개념이 필요할 때는 시리즈 밖 글도 함께 읽으면 좋다.
-
-- [Cubic Hermite Spline이란? 값과 접선으로 만드는 3차 보간](/posts/cubic-hermite-spline-interpolation)
-- [DAG란? 의존 관계에서 실행 순서 구하기](/posts/directed-acyclic-graph-topological-sort)
-
 ## [sort1] 5. 읽는 순서
 
 처음부터 끝까지 따라가려면 Part 번호 순서가 자연스럽다. 관심사만 고르려면 아래 지도를 쓰면 된다.
@@ -87,7 +82,7 @@ DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고,
 4. [[Part 4.] MIDI 파일은 Note 배열이 아니라 Event Stream이었다](/posts/daw-engine-midi-file-codec) - MIDI 교환
 5. [[Part 5.] 오디오 Export는 Encode 한 번으로 끝나지 않았다](/posts/daw-engine-offline-export-pipeline) - 오프라인 파이프라인
 6. [[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유](/posts/daw-engine-processing-dag) - 처리 Graph
-7. [Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기 - 재생 전환 제어 (준비 중)
+7. [[Part 7.] boolean으로 표현하지 못한 재생 전환을 상태 머신으로 관리하기](/posts/daw-engine-transport-state-machine) - 재생 전환 제어
 
 다음 글은 가변 Tempo에서 Frame과 Beat가 왜 하나의 공식으로 끝나지 않는지부터 시작한다.
 
