@@ -17,6 +17,8 @@ visibility: public
 
 구현 세부보다 지도가 목적이다. 각 Part의 본론은 해당 글로 넘긴다.
 
+이 시리즈에서 소개하는 엔진의 코드와 사용법은 GitHub에서 볼 수 있어요. [DAW Engine 저장소](https://github.com/whizzkid1452/daw-engine) / [README](https://github.com/whizzkid1452/daw-engine#readme)
+
 ## [sort1] 1. DAW는 무엇인가
 
 DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고, 내보내는 소프트웨어다. GarageBand, Ableton Live, Logic Pro, Cubase 같은 제품이 여기에 속한다.
@@ -71,6 +73,47 @@ DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고,
 - 모든 MIDI Event의 완전 호환
 - Meter, Export, Graph의 표준 적합성 최종 증명
 - React 화면 컴포넌트 자체의 구현 세부
+
+### [sort2] 4-1. 라이브러리가 맡는 일과 패키지 구성
+
+같은 음성 클립을 나눠서 일부만 옮길 때, `Source`는 원본 오디오 참조를 유지하고 `Region`은 원본에서 가져올 구간과 타임라인 위치를 기록해요. `Session`은 트랙과 소스, 템포, 마커를 담고, 트랙의 `Playlist`는 리전 배치를, `Route`는 믹서 입출력과 처리 체인을 관리해요.
+
+- 편집 명령은 `{ type, payload }` 형식으로 전달하고 Zod 스키마로 검사해요. 되돌릴 수 있는 명령은 실행 이력에 쌓여요. 도메인 객체를 직접 바꾸는 호출은 해당 이력에 기록되지 않아요.
+- 음악 시간은 4분음표당 1,920틱으로 표현하고, `TempoMap`이 박자와 샘플 프레임을 변환해요. 믹서 연결이 바뀌면 엔진은 라우팅 정보를 스냅샷으로 만들어 백엔드에 전달해요.
+- 오토메이션 커브와 모드 상태를 다루는 API가 있어요. Read, Write, Touch, Latch, Off를 실제 입력 및 재생에 연결하는 동작은 앱에서 구현해야 해요.
+- 세션을 직렬화하면 리전 배치, 라우팅, 소스 참조를 복원할 수 있어요. 프로젝트를 다시 열려면 원본 오디오 파일도 함께 보관해야 해요.
+
+| 패키지 | 담당하는 일 |
+| --- | --- |
+| [`@daw-engine/core`](https://github.com/whizzkid1452/daw-engine/blob/main/core/README.md) | 편집 모델, 명령과 이력, 세션 저장 및 복원, 오디오 백엔드 인터페이스 |
+| [`@daw-engine/ui-utils`](https://github.com/whizzkid1452/daw-engine/blob/main/ui-utils/README.md) | 타임라인 좌표 계산, 파형, 눈금, 가상 스크롤, Canvas 도구 |
+
+앱은 화면과 실제 재생, 녹음, 렌더링을 담당할 오디오 백엔드를 제공해요. 백엔드는 `AudioProvider`를 구현하고 첫 `AudioEngine.getInstance(backend)` 호출에 전달해 연결해요. [AudioProvider 인터페이스](https://github.com/whizzkid1452/daw-engine/blob/main/core/src/audio/AudioProvider.ts)
+
+### [sort2] 4-2. Core를 설치하고 첫 세션 만들기
+
+두 패키지는 npm 레지스트리 게시 전이에요. TypeScript와 ESM을 사용하는 앱의 프로젝트 폴더에서 아래 명령을 실행하면, 특정 Git 커밋에 포함된 Core 빌드와 타입 선언을 설치할 수 있어요.
+
+```bash
+npm install 'git+https://github.com/whizzkid1452/daw-engine.git#859e379d869efaaf483d317a062c16775999f97e'
+```
+
+Core를 가져와 48 kHz 세션을 만들고 오디오 트랙을 하나 추가해요. 이 예제는 오디오 장치에 연결하기 전에 편집 모델이 만들어지는지 확인하는 단계예요.
+
+```typescript
+import { Session, TrackType } from '@daw-engine/core';
+
+const session = new Session('My Song', undefined, 48_000);
+const track = session.addTrack('Vocals', TrackType.AUDIO);
+
+session.setTempo(120);
+
+console.log(session.tracks.length, track.name); // 1 Vocals
+```
+
+파형과 타임라인 도구도 필요하면 Core를 먼저 빌드한 다음 `ui-utils`를 빌드하고 두 패키지를 앱에 설치해요. 명령과 환경 조건은 공개 README에 정리되어 있어요. [소스 빌드 및 설치](https://github.com/whizzkid1452/daw-engine#installation)
+
+두 패키지의 라이선스는 `GPL-2.0-or-later`예요. [라이선스 원문](https://github.com/whizzkid1452/daw-engine/blob/main/LICENSE)
 
 ## [sort1] 5. 읽는 순서
 
