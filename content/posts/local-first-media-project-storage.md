@@ -10,8 +10,6 @@ coverImage: '/images/local-first-media-project-storage/local-first-outbox-sync.p
 coverAlt: 'IndexedDB에 로컬 데이터와 Outbox를 저장하고 동기화 서비스가 클라우드로 비동기 전송하는 Local-first 저장 구조'
 ---
 
-안녕하세요. 멀티미디어 에디터를 개발하고 있는 프론트엔드 개발자 김승진입니다.
-
 이번 글에서는 웹 기반 미디어 에디터를 개발하며 마주했던 가장 치열한 고민, ‘저장’에 대한 이야기를 나누고자 합니다.
 
 > "네트워크가 잠깐 끊겼는데, 1시간 동안 편집한 타임라인이 전부 날아갔어요."
