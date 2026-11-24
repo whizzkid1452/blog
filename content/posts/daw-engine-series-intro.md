@@ -1,6 +1,6 @@
 ---
 title: '[Part 0.] TypeScript DAW 엔진 구현기를 시작하며'
-description: 'DAW가 무엇인지, 오디오 편집 도메인의 특성, 미디 작곡에서 개발로 이어진 배경, 그리고 이 시리즈가 다루는 엔진 경계를 안내합니다.'
+description: '미디 작곡 경험에서 출발해 TypeScript로 DAW 엔진을 만든 이유와 wavesurfer.js, Tone.js, Web Audio API가 맡는 역할의 차이를 설명합니다.'
 date: '2026-08-21'
 publishedAt: '2026-08-21T11:30:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'architecture', 'series']
@@ -11,13 +11,11 @@ draft: false
 visibility: public
 ---
 
-이 시리즈는 TypeScript로 만든 DAW 엔진의 핵심 설계를 기록한다. Part 1부터는 Tempo Map, Meter, Automation, MIDI, Export, Processing Graph처럼 개별 문제로 바로 들어간다. 그래서 그 앞에, 이 글이 답할 질문을 먼저 둔다.
+보컬 클립을 둘로 나누고 뒷부분만 다음 마디로 옮겼다고 해볼게요. 화면에는 클립 두 개가 보이지만, 편집기는 두 클립이 같은 원본의 어느 구간을 재생하는지 기억해야 해요. 이동을 취소한 뒤 다시 들으면 클립이 원래 타임라인 위치에서 재생돼야 해요. 믹스를 내보낼 때도 현재 클립 배치와 신호 경로를 읽어야 해요.
 
-> DAW는 무엇이고, 이 도메인에서 무엇이 어렵고, 왜 이 엔진을 만들기 시작했는가.
+미디로 곡을 만들 때 익숙했던 이런 편집을 웹에서도 구현하고 싶었어요. 클립 배치와 편집 이력, 믹서 연결을 하나의 프로젝트 모델로 다룰 수 있도록 TypeScript로 DAW 엔진을 만들었습니다.
 
-구현 세부보다 지도가 목적이다. 각 Part의 본론은 해당 글로 넘긴다.
-
-이 시리즈에서 소개하는 엔진의 코드와 사용법은 GitHub에서 볼 수 있어요. [DAW Engine 저장소](https://github.com/whizzkid1452/daw-engine) / [README](https://github.com/whizzkid1452/daw-engine#readme)
+[DAW Engine 저장소](https://github.com/whizzkid1452/daw-engine) / [설치 및 API 문서](https://github.com/whizzkid1452/daw-engine#readme)
 
 ## [sort1] 1. DAW는 무엇인가
 
@@ -53,7 +51,17 @@ DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고,
 
 그래서 이 엔진은 “오디오를 다루는 라이브러리 실험”보다, 미디 작곡 때 몸으로 익힌 시간, 신호, 편집 감각을 TypeScript 도메인으로 옮기려는 시도에 가깝다. 나중에 사내 미디어 편집기에 연동할 수 있었던 것도, Core를 UI와 플랫폼에서 분리해 둔 선택과 이어진다.
 
-## [sort1] 4. 이 시리즈가 다루는 범위
+## [sort1] 4. wavesurfer.js와 DAW 엔진은 어디에 쓰일까
+
+wavesurfer.js는 브라우저에서 파형을 그리고, 사용자가 파형을 클릭해 원하는 지점부터 소리를 들을 수 있게 해줘요. Regions 플러그인으로 파형 위에 구간을 표시하고, 멀티트랙 확장으로 여러 트랙을 함께 재생하거나 각각의 시작 위치와 볼륨을 조절할 수 있어요. 녹음 내용을 보면서 특정 구간을 찾아 듣는 화면이라면 이 기능들이 바로 필요한 도구예요. [wavesurfer.js 공식 문서](https://wavesurfer.xyz/docs/), [멀티트랙 확장 API](https://wavesurfer-multitrack.pages.dev/docs/classes/default)
+
+제가 엔진에서 맡기고 싶었던 것은 그 조작 이후에 남는 프로젝트 상태였어요. 파형 위에 구간을 표시하면 파일 안에서 어느 부분을 들을지 알 수 있어요. DAW에서 클립을 나누면 원본 파일을 참조하는 두 리전이 생겨요. 각 리전은 원본에서 가져올 구간과 타임라인에 놓일 위치를 따로 기억해서, 뒷부분만 옮기거나 반복해서 배치할 수 있어요.
+
+이동과 분할을 되돌릴 수 있는 편집 명령으로 두면, 드래그와 단축키에서 같은 편집 규칙과 실행 이력을 쓸 수 있어요. 트랙 신호를 리버브 버스로 보낸다면 편집 모델에는 그 연결도 남아요. 그래서 재생 예약과 믹스 출력에 현재 세션의 클립 배치와 라우팅을 전달할 수 있어요. [DAW Engine의 편집 모델과 명령 이력](https://github.com/whizzkid1452/daw-engine#core-concepts)
+
+Web Audio API는 오디오 노드를 연결해 소리를 처리하고 렌더링하는 브라우저 표준이에요. Tone.js는 그 위에서 악기와 이펙트를 구성하고, 박자에 맞춰 이벤트를 예약하는 도구를 제공해요. DAW Engine은 그 실행에 필요한 편집 상태를 관리하고, 앱이 연결한 오디오 백엔드에 전달해요. 덕분에 화면이나 오디오 백엔드를 바꿀 때도 클립 편집 규칙을 재사용할 수 있어요. 실제 재생, 녹음, 렌더링은 앱에서 백엔드를 구현하고 연결하는 작업이 필요해요. [Web Audio API 명세](https://www.w3.org/TR/webaudio-1.0/), [Tone.js 공식 문서](https://tonejs.github.io/), [DAW Engine의 백엔드 경계](https://github.com/whizzkid1452/daw-engine#audio-backend)
+
+## [sort1] 5. 이 시리즈가 다루는 범위
 
 현재 글들이 다루는 축은 대략 다음과 같다.
 
@@ -74,48 +82,7 @@ DAW(Digital Audio Workstation) 는 소리를 녹음하고, 편집하고, 섞고,
 - Meter, Export, Graph의 표준 적합성 최종 증명
 - React 화면 컴포넌트 자체의 구현 세부
 
-### [sort2] 4-1. 라이브러리가 맡는 일과 패키지 구성
-
-같은 음성 클립을 나눠서 일부만 옮길 때, `Source`는 원본 오디오 참조를 유지하고 `Region`은 원본에서 가져올 구간과 타임라인 위치를 기록해요. `Session`은 트랙과 소스, 템포, 마커를 담고, 트랙의 `Playlist`는 리전 배치를, `Route`는 믹서 입출력과 처리 체인을 관리해요.
-
-- 편집 명령은 `{ type, payload }` 형식으로 전달하고 Zod 스키마로 검사해요. 되돌릴 수 있는 명령은 실행 이력에 쌓여요. 도메인 객체를 직접 바꾸는 호출은 해당 이력에 기록되지 않아요.
-- 음악 시간은 4분음표당 1,920틱으로 표현하고, `TempoMap`이 박자와 샘플 프레임을 변환해요. 믹서 연결이 바뀌면 엔진은 라우팅 정보를 스냅샷으로 만들어 백엔드에 전달해요.
-- 오토메이션 커브와 모드 상태를 다루는 API가 있어요. Read, Write, Touch, Latch, Off를 실제 입력 및 재생에 연결하는 동작은 앱에서 구현해야 해요.
-- 세션을 직렬화하면 리전 배치, 라우팅, 소스 참조를 복원할 수 있어요. 프로젝트를 다시 열려면 원본 오디오 파일도 함께 보관해야 해요.
-
-| 패키지 | 담당하는 일 |
-| --- | --- |
-| [`@daw-engine/core`](https://github.com/whizzkid1452/daw-engine/blob/main/core/README.md) | 편집 모델, 명령과 이력, 세션 저장 및 복원, 오디오 백엔드 인터페이스 |
-| [`@daw-engine/ui-utils`](https://github.com/whizzkid1452/daw-engine/blob/main/ui-utils/README.md) | 타임라인 좌표 계산, 파형, 눈금, 가상 스크롤, Canvas 도구 |
-
-앱은 화면과 실제 재생, 녹음, 렌더링을 담당할 오디오 백엔드를 제공해요. 백엔드는 `AudioProvider`를 구현하고 첫 `AudioEngine.getInstance(backend)` 호출에 전달해 연결해요. [AudioProvider 인터페이스](https://github.com/whizzkid1452/daw-engine/blob/main/core/src/audio/AudioProvider.ts)
-
-### [sort2] 4-2. Core를 설치하고 첫 세션 만들기
-
-두 패키지는 npm 레지스트리 게시 전이에요. TypeScript와 ESM을 사용하는 앱의 프로젝트 폴더에서 아래 명령을 실행하면, 특정 Git 커밋에 포함된 Core 빌드와 타입 선언을 설치할 수 있어요.
-
-```bash
-npm install 'git+https://github.com/whizzkid1452/daw-engine.git#859e379d869efaaf483d317a062c16775999f97e'
-```
-
-Core를 가져와 48 kHz 세션을 만들고 오디오 트랙을 하나 추가해요. 이 예제는 오디오 장치에 연결하기 전에 편집 모델이 만들어지는지 확인하는 단계예요.
-
-```typescript
-import { Session, TrackType } from '@daw-engine/core';
-
-const session = new Session('My Song', undefined, 48_000);
-const track = session.addTrack('Vocals', TrackType.AUDIO);
-
-session.setTempo(120);
-
-console.log(session.tracks.length, track.name); // 1 Vocals
-```
-
-파형과 타임라인 도구도 필요하면 Core를 먼저 빌드한 다음 `ui-utils`를 빌드하고 두 패키지를 앱에 설치해요. 명령과 환경 조건은 공개 README에 정리되어 있어요. [소스 빌드 및 설치](https://github.com/whizzkid1452/daw-engine#installation)
-
-두 패키지의 라이선스는 `GPL-2.0-or-later`예요. [라이선스 원문](https://github.com/whizzkid1452/daw-engine/blob/main/LICENSE)
-
-## [sort1] 5. 읽는 순서
+## [sort1] 6. 읽는 순서
 
 처음부터 끝까지 따라가려면 Part 번호 순서가 자연스럽다. 관심사만 고르려면 아래 지도를 쓰면 된다.
 
@@ -129,7 +96,7 @@ console.log(session.tracks.length, track.name); // 1 Vocals
 
 다음 글은 가변 Tempo에서 Frame과 Beat가 왜 하나의 공식으로 끝나지 않는지부터 시작한다.
 
-## [sort1] 6. 마치며
+## [sort1] 7. 마치며
 
 DAW를 쓰던 사람이 엔진을 만들면, 처음에는 화면에 보이는 기능을 그대로 옮기려 한다. 실제로 어려운 지점은 기능 목록보다 시간, 신호, 편집 지시가 어떤 계약을 지키며 흐르는가에 있었다.
 
