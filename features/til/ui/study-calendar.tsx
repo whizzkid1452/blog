@@ -3,7 +3,7 @@
 import * as Tooltip from '@radix-ui/react-tooltip';
 import Link from 'next/link';
 import { useState } from 'react';
-import { IS_TIL_PUBLISHED } from '../config/til-publication';
+import { IS_TIL_DETAIL_ENABLED } from '../config/til-publication';
 import { formatStudyMonth, getStudyMonthWeeks, moveStudyMonth, type StudyCalendarEntry } from '../model/study-entry';
 import styles from './study-calendar.module.css';
 import { StudyCalendarTopics } from './study-calendar-topics';
@@ -73,14 +73,14 @@ export function StudyCalendar({ entries, today, title = 'Today I Learned' }: Stu
                           {entry && (
                             <>
                               <span className={styles.recordDot} aria-hidden="true" />
-                              <StudyCalendarTopics topics={entry.topics} isInsideLink={IS_TIL_PUBLISHED} />
+                              <StudyCalendarTopics topics={entry.topics} isInsideLink={IS_TIL_DETAIL_ENABLED} />
                             </>
                           )}
                         </>
                       );
                     return (
                       <td key={date ?? `empty-${dayIndex}`} data-recorded={entry ? true : undefined}>
-                        {date == null ? null : entry && IS_TIL_PUBLISHED ? (
+                        {date == null ? null : entry && IS_TIL_DETAIL_ENABLED ? (
                           <Tooltip.Root>
                             <Tooltip.Trigger asChild>
                               <Link
@@ -123,7 +123,9 @@ export function StudyCalendar({ entries, today, title = 'Today I Learned' }: Stu
         <div className={styles.footer}>
           {monthEntries.length === 0 && (
             <span className={styles.empty} role="status">
-              {IS_TIL_PUBLISHED ? '이 달에는 아직 공개된 공부 일지가 없습니다.' : '이 달에는 아직 기록이 없습니다.'}
+              {IS_TIL_DETAIL_ENABLED
+                ? '이 달에는 아직 공개된 공부 일지가 없습니다.'
+                : '이 달에는 아직 기록이 없습니다.'}
             </span>
           )}
         </div>
@@ -139,12 +141,12 @@ export function StudyCalendar({ entries, today, title = 'Today I Learned' }: Stu
                     <li key={topic}>{topic}</li>
                   ))}
                 </ul>
-                {IS_TIL_PUBLISHED && <span className={styles.agendaDescription}>{entry.description}</span>}
+                {IS_TIL_DETAIL_ENABLED && <span className={styles.agendaDescription}>{entry.description}</span>}
               </>
             );
             return (
               <li key={entry.date}>
-                {IS_TIL_PUBLISHED ? (
+                {IS_TIL_DETAIL_ENABLED ? (
                   <Link className={styles.agendaEntry} href={`/til/${entry.date}`}>
                     {agendaContent}
                   </Link>

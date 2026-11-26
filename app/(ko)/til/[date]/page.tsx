@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
+import { IS_TIL_BOARD_ENABLED } from '@/features/til/config/til-publication';
 import { createAbsoluteUrl } from '@/shared/config/site-config';
 import { getStudyEntry, getStudySummaries } from '@/features/til/server/study-repository';
 import { MarkdownContent } from '@/features/posts/ui/post-view/markdown/markdown-content';
@@ -35,8 +36,8 @@ export default async function StudyPage({ params }: StudyPageProps) {
   if (!entry) notFound();
   return (
     <div className={styles.page}>
-      <Link className={styles.back} href="/til">
-        ← TIL 게시판
+      <Link className={styles.back} href={IS_TIL_BOARD_ENABLED ? '/til' : '/'}>
+        {IS_TIL_BOARD_ENABLED ? '← TIL 게시판' : '← 홈 달력으로 돌아가기'}
       </Link>
       <article className={styles.article}>
         <header className={`${styles.header} ${styles.articleHeader}`}>

@@ -3,7 +3,7 @@ import { createSitemap } from '@/features/posts/seo/sitemap';
 import type { MetadataRoute } from 'next';
 import { getStudySummaries } from '@/features/til/server/study-repository';
 import { createAbsoluteUrl } from '@/shared/config/site-config';
-import { IS_TIL_PUBLISHED } from '@/features/til/config/til-publication';
+import { IS_TIL_BOARD_ENABLED } from '@/features/til/config/til-publication';
 
 export const dynamic = 'force-static';
 
@@ -13,7 +13,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     posts: postIndex.getPostSummaries(),
     tags: postIndex.getTags(),
   });
-  if (!IS_TIL_PUBLISHED) return postRoutes;
+  if (!IS_TIL_BOARD_ENABLED) return postRoutes;
   return [
     ...postRoutes,
     { url: createAbsoluteUrl('/til'), changeFrequency: 'daily', priority: 0.7 },

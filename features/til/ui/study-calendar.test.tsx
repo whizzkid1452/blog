@@ -1,5 +1,5 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { StudyCalendar } from './study-calendar';
 
 describe('StudyCalendar with hidden TIL content', () => {
@@ -60,5 +60,27 @@ describe('StudyCalendar with hidden TIL content', () => {
     expect(markup).toContain(`>${topics[0]}</span>`);
     expect(markup).toContain(`>${topics[1]}</span>`);
     expect(markup.match(/<td\b/g)).toHaveLength(42);
+  });
+});
+
+describe('StudyCalendar in production', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('links recorded dates from the calendar and the mobile agenda', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_TIL_LOCAL_PREVIEW', undefined);
+    vi.resetModules();
+
+    const { StudyCalendar: ProductionStudyCalendar } = await import('./study-calendar');
+    const markup = renderToStaticMarkup(
+      <ProductionStudyCalendar
+        today="2026-11-01"
+        entries={[{ date: '2026-11-01', title: '일지', description: '요약', topics: ['IndexedDB'] }]}
+      />
+    );
+
+    expect(markup.match(/href="\/til\/2026-11-01"/g)).toHaveLength(2);
+    expect(markup).toContain('aria-label="2026-11-01 공부 일지: IndexedDB"');
+    expect(markup).not.toContain('href="/til/2026-11-02"');
   });
 });

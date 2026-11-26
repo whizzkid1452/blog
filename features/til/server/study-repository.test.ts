@@ -4,16 +4,13 @@ import path from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { getStudyCalendarEntries, getStudyEntry, getStudySummaries, readStudyEntries } from './study-repository';
 
-const publication = vi.hoisted(() => ({ IS_TIL_PUBLISHED: true }));
-vi.mock('../config/til-publication', () => publication);
-
 let directory: string;
 
 beforeEach(() => {
-  publication.IS_TIL_PUBLISHED = true;
   directory = fs.mkdtempSync(path.join(os.tmpdir(), 'til-test-'));
 });
 afterEach(() => {
+  vi.unstubAllEnvs();
   fs.rmSync(directory, { recursive: true, force: true });
 });
 
@@ -46,18 +43,23 @@ describe('study repository', () => {
     expect(readStudyEntries(path.join(directory, 'missing'))).toEqual([]);
   });
 
-  it('exposes the sample, omits full content from calendar data, and rejects invalid dates', () => {
-    const summaries = getStudySummaries();
+  it('serves public detail pages and calendar summaries in production without local preview', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_TIL_LOCAL_PREVIEW', undefined);
+    vi.resetModules();
+
+    const repository = await import('./study-repository');
+    const summaries = repository.getStudySummaries();
     expect(summaries.map(entry => entry.date)).toContain('2026-10-29');
     for (const summary of summaries) expect(summary).not.toHaveProperty('content');
-    expect(getStudyEntry('2026-10-29')?.content).toBeTruthy();
-    expect(getStudyEntry('2026-02-29')).toBeNull();
-    expect(getStudyEntry('../2026-10-29')).toBeNull();
+    const calendarEntry = repository.getStudyCalendarEntries().find(entry => entry.date === '2026-10-29');
+    expect(calendarEntry).toEqual(summaries.find(entry => entry.date === '2026-10-29'));
+    expect(repository.getStudyEntry('2026-10-29')?.content).toBeTruthy();
+    expect(repository.getStudyEntry('2026-02-29')).toBeNull();
+    expect(repository.getStudyEntry('../2026-10-29')).toBeNull();
   });
 
   it('keeps only dates and topics public while hiding articles and their summaries', () => {
-    publication.IS_TIL_PUBLISHED = false;
-
     const calendarEntries = getStudyCalendarEntries();
     expect(calendarEntries.map(entry => entry.date)).toContain('2026-10-29');
     for (const entry of calendarEntries) {
