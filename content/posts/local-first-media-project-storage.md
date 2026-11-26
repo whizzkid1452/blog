@@ -37,6 +37,10 @@ coverAlt: 'IndexedDB에 로컬 데이터와 Outbox를 저장하고 동기화 서
 
 ## [sort1] 2. 로컬이 먼저다: Outbox 패턴의 도입
 
+![항공편 서비스가 데이터베이스를 갱신하고 메시지 브로커를 통해 결제 서비스로 이벤트를 보내는 흐름](/images/local-first-media-project-storage/aws-database-update-event-notification.png)
+
+AWS가 Outbox의 필요성을 설명할 때 사용하는 예시입니다. DB 갱신과 이벤트 전송을 각각 수행하면, DB 갱신에 성공한 뒤 이벤트 전송이 실패해 다른 서비스에 변경 사실이 전달되지 않을 수 있습니다. [이미지 출처와 패턴 설명 - AWS Transactional outbox pattern](https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html)
+
 가장 먼저 저장의 1차 관문을 '서버 응답'에서 '브라우저의 IndexedDB 트랜잭션 완료'로 옮겼습니다. 백엔드 분들이 메시지 유실을 막기 위해 흔히 사용하는 Outbox 패턴을 프론트엔드 클라이언트에 그대로 가져온 것이죠.
 
 ```mermaid
