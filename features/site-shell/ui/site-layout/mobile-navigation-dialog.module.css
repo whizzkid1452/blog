@@ -23,6 +23,9 @@
 
 .siteHeader[data-liquid-glass='bar'] {
   box-shadow: none;
+  background: var(--console-paper);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .siteHeader[data-site-header-visible='true'] {
@@ -63,7 +66,9 @@
   flex-direction: column;
   gap: 28px;
   overflow-y: auto;
-  background: var(--background);
+  border-right: 3px solid var(--console-ink);
+  background: var(--console-paper);
+  box-shadow: 6px 0 0 var(--console-shadow);
   padding: 22px 20px 32px;
   scrollbar-color: transparent transparent;
   scrollbar-width: none;
@@ -93,10 +98,13 @@
 }
 
 .mobileNavigationCloseButton {
-  border: 1px solid var(--color-border);
-  border-radius: 6px;
+  min-width: 44px;
+  min-height: 44px;
+  border: 2px solid var(--console-ink);
+  border-radius: 2px;
   padding: 7px 10px;
-  background: transparent;
+  background: var(--console-screen);
+  box-shadow: 3px 3px 0 var(--console-shadow);
   color: var(--color-text-secondary);
   cursor: pointer;
   font: inherit;
@@ -123,12 +131,13 @@
   .mobileNavigationTrigger {
     display: inline-flex;
     width: 40px;
-    height: 40px;
+    height: 44px;
     align-items: center;
     justify-content: center;
-    border: 0;
-    border-radius: 50%;
-    background: transparent;
+    border: 2px solid var(--console-ink);
+    border-radius: 2px;
+    background: var(--console-screen);
+    box-shadow: 3px 3px 0 var(--console-shadow);
     padding: 0;
     cursor: pointer;
   }

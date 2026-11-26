@@ -18,13 +18,13 @@ describe('StudyCalendar with hidden TIL content', () => {
       />
     );
 
-    expect(markup).toContain('aria-label="Study Stamp"');
+    expect(markup).toContain('aria-label="Today I Learned"');
     expect(markup).not.toContain('한국 시간');
     expect(markup).not.toContain('Asia/Seoul');
-    expect(markup).toContain('2026년 11월');
+    expect(markup).toContain('<time dateTime="2026-11">2026년 11월</time>');
     expect(markup).toContain('aria-label="이전 달"');
     expect(markup).toContain('aria-label="다음 달"');
-    expect(markup).toContain('이번 달');
+    expect(markup).not.toContain('이번 달');
     expect(markup).toContain('aria-current="date"');
     expect(markup).not.toContain('/til');
     expect(markup).not.toContain('TIL');
@@ -37,13 +37,14 @@ describe('StudyCalendar with hidden TIL content', () => {
     expect(markup).not.toContain('숨길 일지 요약');
   });
 
-  it('opens the latest recorded month and accepts dates and topics without article metadata', () => {
+  it('starts in the current month even when the latest entry is older', () => {
     const markup = renderToStaticMarkup(
       <StudyCalendar today="2026-11-01" entries={[{ date: '2026-10-29', topics: ['변환 검증'] }]} />
     );
 
-    expect(markup).toContain('2026년 10월');
-    expect(markup).toContain('변환 검증');
+    expect(markup).toContain('<time dateTime="2026-11">2026년 11월</time>');
+    expect(markup).toContain('이 달에는 아직 기록이 없습니다.');
+    expect(markup).not.toContain('변환 검증');
     expect(markup).not.toContain('href=');
   });
 

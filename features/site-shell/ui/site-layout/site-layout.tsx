@@ -22,12 +22,21 @@ export function SiteLayout({ children, locale, tags, posts }: SiteLayoutProps) {
     <div className={styles.siteShell}>
       <div className={styles.bodyLayout}>
         <aside className={styles.sidebar} aria-label={messages.blogNavigationLabel}>
-          <SiteNavigationContent
-            locale={locale}
-            githubProfileUrl={GITHUB_PROFILE_URL}
-            resumeUrl={RESUME_URL}
-            tags={tags}
-          />
+          <div className={styles.sidebarPanel}>
+            <SiteNavigationContent
+              locale={locale}
+              githubProfileUrl={GITHUB_PROFILE_URL}
+              resumeUrl={RESUME_URL}
+              tags={tags}
+            />
+            <div className={styles.consoleSpeaker} aria-hidden="true">
+              <i />
+              <i />
+              <i />
+              <i />
+              <i />
+            </div>
+          </div>
         </aside>
 
         <MobileNavigationDialog

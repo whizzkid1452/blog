@@ -10,28 +10,33 @@
   display: flex;
   flex-direction: column;
   gap: 32px;
+  border: 2px solid var(--console-ink);
+  border-radius: 4px;
+  padding: clamp(20px, 3vw, 36px);
+  background: var(--console-reading);
+  box-shadow: 5px 5px 0 var(--console-shadow);
 }
 
 .header {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  border-bottom: 1px solid var(--color-border);
+  border-bottom: 2px dashed var(--console-line);
   padding-bottom: 32px;
 }
 
 .postDate {
   color: var(--color-text-muted);
-  font-size: 14px;
+  font: 12px/1.5 var(--font-geist-mono);
   font-weight: 500;
 }
 
 .title {
   margin: 0;
   color: var(--color-text-primary);
-  font-size: 40px;
-  font-weight: 650;
-  line-height: 1.15;
+  font-size: clamp(26px, 3vw, 40px);
+  font-weight: 750;
+  line-height: 1.45;
 }
 
 .description {

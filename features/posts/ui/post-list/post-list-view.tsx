@@ -1,5 +1,7 @@
 import type { Locale } from '@/shared/i18n/i18n';
 import { SITE_NAME } from '@/shared/config/site-config';
+import { ThemeToggle } from '@/features/site-shell/ui/theme-toggle/theme-toggle';
+import { PixelIcon } from '@/shared/ui/pixel-icon/pixel-icon';
 import type { PostSummary } from '../../model/post';
 import type { ReactNode } from 'react';
 import { PostCard } from '../post-card/post-card';
@@ -29,16 +31,30 @@ export function PostListView({
   return (
     <section className={styles.pageShell}>
       <header className={styles.header}>
+        <div className={styles.consoleTopline}>
+          <span className={styles.consoleLabel} aria-hidden="true">
+            <PixelIcon name="gamepad" /> DEVELOPER&apos;S SAVE POINT
+          </span>
+          <ThemeToggle locale={locale} />
+        </div>
         {eyebrow ? <p className={styles.eyebrow}>{eyebrow}</p> : null}
         <h1 className={styles.title}>{title}</h1>
         <p className={styles.description}>{description}</p>
+        <div className={styles.consoleActions}>
+          {posts.length > 0 && (
+            <a className={styles.startLink} href="#post-archive">
+              전체 글 읽기 <PixelIcon name="arrow" />
+            </a>
+          )}
+          <span className={styles.postCount}>{posts.length} POSTS IN MEMORY</span>
+        </div>
         {headerActions}
       </header>
 
       {beforePosts}
 
       {posts.length > 0 ? (
-        <section className={styles.postList} aria-label="Posts">
+        <section id="post-archive" className={styles.postList} aria-label="Posts">
           {posts.map(post => (
             <PostCard key={post.slug} locale={locale} post={post} />
           ))}

@@ -14,7 +14,6 @@ describe('explicit color themes', () => {
 
     expect(lightThemeRule).toContain('color-scheme: light;');
     expect(darkThemeRule).toContain('color-scheme: dark;');
-    expect(darkThemeRule).toContain('--background: #111111;');
   });
 });
 

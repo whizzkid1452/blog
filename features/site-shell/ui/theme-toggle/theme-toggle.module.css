@@ -1,16 +1,35 @@
 .themeToggle {
   display: inline-flex;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   align-items: center;
   justify-content: center;
-  border: 1px solid transparent;
-  border-radius: 50%;
-  background: color-mix(in srgb, var(--background) 76%, transparent);
+  border: 2px solid var(--console-ink);
+  border-radius: 2px;
+  background: var(--console-paper);
+  box-shadow: 3px 3px 0 var(--console-shadow);
+  transition:
+    transform 80ms steps(2),
+    box-shadow 80ms steps(2);
   color: var(--color-text-secondary);
   cursor: pointer;
   grid-column: 3;
   padding: 0;
+}
+
+.themeToggle:active:not(:disabled) {
+  transform: translate(3px, 3px);
+  box-shadow: 0 0 0 var(--console-shadow);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .themeToggle {
+    transition: none;
+  }
+
+  .themeToggle:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 .themeToggle:focus-visible {

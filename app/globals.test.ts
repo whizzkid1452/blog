@@ -18,12 +18,19 @@ describe('root scroll behavior', () => {
 });
 
 describe('theme accent colors', () => {
-  it('uses accessible pink accents in light and dark color schemes', () => {
-    expect(globalStyles).toContain('--color-link: #db2777;');
-    expect(globalStyles.match(/--color-link: #ff69b4;/g)).toHaveLength(2);
-    expect(globalStyles).not.toContain('--color-link: #f9a8d4;');
-    expect(globalStyles).not.toContain('--color-link: #2563eb;');
-    expect(globalStyles).not.toContain('--color-link: #93c5fd;');
+  it('keeps links readable on page, reading, and console surfaces in both themes', () => {
+    for (const selector of [':root', ":root[data-theme='dark']"]) {
+      const rule = getCssRule(globalStyles, selector);
+      const foreground = readColorToken({ rule, name: '--color-link' });
+
+      for (const name of ['--background', '--console-reading', '--console-screen']) {
+        const background = readColorToken({ rule, name });
+        const luminances = [foreground, background].map(color => relativeLuminance({ color }));
+        const contrast = (Math.max(...luminances) + 0.05) / (Math.min(...luminances) + 0.05);
+
+        expect(contrast, `${selector} link contrast on ${name}`).toBeGreaterThanOrEqual(4.5);
+      }
+    }
   });
 });
 
@@ -75,4 +82,23 @@ function getCssRule(styleSheet: string, selector: string): string {
   }
 
   return styleSheet.slice(ruleStart, ruleEnd + 1);
+}
+
+function readColorToken({ rule, name }: { rule: string; name: string }): string {
+  const color = rule.match(new RegExp(`${name}:\\s*(#[0-9a-f]{6});`, 'i'))?.[1];
+
+  if (color === undefined) {
+    throw new Error(`Missing color token ${name}`);
+  }
+
+  return color;
+}
+
+function relativeLuminance({ color }: { color: string }): number {
+  const channels = [1, 3, 5].map(offset => {
+    const channel = parseInt(color.slice(offset, offset + 2), 16) / 255;
+    return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+  });
+
+  return channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
 }

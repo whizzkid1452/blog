@@ -18,16 +18,19 @@
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  border-radius: 6px;
-  padding: 9px 6px;
+  min-height: 44px;
+  border: 1px solid transparent;
+  border-radius: 2px;
+  padding: 9px 10px;
   color: var(--color-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   line-height: 1.4;
   text-decoration: none;
 }
 
 .tagLink:hover {
-  background: color-mix(in srgb, var(--color-border) 35%, transparent);
+  border-color: var(--console-line);
+  background: var(--console-screen);
   color: var(--color-link);
 }
 

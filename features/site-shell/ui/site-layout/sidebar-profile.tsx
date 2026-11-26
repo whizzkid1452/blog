@@ -17,6 +17,9 @@ export function SidebarProfile({ locale }: SidebarProfileProps) {
         href={createLocalizedPath(locale, '/')}
         aria-label={`${SITE_NAME} home`}
       >
+        <span className={styles.profileEyebrow} aria-hidden="true">
+          PLAYER 01 / DEV LOG
+        </span>
         <Image
           className={styles.sidebarProfileImage}
           src="/images/profile-avatar.png"
@@ -27,6 +30,9 @@ export function SidebarProfile({ locale }: SidebarProfileProps) {
         />
         <p className={styles.sidebarProfileTitle}>{SITE_NAME}</p>
         <p className={styles.sidebarProfileAuthor}>@{SITE_AUTHOR_NAME}</p>
+        <span className={styles.profileStatus} aria-hidden="true">
+          <i /> ALWAYS EXPLORING
+        </span>
       </Link>
     </section>
   );

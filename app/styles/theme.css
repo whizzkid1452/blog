@@ -1,14 +1,25 @@
 :root {
   color-scheme: light;
-  --background: #ffffff;
-  --foreground: #171717;
-  --color-text-primary: #18181b;
-  --color-text-secondary: #3f3f46;
-  --color-text-muted: #71717a;
-  --color-border: #e4e4e7;
-  --color-link: #db2777;
-  --color-link-hover: #52525b;
-  --motion-duration-fast: 160ms;
+  --background: #eee4f8;
+  --foreground: #39284f;
+  --color-text-primary: #39284f;
+  --color-text-secondary: #5e496f;
+  --color-text-muted: #756184;
+  --color-border: #d2c2df;
+  --color-link: #6841a3;
+  --color-link-hover: #4e2d80;
+  --console-paper: #fff9eb;
+  --console-reading: #fffdf8;
+  --console-screen: #f1e8ff;
+  --console-ink: #39284f;
+  --console-line: #bca5d1;
+  --console-shadow: #49315e;
+  --console-purple: #8050dd;
+  --console-button-ink: #fffdf8;
+  --console-mint: #caf2df;
+  --console-mint-ink: #35634f;
+  --console-grid: #9b83b738;
+  --motion-duration-fast: 100ms;
   --motion-duration-standard: 240ms;
   --motion-duration-reduced: 120ms;
   --motion-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
@@ -27,27 +38,49 @@
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme]) {
     color-scheme: dark;
-    --background: #111111;
-    --foreground: #f4f4f5;
-    --color-text-primary: #f4f4f5;
-    --color-text-secondary: #d4d4d8;
-    --color-text-muted: #a1a1aa;
-    --color-border: #3f3f46;
-    --color-link: #ff69b4;
-    --color-link-hover: #d4d4d8;
+    --background: #201a2b;
+    --foreground: #f3e9ff;
+    --color-text-primary: #f3e9ff;
+    --color-text-secondary: #d1c1e1;
+    --color-text-muted: #b4a1c7;
+    --color-border: #544263;
+    --color-link: #c2a1ff;
+    --color-link-hover: #decdff;
+    --console-paper: #302638;
+    --console-reading: #2a2232;
+    --console-screen: #372b47;
+    --console-ink: #c5abdf;
+    --console-line: #705a83;
+    --console-shadow: #110d18;
+    --console-purple: #9870ef;
+    --console-button-ink: #1e142e;
+    --console-mint: #284b3f;
+    --console-mint-ink: #b0e8cd;
+    --console-grid: #b393d224;
     --liquid-glass-shadow: color-mix(in srgb, #000000 38%, transparent);
   }
 }
 
 :root[data-theme='dark'] {
   color-scheme: dark;
-  --background: #111111;
-  --foreground: #f4f4f5;
-  --color-text-primary: #f4f4f5;
-  --color-text-secondary: #d4d4d8;
-  --color-text-muted: #a1a1aa;
-  --color-border: #3f3f46;
-  --color-link: #ff69b4;
-  --color-link-hover: #d4d4d8;
+  --background: #201a2b;
+  --foreground: #f3e9ff;
+  --color-text-primary: #f3e9ff;
+  --color-text-secondary: #d1c1e1;
+  --color-text-muted: #b4a1c7;
+  --color-border: #544263;
+  --color-link: #c2a1ff;
+  --color-link-hover: #decdff;
+  --console-paper: #302638;
+  --console-reading: #2a2232;
+  --console-screen: #372b47;
+  --console-ink: #c5abdf;
+  --console-line: #705a83;
+  --console-shadow: #110d18;
+  --console-purple: #9870ef;
+  --console-button-ink: #1e142e;
+  --console-mint: #284b3f;
+  --console-mint-ink: #b0e8cd;
+  --console-grid: #b393d224;
   --liquid-glass-shadow: color-mix(in srgb, #000000 38%, transparent);
 }
