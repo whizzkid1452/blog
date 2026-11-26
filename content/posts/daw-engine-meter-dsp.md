@@ -1,6 +1,6 @@
 ---
 title: '[Part 2.] Sample Peak만으로 부족해서 Meter DSP를 설계했다'
-description: 'K-weighting, 시간 창, loudness gate, 4배 oversampling을 조합한 블록 기반 Meter DSP의 구조와 블록 경계에서 발견한 한계를 설명합니다.'
+description: 'K-weighting 필터, 시간 창, Loudness Gate, 4배 오버샘플링을 조합한 블록 기반 Meter DSP의 구조와 블록 경계에서 발견한 한계를 공유해요.'
 date: '2025-11-18'
 publishedAt: '2025-11-18T11:00:00+09:00'
 tags: ['daw', 'audio', 'dsp', 'typescript', 'lufs']
@@ -11,15 +11,17 @@ draft: false
 visibility: public
 ---
 
-오디오 Meter를 처음 만들 때는 각 block에서 절댓값이 가장 큰 sample을 찾으면 된다고 생각하기 쉽다. 하지만 sample peak가 같아도 사람이 느끼는 loudness는 다를 수 있고, 저장된 sample 사이를 복원하는 과정에서 더 큰 inter-sample peak가 생길 수도 있다.
+오디오 편집기에서 소리 크기를 표시할 때 가장 먼저 떠올리는 건 Sample Peak예요. 현재 들어온 버퍼에서 절댓값이 가장 큰 샘플 하나만 찾으면 바로 dBFS로 바꿀 수 있어 구현이 아주 간단하거든요.
 
-그래서 하나의 숫자를 계산하는 함수가 아니라, 이전 block의 상태를 유지하는 Meter DSP가 필요했다. 여기서 DSP는 Digital Signal Processing, 즉 PCM sample을 수치적으로 처리하는 로직을 뜻한다.
+하지만 실제로 음향을 다루다 보면 곧바로 한계에 부딪혀요. **Sample Peak 수치가 똑같아도 사람 귀에 들리는 음량(Loudness)은 다를 수 있고**, 디지털 샘플 사이를 아날로그 파형으로 복원하는 과정에서 원래 샘플보다 더 큰 **Inter-sample Peak**가 생길 수도 있거든요.
 
-이번 구현은 Sample Peak, RMS, IEC 계열 응답, VU, K-metering, LUFS 계열 값, True Peak를 하나의 class에서 계산한다. 다만 현재 주 오디오 실행 경로에는 연결되지 않았고 표준 적합성 테스트도 없다. 이 글은 “완성된 표준 Meter”가 아니라 구현 구조와 검증 과정에서 확인한 한계를 다룬다.
+결국 이전 블록의 상태를 계속 유지하며 신호를 처리하는 Meter DSP(Digital Signal Processing, PCM 샘플을 수치적으로 처리하는 로직)가 필요했어요.
 
-## [sort1] 1. 왜 Meter마다 상태가 달라야 했는가
+이번 구현은 Sample Peak, RMS, IEC 계열 응답, VU, K-metering, LUFS 계열 값, True Peak를 하나의 클래스에서 계산해요. 다만 아직 메인 오디오 실행 경로에는 연결되지 않았고 국제 표준 적합성 테스트도 없어요. 이 글에서는 완성된 표준 미터를 소개하기보다, **구현 구조와 검토 과정에서 발견한 경계 조건을 솔직하게 정리해 보려고 해요.**
 
-Sample Peak는 현재 block만 보면 계산할 수 있다.
+## [sort1] 1. 왜 Meter마다 유지해야 할 상태가 달랐을까요?
+
+Sample Peak는 현재 들어온 블록만 확인하면 바로 계산할 수 있어요.
 
 ```ts
 function measureSamplePeak(samples: Float32Array): number {
@@ -33,18 +35,18 @@ function measureSamplePeak(samples: Float32Array): number {
 }
 ```
 
-하지만 다음 Meter는 과거 입력이 필요하다.
+하지만 나머지 미터들은 모두 과거 입력을 함께 들고 있어야 해요.
 
-| Meter               | 필요한 상태                        |
-| ------------------- | ---------------------------------- |
-| Peak Hold           | 이전 최고값과 유지 시간            |
-| VU                  | 약 300ms 동안 누적된 에너지        |
-| Momentary Loudness  | 최근 400ms의 가중 power            |
-| Short-term Loudness | 최근 3초의 가중 power              |
-| Integrated Loudness | 측정 시작 이후 gate를 통과한 block |
-| True Peak           | FIR filter 길이만큼의 이전 sample  |
+| **Meter 종류**      | **유지해야 하는 상태**                 |
+| ------------------- | -------------------------------------- |
+| Peak Hold           | 이전 최고값과 유지 시간                |
+| VU                  | 약 300ms 동안 누적된 에너지            |
+| Momentary Loudness  | 최근 400ms의 가중 파워                 |
+| Short-term Loudness | 최근 3초의 가중 파워                   |
+| Integrated Loudness | 측정 시작 이후 Gate를 통과한 모든 블록 |
+| True Peak           | FIR 필터 길이만큼의 이전 샘플 이력     |
 
-따라서 `process(block)`이 값을 바로 반환하는 대신 내부 상태를 갱신하고, UI는 별도의 `getReading()`으로 값을 읽는 구조를 선택했다.
+그래서 `process(block)`이 값을 바로 반환하는 대신 내부 상태만 갱신하고, UI는 별도의 `getReading()`으로 값을 읽어 가는 구조를 선택했어요.
 
 ```mermaid
 flowchart LR
@@ -58,11 +60,11 @@ flowchart LR
   H --> I["True Peak"]
 ```
 
-## [sort1] 2. K-weighting을 두 단계 Biquad로 처리했다
+## [sort1] 2. K-weighting을 두 단계 Biquad 필터로 처리했어요
 
-Loudness 계산에서는 모든 주파수를 같은 비중으로 더하지 않는다. 구현은 high-shelf와 high-pass 두 단계 Biquad filter로 K-weighting을 구성한다.
+사람의 귀는 모든 주파수를 같은 비중으로 듣지 않아요. 그래서 Loudness를 잴 때는 주파수별 가중치를 주는 K-weighting 필터를 먼저 통과시켜요. 구현에서는 High-shelf와 High-pass 두 단계의 Biquad 필터로 이를 구성했어요.
 
-Biquad는 현재 입력뿐 아니라 이전 입력과 출력도 사용한다.
+Biquad 필터는 현재 입력뿐 아니라 이전 입력과 출력도 함께 사용해 다음 값을 계산해요.
 
 ```ts
 interface BiquadState {
@@ -89,35 +91,35 @@ function processBiquad(coefficients: BiquadCoefficients, state: BiquadState, inp
 }
 ```
 
-채널마다 filter 상태를 따로 보관해야 한다. 왼쪽 채널의 이전 출력이 오른쪽 채널 계산에 섞이면 채널 간 간섭이 생기기 때문이다. Sample rate가 바뀌면 filter coefficient도 다시 계산해야 한다.
+여기서 꼭 지켜야 할 점이 있어요. **채널마다 필터 상태는 반드시 따로 보관해야 해요.** 왼쪽 채널의 이전 출력이 오른쪽 채널 계산에 섞이면 채널 간 간섭이 생기거든요. Sample Rate가 바뀌면 필터 계수(Coefficient)도 다시 계산해야 해요.
 
-## [sort1] 3. 100ms Block을 공통 단위로 사용했다
+## [sort1] 3. 100ms 블록을 공통 단위로 썼어요
 
-Momentary 400ms와 Short-term 3초를 매 sample마다 전체 합산하면 같은 값을 반복해서 더하게 된다. 구현은 K-weighting 이후 power를 100ms 단위로 모은다.
+Momentary(400ms)와 Short-term(3초)을 매 샘플마다 전체 합산하면 같은 값을 계속 다시 더하게 돼요. 그래서 K-weighting 이후의 파워를 **100ms 단위 블록**으로 먼저 모았어요.
 
-- 400ms window: 100ms block 4개
-- 3초 window: 100ms block 30개
+- **400ms 창**: 100ms 블록 4개
+- **3초 창**: 100ms 블록 30개
 
-각 window는 고정 크기 ring buffer로 관리한다. 새 block을 덮어쓰고 write index만 이동하므로 과거 배열을 매번 복사하지 않는다.
+각 창은 고정 크기의 링 버퍼(Ring Buffer)로 관리해요. 새 블록을 덮어쓰고 write index만 옮기면 되니 매번 배열을 복사할 필요가 없어요.
 
 ```ts
 writeIndex = (writeIndex + 1) % windowLength;
 filled = Math.min(filled + 1, windowLength);
 ```
 
-Integrated Loudness는 저장한 block loudness에 두 단계 gate를 적용한다.
+Integrated Loudness는 저장된 블록에 두 단계 Gate를 적용해요.
 
-1. `-70 LUFS`보다 작은 block을 제외한다.
-2. 남은 block의 평균보다 `10 LU` 작은 상대 threshold를 만든다.
-3. 상대 threshold도 통과한 block만 다시 평균낸다.
+- -70 LUFS보다 작은 블록을 제외해요.
+- 남은 블록의 평균보다 10 LU 작은 값을 상대 기준선(Threshold)으로 잡아요.
+- 상대 기준선까지 통과한 블록만 다시 평균내요.
 
-현재 코드는 이 계산식을 구현하지만 표준 reference signal과 결과를 비교한 테스트는 없다. “표준식을 참고했다”와 “표준 적합성이 검증됐다”는 다른 주장이다.
+현재 코드는 이 수식을 구현해 두었지만, 표준 레퍼런스 신호와 결과를 비교하는 테스트는 아직 없어요. 표준식을 참고해 코드를 작성했더라도, 실제 레퍼런스 신호와 대조해 보기 전까지는 표준 적합성을 장담할 수 없어요.
 
-## [sort1] 4. True Peak는 Sample 사이를 확인해야 했다
+## [sort1] 4. True Peak는 샘플 사이를 확인해야 했어요
 
-Sample Peak는 저장된 sample만 검사한다. True Peak 계산은 sample 사이의 복원 파형을 근사해야 한다.
+Sample Peak는 저장된 샘플만 검사해요. 반면 True Peak는 샘플 사이의 복원 파형을 근사해서 확인해야 해요.
 
-구현은 12 tap씩 4개 phase를 가진 polyphase FIR filter를 사용한다. 입력 sample 하나마다 네 phase를 평가해 4배 oversampling 위치의 최댓값을 갱신한다.
+구현에서는 12 tap씩 4개 phase를 가진 **Polyphase FIR 필터**를 사용했어요. 입력 샘플 하나마다 네 phase를 평가해 4배 오버샘플링 위치의 최댓값을 갱신하는 방식이에요.
 
 ```ts
 for (let phase = 0; phase < 4; phase++) {
@@ -132,11 +134,13 @@ for (let phase = 0; phase < 4; phase++) {
 }
 ```
 
-이 계산은 일반 Sample Peak보다 연산량이 크다. 따라서 모든 Meter mode에서 항상 실행하지 않고 True Peak와 LUFS mode에서만 실행한다.
+일반 Sample Peak보다 연산량이 크기 때문에 모든 미터 모드에서 항상 돌리지 않고, True Peak와 LUFS 모드에서만 실행하도록 나눴어요.
 
-## [sort1] 5. 다채널 Block 경계에서 순서 문제가 생겼다
+## [sort1] 5. 수식보다 까다로웠던 다채널 블록 경계
 
-가장 까다로운 부분은 수식보다 다채널 block 동기화였다. 현재 구현은 채널을 하나씩 처리한다.
+코드를 검토하다 보니 수식보다 까다로운 지점이 따로 있었어요. 바로 **다채널 블록을 동기화하는 순서**였어요.
+
+현재 구현은 채널을 하나씩 순회하며 처리해요.
 
 ```text
 processBlock
@@ -144,21 +148,21 @@ processBlock
 └─ channel 1 process
 ```
 
-100ms sample counter는 channel 0에서만 증가하고, 100ms block commit은 마지막 채널에서만 실행한다. 같은 100ms 구간에 들어온 모든 채널 power를 함께 commit하려는 의도다.
+같은 100ms 구간에 들어온 모든 채널의 파워를 함께 커밋하려고, 100ms 샘플 카운터는 `channel 0`에서만 올리고 실제 블록 커밋은 마지막 채널에서만 실행하도록 했어요.
 
-하지만 입력 block이 100ms 경계에 정확히 맞지 않으면 문제가 생길 수 있다. 예를 들어 48kHz에서 100ms는 4,800 sample이다. 누적값이 4,736일 때 128 sample block이 들어오면 channel 0은 먼저 64 sample을 처리해 counter를 4,800으로 만든다. 아직 64 sample이 남았지만 commit은 마지막 채널에서만 가능하다.
+문제는 입력 블록이 100ms 경계에 딱 나누어떨어지지 않을 때 생겨요. 48kHz에서 100ms는 4,800 샘플이에요. 누적값이 4,736일 때 128 샘플짜리 블록이 들어오면 `channel 0`은 먼저 64 샘플을 처리해 카운터를 4,800으로 채워요. 아직 64 샘플이 남았는데 카운터를 비워 주는 커밋은 마지막 채널에서만 일어나거든요.
 
 ```text
 spaceInBlock = 0
 toProcess = 0
-remaining = 64
+remaining = 64  // 줄어들지 않고 제자리걸음!
 ```
 
-이 상태에서는 `remaining`이 줄지 않는 반복이 가능하다. 이는 실제 hang을 실행으로 재현한 결과가 아니라 현재 loop 조건을 따라간 정적 분석 결과다. 그래도 128 sample처럼 4,800의 약수가 아닌 block 크기를 지원하려면 반드시 고쳐야 하는 경계 조건이다.
+이 상태가 되면 `remaining`이 줄지 않는 무한 루프가 생길 수 있어요. 실제로 행(Hang)을 재현한 건 아니고 루프 조건을 따라가며 확인한 정적 분석 결과지만, 웹 오디오의 기본 단위인 128 샘플처럼 4,800의 약수가 아닌 블록 크기를 지원하려면 반드시 고쳐야 하는 경계 조건이에요.
 
-## [sort1] 6. 채널별 처리보다 Frame 범위별 처리가 안전하다
+## [sort1] 6. 채널별 처리보다 Frame 범위별 처리가 안전해요
 
-해결 방향은 100ms 경계를 `processBlock`에서 한 번만 계산하는 것이다.
+100ms 경계를 채널 반복문 바깥에서 한 번씩 계산하면 이 문제를 피할 수 있어요. 아래는 적용할 수 있는 구조를 단순화한 예시예요.
 
 ```ts
 function processLoudnessBlock(channels: Float32Array[], blockSize: number): void {
@@ -182,39 +186,41 @@ function processLoudnessBlock(channels: Float32Array[], blockSize: number): void
 }
 ```
 
-이 구조에서는 같은 Frame 범위를 모든 채널에 먼저 적용한 뒤 한 번만 commit한다. 채널 처리 순서에 따라 공통 counter가 달라지지 않는다.
+이렇게 바꾸면 같은 Frame 범위를 모든 채널에 먼저 적용한 뒤 한 번만 커밋하게 돼요. 채널 처리 순서 때문에 공통 카운터가 어긋날 일이 없어지죠.
 
-또 다른 선택지는 채널마다 독립 counter를 두고 마지막에 동일한 시간 구간끼리 결합하는 것이다. 하지만 채널 누락이나 서로 다른 block 길이를 허용할지까지 정책이 늘어난다. 현재 입력 계약이 모든 채널에 같은 block 크기를 요구한다면 Frame 범위 중심 반복이 더 단순하다.
+채널마다 독립 카운터를 두고 마지막에 같은 시간 구간끼리 합치는 방법도 있지만, 모든 채널이 같은 블록 크기를 갖는다는 전제가 있다면 Frame 범위 중심 반복이 훨씬 단순해요.
 
-## [sort1] 7. 어떤 테스트가 있어야 완료라고 말할 수 있는가
+## [sort1] 7. 어떤 테스트가 있어야 완료라고 말할 수 있을까요?
 
-현재 `MeterDSP`를 직접 검증하는 자동 테스트는 없고 주 오디오 실행 경로에서도 생성되지 않는다. 최소 검증은 다음과 같다.
+현재 `MeterDSP`는 자동 테스트가 없고 메인 오디오 실행 경로에서도 아직 생성되지 않아요. 최소한 아래 항목들은 검증이 필요해요.
 
 - 무음 입력이 `-Infinity`를 반환하는지
-- 1kHz sine의 RMS와 peak가 예상 오차 범위에 들어오는지
-- 128, 256, 480 sample block이 100ms 경계를 통과하는지
-- mono, stereo, 5.1에서 channel weight가 분리되는지
-- block을 한 번에 넣은 결과와 여러 조각으로 넣은 결과가 같은지
-- 알려진 loudness reference 파일과 Integrated Loudness가 허용 오차 안에서 일치하는지
-- sample 사이 peak를 가진 fixture에서 True Peak가 Sample Peak보다 크게 측정되는지
+- 1kHz 사인파의 RMS와 Peak가 예상 오차 범위에 들어오는지
+- 128, 256, 480 샘플 블록이 100ms 경계를 문제없이 통과하는지
+- Mono, Stereo, 5.1 채널에서 채널 가중치가 제대로 분리되는지
+- 블록을 한 번에 넣은 결과와 여러 조각으로 나눠 넣은 결과가 같은지
+- 알려진 Loudness 레퍼런스 파일과 Integrated Loudness가 허용 오차 안에서 일치하는지
+- 샘플 사이 Peak를 가진 픽스처에서 True Peak가 Sample Peak보다 크게 측정되는지
 
-특히 다음 불변 조건이 중요하다.
+특히 아래 불변 조건이 가장 중요해요.
 
-> “동일한 PCM은 block 분할 방법이 달라도 같은 측정 결과를 만들어야 한다.”
+> “동일한 PCM 데이터라면 블록을 어떻게 나눠 넣어도 같은 측정 결과가 나와야 해요.”
 
-## [sort1] 8. DSP에서는 수식과 실행 모델을 함께 검증해야 했다
+## [sort1] 8. 마치며
 
-K-weighting coefficient, loudness gate, FIR tap을 구현하는 일은 분명 어렵다. 하지만 실제 block 처리에서는 수식이 맞아도 counter와 채널 순서가 틀리면 결과를 만들지 못한다.
+오디오 미터를 처음 설계할 때는 ITU-R BS.1770 표준 수식을 코드로 옮기는 일이 가장 어려울 줄 알았어요. K-weighting 계수를 계산하고, 두 단계의 Loudness Gate를 세우고, 4배 오버샘플링 FIR 필터를 얹는 과정 자체가 꽤 묵직했거든요.
 
-이번 구현을 보며 얻은 결론은 단순하다.
+하지만 코드를 끝까지 뜯어보며 깨달은 건 조금 달랐어요. 실제 블록 기반 오디오 처리에서는 **수식이 완벽해도 카운터와 채널 순서가 어긋나면 경계에서 바로 무너진다**는 점이었죠. 128샘플 블록이 100ms 경계를 넘는 사소한 순간 하나가 무한 루프로 이어질 수 있다는 걸 확인하고 나니, DSP의 정확성은 공식만이 아니라 **블록 경계와 상태 갱신 순서까지 포함한 실행 모델 전체**라는 사실이 선명해졌어요.
 
-> “DSP의 정확성은 계산식뿐 아니라 block 경계와 상태 갱신 순서까지 포함한다.”
+DAW에서 미터가 보여 주는 숫자는 단순한 장식이 아니에요. 작업자는 그 수치를 믿고 볼륨을 줄이고, 리미터를 걸고, 최종 음압을 결정하거든요. 판단의 근거가 되는 숫자를 믿을 수 없다면 그 위의 기능도 신뢰를 잃게 돼요.
 
-다음 단계는 채널별 loop를 Frame 범위 중심 loop로 바꾸고 reference fixture를 추가하는 것이다. 그 검증이 끝난 뒤에야 이 모듈을 오디오 실행 경로에 연결할 수 있다.
+그래서 아직은 `MeterDSP`를 메인 오디오 실행 경로에 연결하지 않고 경계 밖에 두고 있어요. 채널별 루프를 Frame 범위 중심 루프로 바꾸고, "같은 PCM 데이터라면 블록을 어떻게 쪼개 넣어도 같은 결과가 나와야 한다"는 불변 조건을 레퍼런스 픽스처 테스트로 고정하는 것이 먼저라고 봤거든요. 그 검증이 끝난 뒤에야 비로소 엔진의 메인 경로로 들여오려고 해요.
+
+지금까지 오디오 신호가 시간 축을 따라 상태를 쌓아 가는 과정을 살펴봤다면, 다음 글에서는 사용자가 직접 그린 파라미터 곡선이 시간에 따라 어떻게 평가되고 덮어쓰이는지, **Automation** 설계 이야기로 이어가 볼게요.
 
 ## 참고
 
 - [ITU-R BS.1770-5, Algorithms to measure audio programme loudness and true-peak audio level](https://www.itu.int/rec/R-REC-BS.1770-5-202311-I)
 - [EBU R 128, Loudness normalisation and permitted maximum level of audio signals](https://tech.ebu.ch/publications/r128)
-- [[음향] True Peak와 Inter-sample Peak](https://miing95.tistory.com/46)
+- [\[음향\] True Peak와 Inter-sample Peak](https://miing95.tistory.com/46)
 - [pyloudnorm: ITU-R BS.1770 알고리즘 구현](https://www.christiansteinmetz.com/projects-blog/pyloudnorm)
