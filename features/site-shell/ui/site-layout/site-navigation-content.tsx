@@ -27,6 +27,9 @@ export function SiteNavigationContent({ locale, githubProfileUrl, resumeUrl, tag
           <Link className={styles.navigationAnchor} href={createLocalizedPath(locale, '/posts')}>
             {messages.posts}
           </Link>
+          <Link className={styles.navigationAnchor} href={createLocalizedPath(locale, '/series')}>
+            {messages.series}
+          </Link>
           {IS_TIL_BOARD_ENABLED && (
             <Link className={styles.navigationAnchor} href="/til">
               TIL · 공부 일지
