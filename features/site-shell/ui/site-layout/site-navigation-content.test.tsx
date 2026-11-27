@@ -1,8 +1,9 @@
 import { renderToStaticMarkup } from 'react-dom/server';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { SiteNavigationContent } from './site-navigation-content';
 
 describe('SiteNavigationContent', () => {
+  afterEach(() => vi.unstubAllEnvs());
   it('renders the complete navigation content shared by desktop and mobile layouts', () => {
     const markup = renderToStaticMarkup(
       <SiteNavigationContent
@@ -27,5 +28,24 @@ describe('SiteNavigationContent', () => {
     expect(markup).toContain('href="/tags/react"');
     expect(markup).not.toContain('>최근 글</h2>');
     expect(markup).not.toContain('href="/posts/example"');
+  });
+  it('shows the TIL board in production without a local preview flag', async () => {
+    vi.stubEnv('NODE_ENV', 'production');
+    vi.stubEnv('NEXT_PUBLIC_TIL_LOCAL_PREVIEW', undefined);
+    vi.resetModules();
+
+    const { SiteNavigationContent: ProductionNavigation } = await import('./site-navigation-content');
+    const markup = renderToStaticMarkup(
+      <ProductionNavigation
+        locale="ko"
+        githubProfileUrl="https://github.com/example"
+        resumeUrl="https://example.com/about"
+        tags={[]}
+      />
+    );
+
+    expect(markup).toContain('href="/til"');
+    expect(markup).toContain('TIL');
+    expect(markup).toContain('href="/series"');
   });
 });
