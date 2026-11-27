@@ -8,13 +8,5 @@ export const metadata: Metadata = createPostsPageMetadata();
 export default function PostsPage() {
   const posts = getPostIndex().getPostSummaries();
 
-  return (
-    <PostListView
-      posts={posts}
-      eyebrow="Archive"
-      title="전체 글"
-      description="공개된 글을 최신순으로 모았습니다."
-      emptyMessage="등록된 글이 없습니다."
-    />
-  );
+  return <PostListView posts={posts} title="전체 글" headerVariant="title" emptyMessage="등록된 글이 없습니다." />;
 }

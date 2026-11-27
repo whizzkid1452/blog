@@ -23,9 +23,21 @@ describe('SiteLayout', () => {
     expect(markup).toContain('aria-hidden="true"');
     expect(markup).toContain('inert=""');
     expect(markup).toContain('data-mobile-navigation-trigger="true"');
-    expect(markup).toContain('data-theme-toggle="true"');
     expect(markup).toContain('data-liquid-glass="bar"');
     expect(markup).toContain('>앨리스의 토끼굴</p>');
+  });
+
+  it('renders one theme toggle outside the scroll-controlled header', () => {
+    currentPathname.value = '/posts';
+    const markup = renderToStaticMarkup(
+      <SiteLayout locale="ko" tags={[]} posts={[]}>
+        <p>Content</p>
+      </SiteLayout>
+    );
+    const headerEnd = markup.indexOf('</header>');
+
+    expect(markup.match(/data-theme-toggle="true"/g)).toHaveLength(1);
+    expect(markup.indexOf('data-theme-toggle="true"')).toBeGreaterThan(headerEnd);
   });
 
   it('글 페이지의 모바일 헤더에 글 제목을 표시한다', () => {

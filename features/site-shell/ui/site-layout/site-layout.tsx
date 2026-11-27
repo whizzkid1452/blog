@@ -2,6 +2,7 @@ import type { PostSummary } from '@/features/posts/model/post';
 import type { Locale } from '@/shared/i18n/i18n';
 import { getUiMessages } from '@/shared/i18n/i18n';
 import type { ReactNode } from 'react';
+import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import { MobileNavigationDialog } from './mobile-navigation-dialog';
 import { SiteNavigationContent } from './site-navigation-content';
 import styles from './site-layout.module.css';
@@ -15,6 +16,7 @@ interface SiteLayoutProps {
 
 const GITHUB_PROFILE_URL = 'https://github.com/whizzkid1452';
 const RESUME_URL = 'https://app.notion.com/p/Frontend-Developer-3e473b56612a817da9d4f8ec18e9e537';
+
 export function SiteLayout({ children, locale, tags, posts }: SiteLayoutProps) {
   const messages = getUiMessages(locale);
 
@@ -46,6 +48,10 @@ export function SiteLayout({ children, locale, tags, posts }: SiteLayoutProps) {
           tags={tags}
           posts={posts}
         />
+
+        <div className={styles.themeControl}>
+          <ThemeToggle locale={locale} />
+        </div>
 
         <main className={styles.mainContent}>{children}</main>
       </div>

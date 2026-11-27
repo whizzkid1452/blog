@@ -13,7 +13,6 @@
     box-shadow 80ms steps(2);
   color: var(--color-text-secondary);
   cursor: pointer;
-  grid-column: 3;
   padding: 0;
 }
 

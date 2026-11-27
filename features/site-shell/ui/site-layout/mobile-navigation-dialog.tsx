@@ -10,7 +10,6 @@ import { useState } from 'react';
 import { SiteNavigationContent } from './site-navigation-content';
 import { resolveSiteHeaderTitle } from './site-header-title';
 import { useSiteHeaderVisibility } from './site-header-visibility';
-import { ThemeToggle } from '../theme-toggle/theme-toggle';
 import styles from './mobile-navigation-dialog.module.css';
 import accessibilityStyles from './visually-hidden.module.css';
 
@@ -63,7 +62,6 @@ export function MobileNavigationDialog({
         <p className={styles.siteHeaderTitle} title={siteHeaderTitle}>
           {siteHeaderTitle}
         </p>
-        <ThemeToggle locale={locale} />
       </header>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.mobileNavigationOverlay} data-motion-overlay="backdrop" />

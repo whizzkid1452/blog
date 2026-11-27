@@ -1,8 +1,9 @@
 .siteShell {
   --desktop-sidebar-width: 300px;
-  --site-content-top-padding: 32px;
   --site-header-enter-duration: 400ms;
   --site-header-height: 64px;
+  --site-header-inline-padding: 24px;
+  --site-content-top-padding: var(--site-header-height);
 
   display: flex;
   min-height: 100vh;
@@ -72,6 +73,16 @@
   background: transparent;
 }
 
+.themeControl {
+  position: fixed;
+  z-index: 21;
+  inset-block-start: 0;
+  inset-inline-end: var(--site-header-inline-padding);
+  display: flex;
+  height: var(--site-header-height);
+  align-items: center;
+}
+
 .mainContent {
   grid-column: 2;
   min-width: 0;
@@ -79,6 +90,10 @@
 }
 
 @media (max-width: 900px) {
+  .siteShell {
+    --site-header-inline-padding: 16px;
+  }
+
   .bodyLayout {
     grid-template-columns: 1fr;
   }
@@ -98,6 +113,6 @@
   .mainContent {
     grid-column: auto;
     order: 1;
-    padding: 24px 20px 40px;
+    padding: var(--site-content-top-padding) 20px 40px;
   }
 }
