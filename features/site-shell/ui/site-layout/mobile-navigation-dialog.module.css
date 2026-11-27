@@ -13,7 +13,7 @@
   align-items: center;
   grid-template-columns: 40px minmax(0, 1fr) 40px;
   opacity: 0;
-  padding: 0 24px;
+  padding: 0 var(--site-header-inline-padding);
   pointer-events: none;
   transform: translateY(-100%);
   transition:
@@ -125,7 +125,6 @@
     left: 0;
     grid-template-columns: 40px minmax(0, 1fr) 40px;
     column-gap: 12px;
-    padding: 0 16px;
   }
 
   .mobileNavigationTrigger {
