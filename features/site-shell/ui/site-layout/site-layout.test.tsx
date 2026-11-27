@@ -93,6 +93,7 @@ describe('SiteLayout', () => {
     expect(sidebarMarkup).toContain('href="/series">시리즈</a>');
     expect(sidebarMarkup).toContain('>GitHub</a>');
     expect(sidebarMarkup).toContain('>About</a>');
+    expect(sidebarMarkup).toContain('https://elderly-mosquito-87f.notion.site/Front-End-Engineer-3e473b56612a817da9d4f8ec18e9e537');
     expect(sidebarMarkup).not.toContain('>English</a>');
     expect(sidebarMarkup.indexOf('>앨리스의 토끼굴</p>')).toBeLessThan(sidebarMarkup.indexOf('>블로그 메뉴</h2>'));
     expect(sidebarMarkup).not.toContain('>검색</h2>');
