@@ -1,7 +1,7 @@
 ---
 title: 'Cubic Hermite Spline이란? 값과 접선으로 만드는 3차 보간'
 description: 'Cubic Hermite 보간식과 연속성 조건, 접선 선택에 따른 Overshoot를 살펴보고 DAW Automation Curve에 적용한 방법을 설명합니다.'
-date: '2026-08-03'
+date: '2026-08-01'
 tags: ['algorithm', 'math', 'typescript', 'audio', 'automation']
 draft: false
 visibility: private

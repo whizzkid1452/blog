@@ -1,7 +1,7 @@
 ---
 title: "[Part 6.] LangChain으로 자연어 음악 편집 기능 구현하기"
 description: "OpenAI 직접 호출 프로토타입을 거쳐 LangChain의 구조화 출력과 로컬 편집 검증, 미리보기 및 사용자 승인 흐름을 구현했어요."
-date: '2026-11-27'
+date: '2026-11-24'
 tags: ["daw","langchain","llm","typescript","architecture"]
 series:
   name: '어엿비 구현기'

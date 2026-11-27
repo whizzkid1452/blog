@@ -1,7 +1,7 @@
 ---
 title: "[Part 3.] 오디오와 MIDI를 동시에 녹음하는 엔진 구현기"
 description: "입력 장치 갱신 순서와 공통 Transport, 녹음 등록 트랜잭션, 저장된 프로젝트의 렌더 과정을 살펴봐요."
-date: '2026-11-27'
+date: '2026-11-12'
 tags: ["daw","audio","midi","recording","rendering"]
 series:
   name: '어엿비 구현기'

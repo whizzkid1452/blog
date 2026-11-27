@@ -1,7 +1,7 @@
 ---
 title: "[Part 2.] DAW의 편집 엔진은 어떻게 동작할까?"
 description: "트랜잭션 기반 편집 엔진, Undo 그룹, 음악 시간과 원본 샘플 좌표, Warp의 실제 구현 원리를 소개해요."
-date: '2026-11-27'
+date: '2026-11-09'
 tags: ["daw","cpp","audio","state-management","undo"]
 series:
   name: '어엿비 구현기'
