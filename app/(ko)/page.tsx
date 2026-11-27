@@ -14,6 +14,7 @@ export default function Home() {
   return (
     <PostListView
       posts={posts}
+      headerVariant="none"
       beforePosts={<StudyCalendar entries={getStudyCalendarEntries()} today={getKoreanToday()} />}
     />
   );
