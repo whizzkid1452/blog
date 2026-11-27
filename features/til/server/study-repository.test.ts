@@ -48,6 +48,10 @@ describe('study repository', () => {
     vi.stubEnv('NEXT_PUBLIC_TIL_LOCAL_PREVIEW', undefined);
     vi.resetModules();
 
+    const publication = await import('../config/til-publication');
+    expect(publication.IS_TIL_BOARD_ENABLED).toBe(true);
+    expect(publication.IS_TIL_DETAIL_ENABLED).toBe(true);
+
     const repository = await import('./study-repository');
     const summaries = repository.getStudySummaries();
     expect(summaries.map(entry => entry.date)).toContain('2026-10-29');
