@@ -21,10 +21,9 @@
 .sidebar {
   position: fixed;
   z-index: 5;
-  top: 0;
+  inset-block: var(--site-header-height) 0;
   left: 0;
   display: flex;
-  height: 100dvh;
   width: var(--desktop-sidebar-width);
   flex-direction: column;
   overflow-x: hidden;

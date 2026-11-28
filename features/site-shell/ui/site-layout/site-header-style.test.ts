@@ -19,20 +19,21 @@ describe('site header styles', () => {
     expect(desktopSidebarRule).toContain('border-right: 1px solid transparent;');
   });
 
-  it('shows the header beside the desktop sidebar without a border', () => {
+  it('spans the viewport without a border at desktop and mobile widths', () => {
     const siteHeaderRules = getCssRules(layoutStyles, '.siteHeader');
     const desktopHeaderRule = siteHeaderRules[0] ?? '';
 
     expect(desktopHeaderRule).toContain('display: grid;');
-    expect(desktopHeaderRule).toContain('left: var(--desktop-sidebar-width);');
+    expect(desktopHeaderRule).toContain('inset-inline: 0;');
     expect(desktopHeaderRule).toContain('height: var(--site-header-height);');
     expect(siteHeaderRules.every(rule => !rule.includes('border'))).toBe(true);
   });
 
-  it('removes the shadow from the liquid glass header', () => {
+  it('uses the shared liquid glass bar surface without a shadow', () => {
     const glassHeaderRule = getCssRules(layoutStyles, ".siteHeader[data-liquid-glass='bar']")[0] ?? '';
 
     expect(glassHeaderRule).toContain('box-shadow: none;');
+    expect(glassHeaderRule).not.toMatch(/background|backdrop-filter/);
   });
 
   it('moves the header outside the viewport until the scroll threshold is reached', () => {
@@ -56,8 +57,10 @@ describe('site header styles', () => {
   });
 
   it('reserves vertical space for the fixed header above desktop content', () => {
+    const desktopSidebarRule = getCssRules(layoutStyles, '.sidebar')[0] ?? '';
     const mainContentRule = getCssRules(layoutStyles, '.mainContent')[0] ?? '';
 
+    expect(desktopSidebarRule).toContain('inset-block: var(--site-header-height) 0;');
     expect(mainContentRule).toContain('padding: var(--site-content-top-padding) 24px 72px 56px;');
   });
 
