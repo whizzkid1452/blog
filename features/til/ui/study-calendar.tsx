@@ -12,11 +12,17 @@ interface StudyCalendarProps {
   entries: StudyCalendarEntry[];
   today: string;
   title?: string;
+  showMobileAgenda?: boolean;
 }
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-export function StudyCalendar({ entries, today, title = 'Today I Learned' }: StudyCalendarProps) {
+export function StudyCalendar({
+  entries,
+  today,
+  title = 'Today I Learned',
+  showMobileAgenda = true,
+}: StudyCalendarProps) {
   const [month, setMonth] = useState(today.slice(0, 7));
   const entriesByDate = new Map(entries.map(entry => [entry.date, entry]));
   const monthEntries = entries.filter(entry => entry.date.startsWith(`${month}-`));
@@ -130,7 +136,7 @@ export function StudyCalendar({ entries, today, title = 'Today I Learned' }: Stu
           )}
         </div>
       </section>
-      {monthEntries.length > 0 && (
+      {showMobileAgenda && monthEntries.length > 0 && (
         <ul className={styles.mobileAgenda} aria-label={`${monthLabel} 주제 목록`}>
           {monthEntries.map(entry => {
             const agendaContent = (
