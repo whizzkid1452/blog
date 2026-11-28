@@ -1,8 +1,8 @@
 ---
 title: 'rAF란?'
 description: 'requestAnimationFrame의 실행 시점, 예약 ID, 취소 방법, 프레임 단위 스로틀링 구조를 정리합니다.'
-date: '2026-02-03'
-publishedAt: '2026-02-03T10:06:23+09:00'
+date: '2026-02-04'
+publishedAt: '2026-02-04T10:06:23+09:00'
 tags: ['til', 'frontend', 'performance']
 draft: false
 visibility: private

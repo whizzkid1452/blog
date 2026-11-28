@@ -1,7 +1,7 @@
 ---
 title: "RAG, LangChain, LangGraph란? AI 워크플로 도구의 역할 구분하기"
 description: "RAG의 외부 지식 검색, LangChain의 구조화 출력, LangGraph의 상태 기반 실행을 비교하고 어엿비에서의 선택 기준을 정리해요."
-date: '2026-11-27'
+date: '2026-11-21'
 tags: ["ai","rag","langchain","langgraph","llm"]
 draft: false
 visibility: public

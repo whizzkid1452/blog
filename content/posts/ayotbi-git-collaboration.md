@@ -1,7 +1,7 @@
 ---
 title: "[Part 5.] 음악 프로젝트에 Git과 3-way Merge 구현하기"
 description: "공식 Git과 LFS, 안정적인 음악 객체 ID, 도메인 검증을 결합해 브랜치 편집과 고정 커밋 웹 리뷰를 만들었어요."
-date: '2026-11-27'
+date: '2026-11-18'
 tags: ["daw","git","collaboration","architecture","version-control"]
 series:
   name: '어엿비 구현기'

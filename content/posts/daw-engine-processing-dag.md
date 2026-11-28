@@ -1,8 +1,8 @@
 ---
 title: '[Part 6.] Audio Processor 실행 순서를 DAG로 모델링한 이유'
 description: '분기와 합류가 얽힌 오디오 처리 의존성을 DAG로 표현하고, 위상 정렬, 순환(Cycle) 탐지, 병렬 실행 후보 그룹을 계산한 구조와 통합 전 남은 계약을 공유해요.'
-date: '2026-04-13'
-publishedAt: '2026-04-13T15:00:00+09:00'
+date: '2026-04-09'
+publishedAt: '2026-04-09T15:00:00+09:00'
 tags: ['daw', 'audio', 'typescript', 'graph', 'algorithm']
 series:
   name: 'TypeScript DAW 엔진 구현기'

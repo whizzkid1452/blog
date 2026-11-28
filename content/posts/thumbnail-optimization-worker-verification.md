@@ -1,8 +1,8 @@
 ---
 title: '[Part 3.] Web Worker를 다시 의심하고 검증하기'
 description: '썸네일 생성 경로의 전체 처리 시간과 UI 루프 지연을 분리해 Web Worker의 역할을 다시 검증합니다.'
-date: '2026-06-09'
-publishedAt: '2026-06-09T11:23:22+09:00'
+date: '2026-06-08'
+publishedAt: '2026-06-08T11:23:22+09:00'
 tags: ['performance', 'thumbnail', 'web-worker', 'webcodecs']
 series:
   name: '썸네일 생성 최적화'

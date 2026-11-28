@@ -1,7 +1,7 @@
 ---
 title: "[Part 1.] 음악을 만들던 개발자가 DAW를 만들기까지"
 description: "웹 오디오 프로토타입에서 C++ 기반 제작 앱으로 발전시키며 자체 프로젝트 모델과 재생 엔진을 설계한 과정이에요."
-date: '2026-11-27'
+date: '2026-11-06'
 tags: ["daw","audio","architecture","cpp","juce"]
 series:
   name: '어엿비 구현기'

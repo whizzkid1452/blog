@@ -1,8 +1,8 @@
 ---
 title: '오디오 파형 로딩 지연 해결기: 동적 stride를 이용한 Peak 연산 최적화'
 description: '긴 오디오 파일에서 파형 Peak 추출이 메인 스레드를 점유하던 문제를 동적 stride 방식으로 줄인 과정을 정리합니다.'
-date: '2026-02-04'
-publishedAt: '2026-02-04T10:50:41+09:00'
+date: '2026-02-06'
+publishedAt: '2026-02-06T10:50:41+09:00'
 tags: ['audio', 'peak', 'stride', '최적화']
 draft: false
 visibility: private

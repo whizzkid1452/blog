@@ -1,7 +1,7 @@
 ---
 title: '이진 탐색 기반 Region 시간 인덱스와 rAF Signal 구현하기'
 description: 'Viewport 내 Region만 조회하는 시간 인덱스와 React 실행에서 Canvas draw를 분리하는 rAF 기반 Signal 구독 패턴을 단계별로 구현합니다.'
-date: '2026-07-24'
+date: '2026-07-26'
 tags: ['react', 'performance', 'timeline', 'canvas', 'typescript']
 draft: false
 visibility: private

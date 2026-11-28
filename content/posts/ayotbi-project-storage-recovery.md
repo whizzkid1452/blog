@@ -1,7 +1,7 @@
 ---
 title: "[Part 4.] Local-first DAW의 저장과 복구 시스템 구축기"
 description: "내용 해시를 참조하는 프로젝트 모델, 저장 저널, SQLite 자동 저장의 구현과 중단 복구 검증을 소개해요."
-date: '2026-11-27'
+date: '2026-11-15'
 tags: ["daw","local-first","storage","sqlite","recovery"]
 series:
   name: '어엿비 구현기'

@@ -1,7 +1,7 @@
 ---
 title: '정적 배포에서 서버 배포로 바꾼 이유'
 description: 'SEO를 위해 선택했던 정적 배포를 비공개 Markdown의 서버 측 인가와 운영 확장성을 위해 Next.js 서버 배포로 전환한 판단 과정을 정리합니다.'
-date: '2026-07-14'
+date: '2026-07-13'
 tags: ['nextjs', 'deployment', 'authentication', 'security', 'seo']
 draft: false
 visibility: private
